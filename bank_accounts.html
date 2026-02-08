@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bank Accounts</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #ff7e4d;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .ba-header {
+            background-color: #0c4a6e;
+            /* Dark blue */
+            background: linear-gradient(to right, #1e40af, #2563eb);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .ba-back-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .ba-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .ba-content {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .ba-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ba-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .ba-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .ba-card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+
+        .ba-card-icon {
+            color: #fb923c;
+            /* Orange matching theme */
+        }
+
+        .ba-add-btn {
+            color: #0284c7;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background-color: #e0f2fe;
+            /* Light blue background for better visibility */
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .ba-add-btn:hover {
+            background-color: #bae6fd;
+        }
+
+        /* Blue Gradient Card */
+        .ba-blue-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: white;
+            position: relative;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4);
+        }
+
+        .ba-blue-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .ba-bank-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .ba-country-tag {
+            background: #fcd34d;
+            color: #1e293b;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .ba-account-num {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .ba-account-name {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .ba-account-phone {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 1rem;
+        }
+
+        .ba-blue-bottom {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 -1.5rem -1.5rem -1.5rem;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 12px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* List Item Card */
+        .ba-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8fafc;
+            /* Light gray background */
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .ba-list-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .ba-list-bank {
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ba-list-tag {
+            background: #fcd34d;
+            font-size: 0.65rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        .ba-list-num {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .ba-list-ifsc {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .ba-list-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .ba-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            /* Slightly larger hit area */
+            color: #94a3b8;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .ba-action-btn:hover {
+            color: #3b82f6;
+        }
+
+        .ba-action-btn.delete:hover {
+            color: #ef4444;
+        }
+
+        /* Terms List */
+        .ba-terms-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ba-terms-list li {
+            position: relative;
+            padding-left: 1.2rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .ba-terms-list li::before {
+            content: "•";
+            /* Bullet */
+            position: absolute;
+            left: 0;
+            color: #1e293b;
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .ba-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .ba-modal {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ba-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.8rem;
+        }
+
+        .ba-modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .ba-modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0;
+        }
+
+        .ba-funding-info {
+            margin-bottom: 1.2rem;
+        }
+
+        .ba-funding-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.2rem;
+        }
+
+        .ba-funding-val {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .ba-form-group {
+            margin-bottom: 0.8rem;
+        }
+
+        .ba-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 0.3rem;
+        }
+
+        .ba-label span {
+            color: #ef4444;
+        }
+
+        .ba-input {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #334155;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .ba-input:focus {
+            border-color: #3b82f6;
+        }
+
+        .ba-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .ba-col {
+            flex: 1;
+        }
+
+        .ba-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .ba-btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .ba-btn-submit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .ba-btn-submit:hover {
+            background: #2563eb;
+        }
+
+        .ba-btn-cancel {
+            background: #ef4444;
+            color: white;
+        }
+
+        .ba-btn-cancel:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ba-header">
+        <button class="ba-back-btn" onclick="window.location.href='market.html'"><i data-lucide="chevron-left"
+                size="24"></i></button>
+        <div class="ba-title">Manage your bank accounts</div>
+    </div>
+
+    <div class="ba-content">
+        <!-- New Left Column: Bank Accounts -->
+        <div class="ba-card" id="accountsListContainer">
+            <div class="ba-card-header">
+                <div class="ba-card-title">
+                    <i data-lucide="credit-card" class="ba-card-icon" size="20"></i> Bank Accounts
+                </div>
+                <button class="ba-add-btn" onclick="openAddAccountModal()">+ Add Account</button>
+            </div>
+
+            <div id="accountsList">
+                <div style="text-align:center; padding:2rem; color:#64748b;">Loading accounts...</div>
+            </div>
+        </div>
+
+        <!-- Right Column: Terms -->
+        <div class="ba-card">
+            <div class="ba-card-header">
+                <div class="ba-card-title">Terms & Conditions</div>
+            </div>
+            <ul class="ba-terms-list">
+                <li>Bank accounts must be under your legal name and ownership.</li>
+                <li>Only verified accounts can be used for withdrawals.</li>
+                <li>Changes to bank details may require additional verification.</li>
+                <li>Incorrect information may delay or fail fund transfers.</li>
+                <li>All transactions are governed by applicable financial regulations.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div id="editAccountModal" class="ba-modal-overlay">
+        <div class="ba-modal">
+            <div class="ba-modal-header">
+                <div class="ba-modal-title">Edit Account</div>
+                <button class="ba-modal-close" onclick="closeEditAccountModal()"><i data-lucide="x"
+                        size="20"></i></button>
+            </div>
+
+            <!-- Removed Funding Info for Edit Modal to distinguish from Add Modal -->
+
+            <div class="ba-form-group">
+                <label class="ba-label">Bank Name <span>*</span></label>
+                <input type="text" id="editBankName" class="ba-input" value="SBI">
+            </div>
+
+            <div class="ba-row">
+                <div class="ba-col">
+                    <div class="ba-form-group">
+                        <label class="ba-label">First name <span>*</span></label>
+                        <input type="text" id="editFirstName" class="ba-input" value="Sharad">
+                    </div>
+                </div>
+                <div class="ba-col">
+                    <div class="ba-form-group">
+                        <label class="ba-label">Last name <span>*</span></label>
+                        <input type="text" id="editLastName" class="ba-input" value="Mali">
+                    </div>
+                </div>
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label">Account Number <span>*</span></label>
+                <input type="text" id="editAccNum" class="ba-input" value="39550453647">
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label">Mobile No. <span>*</span></label>
+                <input type="text" id="editPhone" class="ba-input" value="8108038029">
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label">IFSC <span>*</span></label>
+                <input type="text" id="editIFSC" class="ba-input" value="SBIN0021104">
+            </div>
+
+            <div class="ba-modal-actions">
+                <button class="ba-btn ba-btn-submit" onclick="submitEdit()">Submit</button>
+                <button class="ba-btn ba-btn-cancel" onclick="closeEditAccountModal()">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Add Account Modal -->
+    <div id="addAccountModal" class="ba-modal-overlay">
+        <div class="ba-modal" style="max-width: 600px; padding: 2rem;">
+            <div class="ba-modal-header" style="border: none; padding-bottom: 0;">
+                <div class="ba-modal-title" style="font-size: 1.25rem; font-weight: 700;">Add Account</div>
+                <button class="ba-modal-close" onclick="closeAddAccountModal()"><i data-lucide="x"
+                        size="24"></i></button>
+            </div>
+
+            <div class="ba-funding-info" style="margin: 1.5rem 0;">
+                <div class="ba-funding-label" style="font-size: 1rem; color: #1e293b; margin-bottom: 0.25rem;">
+                    Funding Accounts</div>
+                <div class="ba-funding-val" style="color: #64748b; font-size: 0.9rem;">Selected: INR****029 · IN
+                </div>
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label" style="font-size: 0.9rem; color: #1e293b;">Bank Name <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="addBankName" class="ba-input" placeholder="Please enter the bank name"
+                    style="padding: 0.8rem; border-radius: 8px;">
+            </div>
+
+            <div class="ba-row">
+                <div class="ba-col">
+                    <div class="ba-form-group">
+                        <label class="ba-label" style="font-size: 0.9rem; color: #1e293b;">First name <span
+                                style="color: #ef4444">*</span></label>
+                        <input type="text" id="addFirstName" class="ba-input" placeholder="Enter first name"
+                            style="padding: 0.8rem; border-radius: 8px;">
+                    </div>
+                </div>
+                <div class="ba-col">
+                    <div class="ba-form-group">
+                        <label class="ba-label" style="font-size: 0.9rem; color: #1e293b;">Last name <span
+                                style="color: #ef4444">*</span></label>
+                        <input type="text" id="addLastName" class="ba-input" placeholder="Enter last name"
+                            style="padding: 0.8rem; border-radius: 8px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label" style="font-size: 0.9rem; color: #1e293b;">Account Number <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="addAccNum" class="ba-input" placeholder="Your bank account no"
+                    style="padding: 0.8rem; border-radius: 8px;">
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label" style="font-size: 0.9rem; color: #1e293b;">Mobile No. <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="addPhone" class="ba-input" placeholder="Enter your mobile number"
+                    style="padding: 0.8rem; border-radius: 8px;">
+            </div>
+
+            <div class="ba-form-group">
+                <label class="ba-label" style="font-size: 0.9rem; color: #1e293b;">IFSC <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="addIFSC" class="ba-input" placeholder="Please enter IFSC"
+                    style="padding: 0.8rem; border-radius: 8px;">
+            </div>
+
+            <div class="ba-modal-actions" style="margin-top: 2rem; gap: 1rem;">
+                <button class="ba-btn" onclick="submitAdd()"
+                    style="background: #93c5fd; color: white; padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600;">Submit</button>
+                <button class="ba-btn" onclick="closeAddAccountModal()"
+                    style="background: #ef4444; color: white; padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600;">Cancel</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        let allAccounts = [];
+        let editingAccountId = null;
+
+        async function init() {
+            const user = DB.getCurrentUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            lucide.createIcons();
+            await loadAccounts();
+        }
+
+        async function loadAccounts() {
+            const user = DB.getCurrentUser();
+            allAccounts = await DB.getBankAccounts(user.id);
+            renderAccounts();
+        }
+
+        function renderAccounts() {
+            const container = document.getElementById('accountsList');
+            if (allAccounts.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 2rem; color: #64748b;">No bank accounts linked.</div>';
+                return;
+            }
+
+            container.innerHTML = allAccounts.map(acc => {
+                const rawNum = acc.account_number || '';
+                const masked = rawNum.length > 4 ? rawNum.substring(0, 3) + "*****" + rawNum.substring(rawNum.length - 3) : rawNum;
+
+                return `
+                    <div class="ba-blue-card">
+                        <div class="ba-blue-top">
+                            <div class="ba-bank-name">${acc.bank_name}</div>
+                            <div class="ba-country-tag">IN</div>
+                        </div>
+                        <div class="ba-account-num">${masked}</div>
+                        <div class="ba-account-name">${acc.first_name} ${acc.last_name}</div>
+                        <div class="ba-account-phone">${acc.mobile || ''}</div>
+                        <div class="ba-blue-bottom">
+                            <span>IFSC</span>
+                            <span style="font-family: monospace;">${acc.ifsc}</span>
+                        </div>
+                    </div>
+
+                    <div class="ba-list-item">
+                        <div class="ba-list-left">
+                            <div class="ba-list-bank">${acc.bank_name} <span class="ba-list-tag">IN</span></div>
+                            <div class="ba-list-num">${masked}</div>
+                            <div class="ba-list-ifsc">IFSC: ${acc.ifsc}</div>
+                        </div>
+                        <div class="ba-list-actions">
+                            <button class="ba-action-btn delete" onclick="handleDelete('${acc.id}')"><i data-lucide="trash-2" size="16"></i></button>
+                            <button class="ba-action-btn" onclick="openEditAccountModal('${acc.id}')"><i data-lucide="pencil" size="16"></i></button>
+                            <button class="ba-action-btn"><i data-lucide="chevron-right" size="16"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openAddAccountModal() {
+            editingAccountId = null;
+            document.getElementById('addAccountModal').style.display = 'flex';
+        }
+
+        function closeAddAccountModal() {
+            document.getElementById('addAccountModal').style.display = 'none';
+        }
+
+        async function submitAdd() {
+            const data = {
+                bank_name: document.getElementById('addBankName').value,
+                first_name: document.getElementById('addFirstName').value,
+                last_name: document.getElementById('addLastName').value,
+                account_number: document.getElementById('addAccNum').value,
+                mobile: document.getElementById('addPhone').value,
+                ifsc: document.getElementById('addIFSC').value
+            };
+
+            if (!data.bank_name || !data.account_number || !data.first_name) {
+                alert('Please fill in required fields');
+                return;
+            }
+
+            const user = DB.getCurrentUser();
+            const res = await DB.addBankAccount(user.id, data);
+
+            if (res.success) {
+                alert('Account added successfully!');
+                closeAddAccountModal();
+                loadAccounts();
+                // Reset form
+                ['addBankName', 'addFirstName', 'addLastName', 'addAccNum', 'addPhone', 'addIFSC'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+            } else {
+                alert('Error adding account');
+            }
+        }
+
+        function openEditAccountModal(id) {
+            editingAccountId = id;
+            const acc = allAccounts.find(a => a.id == id);
+            if (!acc) return;
+
+            document.getElementById('editBankName').value = acc.bank_name;
+            document.getElementById('editFirstName').value = acc.first_name;
+            document.getElementById('editLastName').value = acc.last_name;
+            document.getElementById('editAccNum').value = acc.account_number;
+            document.getElementById('editPhone').value = acc.mobile || '';
+            document.getElementById('editIFSC').value = acc.ifsc;
+
+            document.getElementById('editAccountModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeEditAccountModal() {
+            document.getElementById('editAccountModal').style.display = 'none';
+        }
+
+        async function submitEdit() {
+            if (!editingAccountId) return;
+
+            const data = {
+                bank_name: document.getElementById('editBankName').value,
+                first_name: document.getElementById('editFirstName').value,
+                last_name: document.getElementById('editLastName').value,
+                account_number: document.getElementById('editAccNum').value,
+                mobile: document.getElementById('editPhone').value,
+                ifsc: document.getElementById('editIFSC').value
+            };
+
+            const res = await DB.updateBankAccount(editingAccountId, data);
+
+            if (res.success) {
+                alert('Account updated successfully!');
+                closeEditAccountModal();
+                loadAccounts();
+            } else {
+                alert('Error updating account');
+            }
+        }
+
+        async function handleDelete(id) {
+            if (confirm('Are you sure you want to delete this account?')) {
+                const res = await DB.deleteBankAccount(id);
+                if (res.success) {
+                    loadAccounts();
+                } else {
+                    alert('Error deleting account');
+                }
+            }
+        }
+
+        window.onload = init;
+    </script>
+    <!-- Customer Service Modal -->
+    <div id="csModal" class="cs-modal" onclick="if(event.target == this) closeCS()">
+        <div class="cs-content">
+            <!-- Header -->
+            <div class="cs-header">
+                <div class="cs-header-avatar">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Support" alt="Support">
+                </div>
+                <div class="cs-header-info">
+                    <div class="cs-header-title">VSL Customer Service</div>
+                    <div class="cs-header-hours">Service Hours: 8:30 AM - 10:00 PM</div>
+                </div>
+                <button class="cs-minimize" onclick="closeCS()">
+                    <i data-lucide="chevron-down" size="24"></i>
+                </button>
+            </div>
+
+            <!-- Body / Chat History -->
+            <div class="cs-body" id="csBody">
+                <!-- Messages injected via JS -->
+            </div>
+
+            <!-- Footer / Input -->
+            <div class="cs-footer">
+                <div id="csEmojiPicker" class="cs-emoji-picker">
+                    <button class="cs-emoji-btn" onclick="addEmoji('😊')">😊</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😂')">😂</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤣')">🤣</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('❤️')">❤️</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😍')">😍</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('👍')">👍</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🙏')">🙏</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😭')">😭</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😘')">😘</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🥰')">🥰</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🙌')">🙌</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('✨')">✨</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🔥')">🔥</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🚀')">🚀</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😮')">😮</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😢')">😢</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😎')">😎</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤔')">🤔</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('👏')">👏</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🎉')">🎉</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💪')">💪</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💯')">💯</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤑')">🤑</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💰')">💰</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('📈')">📈</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('📉')">📉</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💎')">💎</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤝')">🤝</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('✅')">✅</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('❌')">❌</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🔔')">🔔</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🎁')">🎁</button>
+                </div>
+
+                <div id="csAttachmentPreview" class="cs-attachment-preview">
+                    <img id="csPreviewImg" src="" class="cs-preview-img" style="display:none;">
+                    <span id="csFileName">File name</span>
+                    <i data-lucide="x" class="cs-remove-attachment" onclick="clearAttachment()" size="16"></i>
+                </div>
+
+                <div class="cs-input-area">
+                    <input type="file" id="csFileInput" style="display:none;" onchange="handleCSFile(this)">
+                    <div class="cs-input-row">
+                        <input type="text" id="csInput" class="cs-input" placeholder="Type a message..."
+                            onkeypress="if(event.key === 'Enter') sendCSMessage()">
+                    </div>
+                    <div class="cs-actions">
+                        <div class="cs-tools">
+                            <button class="cs-tool-btn" onclick="csTool('emoji')" title="Emoji">
+                                <i data-lucide="smile" size="20"></i>
+                            </button>
+                            <button class="cs-tool-btn" onclick="csTool('image')" title="Send Image">
+                                <i data-lucide="camera" size="20"></i>
+                            </button>
+                            <button class="cs-tool-btn" onclick="csTool('video')" title="Send Video">
+                                <i data-lucide="video" size="20"></i>
+                            </button>
+                            <button class="cs-tool-btn" onclick="csTool('file')" title="Send File">
+                                <i data-lucide="link" size="20"></i>
+                            </button>
+                        </div>
+                        <button class="cs-send-btn" onclick="sendCSMessage()">
+                            <i data-lucide="send" size="18"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Contact Us Tab -->
+    <div class="cs-floating-tab" onclick="openCS()">
+        <span class="cs-floating-text">Contact us</span>
+        <div class="cs-floating-icon">
+            <i data-lucide="messages-square" size="16"></i>
+        </div>
+    </div>
+
+    <script>
+        // Customer Service Script Logic
+        function openCS() {
+            document.getElementById('csModal').style.display = 'flex';
+            const chatBody = document.getElementById('csBody');
+            if (chatBody.children.length === 0) {
+                addCSMessage('service', 'Please don\'t share any sensitive information. Do not transfer funds without my explicit permission.', '8:30 AM');
+                addCSMessage('user', 'Sharad Madhukar Mali | *******38029', '8:31 AM');
+                addCSMessage('service', 'Hello, how can I help you today?', '8:32 AM');
+            }
+        }
+
+        function closeCS() {
+            document.getElementById('csModal').style.display = 'none';
+        }
+
+        function addCSMessage(type, text, time = '') {
+            const chatBody = document.getElementById('csBody');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `cs-msg ${type}`;
+
+            const avatarUrl = type === 'service'
+                ? 'https://api.dicebear.com/7.x/bottts/svg?seed=Support'
+                : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sharad';
+
+            // Convert URLs to clickable links
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const formattedText = text.replace(urlRegex, (url) => {
+                return `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`;
+            });
+
+            msgDiv.innerHTML = `
+                <div class="cs-msg-avatar">
+                    <img src="${avatarUrl}" alt="avatar">
+                </div>
+                <div class="cs-msg-bubble">
+                    ${formattedText}
+                    ${time ? `<div style="font-size: 0.7rem; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>` : ''}
+                </div>
+            `;
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            lucide.createIcons();
+        }
+
+        let csAttachment = null;
+        function sendCSMessage() {
+            const input = document.getElementById('csInput');
+            const text = input.value.trim();
+            if (!text && !csAttachment) return;
+
+            const now = new Date();
+            const time = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+
+            let messageHtml = text;
+            if (csAttachment) {
+                if (csAttachment.type.startsWith('image/')) {
+                    messageHtml = `<div>${text}</div><img src="${csAttachment.url}" style="max-width: 100%; border-radius: 8px; margin-top: 8px;">`;
+                } else {
+                    messageHtml = `<div>${text}</div><div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.05); padding:8px; border-radius:8px; margin-top:8px;">
+                        <i data-lucide="file-text" size="20"></i> <span>${csAttachment.name}</span>
+                    </div>`;
+                }
+            }
+
+            addCSMessage('user', messageHtml, time);
+            input.value = '';
+            clearAttachment();
+            document.getElementById('csEmojiPicker').style.display = 'none';
+
+            setTimeout(() => {
+                addCSMessage('service', 'Thank you for your message. An agent will be with you shortly.', time);
+            }, 1000);
+        }
+
+        function csTool(action) {
+            if (action === 'emoji') {
+                const picker = document.getElementById('csEmojiPicker');
+                picker.style.display = picker.style.display === 'grid' ? 'none' : 'grid';
+            } else if (action === 'image' || action === 'file' || action === 'video') {
+                document.getElementById('csFileInput').click();
+            }
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('csInput');
+            input.value += emoji;
+            input.focus();
+            document.getElementById('csEmojiPicker').style.display = 'none';
+        }
+
+        function handleCSFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    csAttachment = {
+                        name: file.name,
+                        type: file.type,
+                        url: e.target.result
+                    };
+                    const preview = document.getElementById('csAttachmentPreview');
+                    const previewImg = document.getElementById('csPreviewImg');
+                    const fileNameSpan = document.getElementById('csFileName');
+                    preview.style.display = 'flex';
+                    if (file.type.startsWith('image/')) {
+                        previewImg.src = e.target.result;
+                        previewImg.style.display = 'block';
+                        fileNameSpan.style.display = 'none';
+                    } else {
+                        previewImg.style.display = 'none';
+                        fileNameSpan.innerText = file.name;
+                        fileNameSpan.style.display = 'block';
+                    }
+                    lucide.createIcons();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearAttachment() {
+            csAttachment = null;
+            document.getElementById('csAttachmentPreview').style.display = 'none';
+            document.getElementById('csFileInput').value = '';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Detail - Avendus Capital</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <style>
+        body {
+            background-color: var(--bg-orange);
+            /* Orange background from screenshot */
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            color: #333;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 100;
+            border: none;
+            backdrop-filter: blur(4px);
+        }
+
+        .hero-section {
+            width: 100%;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.8));
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            /* Centered title based on screenshot layout structure */
+            padding-bottom: 60px;
+            /* Space for the overlapping card */
+        }
+
+        .hero-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 1rem 1rem 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Content Card */
+        .content-card {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            margin: -40px auto 40px auto;
+            /* Negative top margin to overlap */
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            z-index: 20;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            background: #1e293b;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+        }
+
+        .author-text h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #0f172a;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .author-text span {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .article-body {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #334155;
+        }
+
+        .article-body p {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Contact/Chat Widget Placeholder from screenshot (optional but nice) */
+        .contact-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 0;
+            background: #0ea5e9;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px 0 0 8px;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="back-btn" onclick="history.back()"><i data-lucide="chevron-left"></i></button>
+
+    <div class="hero-section" id="heroBg">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-meta">
+                <span class="badge">Business</span>
+                <span id="heroDate">16 minutes ago</span>
+            </div>
+            <h1 class="hero-title" id="articleTitle">Loading...</h1>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="author-info">
+            <div class="author-avatar" id="authorInitials">TR</div>
+            <div class="author-text">
+                <h4 id="authorName">Tristan Rich</h4>
+                <span id="fullDate">Feb 6, 2026, 09:42 PM</span>
+            </div>
+        </div>
+
+        <div class="article-body" id="articleContent">
+            Loading content...
+        </div>
+    </div>
+
+    <!-- Customer Service Modal -->
+    <div id="csModal" class="cs-modal" onclick="if(event.target == this) closeCS()">
+        <div class="cs-content">
+            <!-- Header -->
+            <div class="cs-header">
+                <div class="cs-header-avatar">
+                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Support" alt="Support">
+                </div>
+                <div class="cs-header-info">
+                    <div class="cs-header-title">VSL Customer Service</div>
+                    <div class="cs-header-hours">Service Hours: 8:30 AM - 10:00 PM</div>
+                </div>
+                <button class="cs-minimize" onclick="closeCS()">
+                    <i data-lucide="chevron-down" size="24"></i>
+                </button>
+            </div>
+
+            <!-- Body / Chat History -->
+            <div class="cs-body" id="csBody">
+                <!-- Messages injected via JS -->
+            </div>
+
+            <!-- Footer / Input -->
+            <div class="cs-footer">
+                <div id="csEmojiPicker" class="cs-emoji-picker">
+                    <button class="cs-emoji-btn" onclick="addEmoji('😊')">😊</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😂')">😂</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤣')">🤣</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('❤️')">❤️</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😍')">😍</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('👍')">👍</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🙏')">🙏</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😭')">😭</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😘')">😘</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🥰')">🥰</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🙌')">🙌</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('✨')">✨</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🔥')">🔥</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🚀')">🚀</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😮')">😮</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😢')">😢</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('😎')">😎</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤔')">🤔</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('👏')">👏</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🎉')">🎉</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💪')">💪</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💯')">💯</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤑')">🤑</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💰')">💰</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('📈')">📈</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('📉')">📉</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('💎')">💎</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🤝')">🤝</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('✅')">✅</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('❌')">❌</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🔔')">🔔</button>
+                    <button class="cs-emoji-btn" onclick="addEmoji('🎁')">🎁</button>
+                </div>
+
+                <div id="csAttachmentPreview" class="cs-attachment-preview">
+                    <img id="csPreviewImg" src="" class="cs-preview-img" style="display:none;">
+                    <span id="csFileName">File name</span>
+                    <i data-lucide="x" class="cs-remove-attachment" onclick="clearAttachment()" size="16"></i>
+                </div>
+
+                <div class="cs-input-area">
+                    <input type="file" id="csFileInput" style="display:none;" onchange="handleCSFile(this)">
+                    <div class="cs-input-row">
+                        <input type="text" id="csInput" class="cs-input" placeholder="Type a message..."
+                            onkeypress="if(event.key === 'Enter') sendCSMessage()">
+                    </div>
+                    <div class="cs-actions">
+                        <div class="cs-tools">
+                            <button class="cs-tool-btn" onclick="csTool('emoji')" title="Emoji">
+                                <i data-lucide="smile" size="20"></i>
+                            </button>
+                            <button class="cs-tool-btn" onclick="csTool('image')" title="Send Image">
+                                <i data-lucide="camera" size="20"></i>
+                            </button>
+                            <button class="cs-tool-btn" onclick="csTool('video')" title="Send Video">
+                                <i data-lucide="video" size="20"></i>
+                            </button>
+                            <button class="cs-tool-btn" onclick="csTool('file')" title="Send File">
+                                <i data-lucide="link" size="20"></i>
+                            </button>
+                        </div>
+                        <button class="cs-send-btn" onclick="sendCSMessage()">
+                            <i data-lucide="send" size="18"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Contact Us Tab -->
+    <div class="cs-floating-tab" onclick="openCS()">
+        <span class="cs-floating-text">Contact us</span>
+        <div class="cs-floating-icon">
+            <i data-lucide="messages-square" size="16"></i>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Customer Service Script Logic
+        function openCS() {
+            document.getElementById('csModal').style.display = 'flex';
+            const chatBody = document.getElementById('csBody');
+            if (chatBody.children.length === 0) {
+                addCSMessage('service', 'Please don\'t share any sensitive information. Do not transfer funds without my explicit permission.', '8:30 AM');
+                addCSMessage('user', 'Sharad Madhukar Mali | *******38029', '8:31 AM');
+                addCSMessage('service', 'Hello, how can I help you today?', '8:32 AM');
+            }
+        }
+
+        function closeCS() {
+            document.getElementById('csModal').style.display = 'none';
+        }
+
+        function addCSMessage(type, text, time = '') {
+            const chatBody = document.getElementById('csBody');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `cs-msg ${type}`;
+
+            const avatarUrl = type === 'service'
+                ? 'https://api.dicebear.com/7.x/bottts/svg?seed=Support'
+                : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sharad';
+
+            // Convert URLs to clickable links
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const formattedText = text.replace(urlRegex, (url) => {
+                return `<a href="${url}" target="_blank" style="color: inherit; text-decoration: underline;">${url}</a>`;
+            });
+
+            msgDiv.innerHTML = `
+                <div class="cs-msg-avatar">
+                    <img src="${avatarUrl}" alt="avatar">
+                </div>
+                <div class="cs-msg-bubble">
+                    ${formattedText}
+                    ${time ? `<div style="font-size: 0.7rem; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>` : ''}
+                </div>
+            `;
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            lucide.createIcons();
+        }
+
+        let csAttachment = null;
+        function sendCSMessage() {
+            const input = document.getElementById('csInput');
+            const text = input.value.trim();
+            if (!text && !csAttachment) return;
+
+            const now = new Date();
+            const time = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+
+            let messageHtml = text;
+            if (csAttachment) {
+                if (csAttachment.type.startsWith('image/')) {
+                    messageHtml = `<div>${text}</div><img src="${csAttachment.url}" style="max-width: 100%; border-radius: 8px; margin-top: 8px;">`;
+                } else {
+                    messageHtml = `<div>${text}</div><div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.05); padding:8px; border-radius:8px; margin-top:8px;">
+                        <i data-lucide="file-text" size="20"></i> <span>${csAttachment.name}</span>
+                    </div>`;
+                }
+            }
+
+            addCSMessage('user', messageHtml, time);
+            input.value = '';
+            clearAttachment();
+            document.getElementById('csEmojiPicker').style.display = 'none';
+
+            setTimeout(() => {
+                addCSMessage('service', 'Thank you for your message. An agent will be with you shortly.', time);
+            }, 1000);
+        }
+
+        function csTool(action) {
+            if (action === 'emoji') {
+                const picker = document.getElementById('csEmojiPicker');
+                picker.style.display = picker.style.display === 'grid' ? 'none' : 'grid';
+            } else if (action === 'image' || action === 'file' || action === 'video') {
+                document.getElementById('csFileInput').click();
+            }
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('csInput');
+            input.value += emoji;
+            input.focus();
+            document.getElementById('csEmojiPicker').style.display = 'none';
+        }
+
+        function handleCSFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    csAttachment = {
+                        name: file.name,
+                        type: file.type,
+                        url: e.target.result
+                    };
+                    const preview = document.getElementById('csAttachmentPreview');
+                    const previewImg = document.getElementById('csPreviewImg');
+                    const fileNameSpan = document.getElementById('csFileName');
+                    preview.style.display = 'flex';
+                    if (file.type.startsWith('image/')) {
+                        previewImg.src = e.target.result;
+                        previewImg.style.display = 'block';
+                        fileNameSpan.style.display = 'none';
+                    } else {
+                        previewImg.style.display = 'none';
+                        fileNameSpan.innerText = file.name;
+                        fileNameSpan.style.display = 'block';
+                    }
+                    lucide.createIcons();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearAttachment() {
+            csAttachment = null;
+            document.getElementById('csAttachmentPreview').style.display = 'none';
+            document.getElementById('csFileInput').value = '';
+        }
+
+        // Safe decode utility
+        function safeDecode(str) {
+            try {
+                return decodeURIComponent(str);
+            } catch (e) {
+                return str;
+            }
+        }
+
+        // Parse URL params
+        const params = new URLSearchParams(window.location.search);
+
+        const title = safeDecode(params.get('title') || 'Market Notice');
+        const author = safeDecode(params.get('author') || 'Admin');
+        const date = safeDecode(params.get('date') || 'Just now');
+        const img = safeDecode(params.get('img') || 'https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&q=80&w=1200');
+        const content = safeDecode(params.get('content') || '');
+
+        // Default content text if no content param provided
+        const defaultText = `Guinness Atkinson Asset Management Inc bought a new stake in shares of Trane Technologies plc (NYSE:TT – Free Report) during the 3rd quarter, according to its most recent Form 13F filing with the Securities and Exchange Commission (SEC). The fund bought 2,159 shares of the company's stock, valued at approximately $895,000.<br><br>A number of other hedge funds and other institutional investors also recently made changes to their positions in the business. Icon Advisers Inc. Co. bought a new stake in shares of Trane Technologies during the 2nd quarter valued at about $26,000. Financial Consulate Inc. purchased a new stake in Trane Technologies in the third quarter worth about $25,000.<br><br>Hantz Financial Services Inc. boosted its position in Trane Technologies by 1,016.7% during the 2nd quarter. Hantz Financial Services Inc. now owns 67 shares of the company's stock valued at $29,000 after acquiring an additional 61 shares in the last quarter.<br><br>This strategic move highlights the growing confidence in sustainable infrastructure solutions and the long-term value proposition of the sector. Investors are advised to monitor quarterly reports for further consolidations in this space.`;
+
+        // Render Data
+        document.title = title + " - Avendus";
+        document.getElementById('articleTitle').textContent = title;
+        document.getElementById('authorName').textContent = author;
+        document.getElementById('heroDate').textContent = date;
+        document.getElementById('fullDate').textContent = date;
+        document.getElementById('heroBg').style.backgroundImage = `url('${img}')`;
+
+        // Initials
+        const names = author.split(' ');
+        let initials = names[0][0];
+        if (names.length > 1) initials += names[names.length - 1][0];
+        document.getElementById('authorInitials').textContent = initials;
+
+        // Use content from URL or default
+        document.getElementById('articleContent').innerHTML = content ? content.replace(/\n/g, '<br><br>') : defaultText;
+    </script>
+</body>
+
+</html>

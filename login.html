@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in to Avendus Capital</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <style>
+        /* Force settings to ensure no Robot and proper centering */
+        body.login-body {
+            margin: 0;
+            padding: 0;
+            background-color: #ff7e4d !important;
+            background-image: none !important;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .login-card {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Ensure header is absolute and simple */
+        .login-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            /* Let clicks pass through if needed, but buttons need pointer-events auto */
+        }
+
+        .login-header>* {
+            pointer-events: auto;
+        }
+
+        .login-logo {
+            font-weight: 800;
+            color: white;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .home-btn {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Form Styles */
+        h1 {
+            color: #1e293b;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .phone-input-wrapper {
+            display: flex;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .country-code {
+            background: #f8fafc;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-right: 1px solid #e2e8f0;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* Password field */
+        .password-wrapper {
+            position: relative;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .login-submit-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .login-submit-btn:hover {
+            background: #2563eb;
+        }
+
+        .links {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .links a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 0 10px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-body {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <div class="login-header">
+        <div class="login-logo">Avendus Capital</div>
+        <a href="index.html" class="home-btn"><i data-lucide="home" width="20"></i></a>
+    </div>
+
+    <div class="login-card">
+        <h1>Sign in</h1>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <div class="phone-input-wrapper">
+                    <div class="country-code">
+                        <img src="https://flagcdn.com/w20/in.png" width="20"> +91
+                    </div>
+                    <input type="tel" id="phoneNumber" placeholder="Enter mobile number" required maxlength="10">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="Enter password" required>
+                    <i data-lucide="eye" class="eye-icon" id="togglePass"></i>
+                </div>
+                <div style="text-align: right; margin-top: 5px;">
+                    <a href="#" onclick="openModal('forgot')"
+                        style="font-size: 0.8rem; color: #3b82f6; text-decoration: none;">Forgot Password?</a>
+                </div>
+            </div>
+
+            <button type="submit" class="login-submit-btn">Login</button>
+        </form>
+
+        <div class="links">
+            Don't have an account? <a href="#" onclick="openModal('register')">Register Now</a>
+        </div>
+
+        <div class="divider"><span>OR</span></div>
+
+        <div style="font-size: 0.85rem;">
+            <a href="admin_login.html" style="color: #64748b; text-decoration: none;">Admin Access</a>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal-overlay">
+        <div class="modal-body">
+            <button class="close-modal" onclick="closeModal('register')"><i data-lucide="x"></i></button>
+            <h2>Create Account</h2>
+            <form id="registerForm" style="margin-top: 1.5rem;">
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <div class="phone-input-wrapper">
+                        <div class="country-code">+91</div>
+                        <input type="tel" id="regMobile" required maxlength="10">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPass" style="border:1px solid #e2e8f0; border-radius:8px;" required>
+                </div>
+                <div class="form-group">
+                    <label>Invitation Code</label>
+                    <input type="text" id="regCode" style="border:1px solid #e2e8f0; border-radius:8px;">
+                </div>
+                <button type="submit" class="login-submit-btn">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotModal" class="modal-overlay">
+        <div class="modal-body">
+            <button class="close-modal" onclick="closeModal('forgot')"><i data-lucide="x"></i></button>
+            <h2>Reset Password</h2>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;">
+                Please contact our support team to verify your identity and reset your password.
+            </p>
+            <button class="login-submit-btn" onclick="closeModal('forgot')">Close</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Password Toggle
+        document.getElementById('togglePass').addEventListener('click', function () {
+            const input = document.getElementById('password');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            this.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
+            lucide.createIcons();
+        });
+
+        // Modals
+        window.openModal = function (id) {
+            document.getElementById(id + 'Modal').style.display = 'flex';
+        }
+        window.closeModal = function (id) {
+            document.getElementById(id + 'Modal').style.display = 'none';
+        }
+
+        // Login Logic
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Logging in...';
+
+            const mobile = document.getElementById('phoneNumber').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // Use DB utility from db.js
+                const result = await DB.login(mobile, password);
+
+                if (result.success) {
+                    window.location.href = 'index.html?logged_in=true';
+                } else {
+                    alert(result.message || 'Login failed');
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred. Please check your connection.');
+                btn.textContent = originalText;
+            }
+        });
+
+        // Register Logic
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mobile = document.getElementById('regMobile').value;
+            const pass = document.getElementById('regPass').value;
+
+            if (mobile.length !== 10) {
+                alert('Please enter a valid 10-digit mobile number');
+                return;
+            }
+
+            try {
+                const res = await DB.register(mobile, pass);
+                if (res.success) {
+                    alert('Registration successful! Please login.');
+                    closeModal('register');
+                } else {
+                    alert(res.message);
+                }
+            } catch (e) {
+                alert('Registration failed.');
+            }
+        });
+    </script>
+</body>
+
+</html>
