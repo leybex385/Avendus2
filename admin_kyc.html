@@ -722,7 +722,7 @@
                 style="padding: 15px 15px 5px 15px; font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
                 Communication</div>
             <div class="menu-item" id="btn_messages" onclick="switchPage('messages')"><i data-lucide="send"
-                    size="18"></i> Internal messages</div>
+                    size="18"></i> Notification Center</div>
             <div class="menu-item" id="btn_livechat" onclick="switchPage('livechat')">
                 <i data-lucide="message-circle" size="18"></i> Customer Service Support
                 <span id="chat_badge"
@@ -801,12 +801,11 @@
             <div id="pageMessages" class="vsl-page" style="display:none;">
                 <div class="section-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h2 style="font-size:1.1rem; margin:0;">Internal Messaging Center</h2>
+                        <h2 style="font-size:1.1rem; margin:0;">Notification Center</h2>
                         <div style="display:flex; gap:10px;">
                             <button class="vsl-btn orange" onclick="init()"><i data-lucide="refresh-cw" size="14"></i>
                                 refresh</button>
-                            <button class="vsl-btn green" onclick="openMsgModal()">Create a new internal
-                                message</button>
+                            <button class="vsl-btn green" onclick="openMsgModal()">Create a new notification</button>
                         </div>
                     </div>
 
@@ -832,7 +831,7 @@
                             <div class="msg-items-scroll" id="sentMsgs"></div>
                         </div>
                         <div class="msg-content-pane" id="msgContentArea">
-                            <p>Please select one internal message to view.</p>
+                            <p>Please select one notification to view.</p>
                         </div>
                     </div>
 
@@ -1441,7 +1440,7 @@
     <!-- NEW MESSAGE MODAL -->
     <div id="msgModal" class="loader" style="background:rgba(0,0,0,0.5); z-index:2000;">
         <div class="section-card" style="width:550px; min-height:auto;">
-            <h3>Create New Message</h3>
+            <h3>Create New Notification</h3>
             <select id="msgTarget"
                 style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;"></select>
             <input id="msgTitle" placeholder="Enter message title"
@@ -1464,7 +1463,7 @@
             'home': 'front page', 'kyc': 'Real-name authentication', 'users': 'Customer Management',
             'deposits': 'Deposit records', 'withdrawals': 'Withdrawal records', 'loans': 'Loan records',
             'rewards': 'Bonus Points Record', 'stock': 'Stock trading', 'bulk': 'Large transactions',
-            'ipo': 'IPO', 'fund': 'Fund trading', 'quant': 'Quantitative Trading', 'messages': 'Internal messages',
+            'ipo': 'IPO', 'fund': 'Fund trading', 'quant': 'Quantitative Trading', 'messages': 'Notification Center',
             'livechat': 'Customer Service Support'
         };
         let openTabs = ['home'];
@@ -1483,7 +1482,7 @@
                 client.from('users').select('*').order('created_at', { ascending: false }),
                 client.from('deposits').select('*, users(mobile,username)').order('created_at', { ascending: false }),
                 client.from('withdrawals').select('*, users(mobile,username)').order('created_at', { ascending: false }),
-                client.from('messages').select('*, users(mobile)').eq('sender', 'Admin').order('created_at', { ascending: false }),
+                client.from('messages').select('*, users(mobile)').in('sender', ['Admin', 'System']).order('created_at', { ascending: false }),
                 client.from('kyc_submissions').select('*').order('submitted_at', { ascending: false })
             ]);
 
@@ -1717,8 +1716,10 @@
             { id: 'ipo_win', title: 'Congratulations on Your IPO Allocation!', tag: 'ipo:win', icon: 'party-popper', body: 'Congratulations! You have successfully been allocated shares in the IPO of {{company_name}}.\nAs a valued investor, we are pleased to notify you that your subscription was successful.' },
             { id: 'ipo_ann', title: 'IPO Announcement - {{name}}', tag: 'girlfriend:new', icon: 'info', body: 'We are pleased to inform you that the IPO for {{name}} is now open for subscription. Please find the key dates below:\nSubscription Start: {{start_date}}\nListing Date: {{listing_date}}' },
             { id: 'ipo_list', title: 'IPO Listed now!', tag: 'ipolist', icon: 'trending-up', body: 'IPO listed successfully! The shares are now available for trading in the secondary market.' },
-            { id: 'ipo_pay', title: 'Order payment successful!', tag: 'ipo:pay', icon: 'check-circle', body: 'Your order for {{order_name}} paid successfully. Thank you for using our service.' },
-            { id: 'ipo_fail', title: 'IPO subscription failed', tag: 'ipo:fail', icon: 'alert-triangle', body: 'Unfortunately, the subscription of {{ipo_name}} failed because conditions match failed. Your funds have been returned to your balance.' }
+            { id: 'kyc_approve', title: 'KYC Approval', tag: 'KYC', icon: 'check-circle', body: 'We are pleased to inform you that your Real-Name Authentication (KYC) has been approved. You can now access all features.' },
+            { id: 'kyc_reject', title: 'KYC Rejection', tag: 'KYC', icon: 'x-circle', body: 'Your KYC submission was rejected due to unclear images or mismatched information. Please resubmit with clear documents.' },
+            { id: 'dep_success', title: 'Deposit Success', tag: 'FINANCE', icon: 'arrow-down-circle', body: 'Your deposit has been successfully processed and credited to your account.' },
+            { id: 'with_process', title: 'Withdrawal Processing', tag: 'FINANCE', icon: 'clock', body: 'Your withdrawal request has been received and is currently being processed by our finance team.' }
         ];
 
         function showMsgSection(s) {
@@ -1732,6 +1733,7 @@
 
         function renderStencils() {
             const grid = document.getElementById('stencilGrid');
+            if (!grid) return;
             grid.innerHTML = STENCILS.map(s => `
                 <div class="stencil-card" onclick="useStencil('${s.id}')">
                     <h4><i data-lucide="${s.icon || 'file-text'}" size="18"></i> ${s.title}</h4>
@@ -1746,12 +1748,13 @@
             const s = STENCILS.find(x => x.id === id);
             if (!s) return;
             openMsgModal();
-            document.getElementById('msgTitle').value = s.title;
-            document.getElementById('msgBody').value = s.body;
+            document.getElementById('newMsgTitle').value = s.title;
+            document.getElementById('newMsgContent').value = s.body;
         }
 
         function filterMessages() {
             const q = document.getElementById('msgSearch').value.toLowerCase();
+            // Filter logic here if needed for 'sent' messages
             const filtered = allMsgs.filter(m => {
                 try { let p = JSON.parse(m.message); return p.title.toLowerCase().includes(q); } catch (e) { return false; }
             });
@@ -1809,7 +1812,7 @@
                     <td style="padding:12px;">${acc.mobile || '-'}</td>
                     <td style="padding:12px; font-size:0.75rem; color:#64748b;">${acc.created_at ? new Date(acc.created_at).toLocaleString() : '-'}</td>
                 </tr>
-             `).join('');
+                `).join('');
         }
 
         // Live Chat Logic
@@ -1883,7 +1886,7 @@
                 const unread = u.unreadCount || 0;
 
                 return `
-                    <div class="msg-row ${isActive ? 'active' : ''}" onclick="openChat('${u.id}')" style="display: flex; align-items: center; gap: 12px; padding: 15px 20px;">
+                <div class="msg-row ${isActive ? 'active' : ''}" onclick="openChat('${u.id}')" style="display: flex; align-items: center; gap: 12px; padding: 15px 20px;">
                         <div style="width: 45px; height: 45px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 700; flex-shrink: 0; font-size: 0.85rem; position: relative;">
                             ${(u.username || u.mobile || 'U').substring(0, 1).toUpperCase()}
                             ${unread > 0 ? `<div style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; animation: pulse-red-admin 2s infinite;">${unread}</div>` : ''}
@@ -1935,17 +1938,17 @@
             }).map(m => {
                 const isAdmin = m.sender === 'Admin';
                 return `
-                    <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; 
-                                background: ${isAdmin ? '#3b82f6' : 'white'}; 
-                                color: ${isAdmin ? 'white' : '#1e293b'}; 
-                                padding: 10px 16px; border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; 
-                                max-width: 80%; 
-                                box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};">
-                        <div style="font-size: 0.88rem; line-height: 1.5;">${m.message}</div>
-                        <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
-                            ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
+                <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; 
+                                background: ${isAdmin ? '#3b82f6' : 'white'};
+            color: ${isAdmin ? 'white' : '#1e293b'};
+            padding: 10px 16px; border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'};
+            max-width: 80%;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};">
+                <div style="font-size: 0.88rem; line-height: 1.5;">${m.message}</div>
+                    <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
+                        ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
+                </div>
                 `;
             }).join('');
             hist.scrollTop = hist.scrollHeight;
@@ -1956,15 +1959,15 @@
             const hist = document.getElementById('chatHistory');
             const div = document.createElement('div');
             const isAdmin = m.sender === 'Admin';
-            div.style.cssText = `align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; 
-                                background: ${isAdmin ? '#3b82f6' : 'white'}; 
-                                color: ${isAdmin ? 'white' : '#1e293b'}; padding: 10px 16px; 
-                                border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; max-width: 80%; 
-                                box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};`;
+            div.style.cssText = `align-self: ${isAdmin ? 'flex-end' : 'flex-start'};
+            background: ${isAdmin ? '#3b82f6' : 'white'};
+            color: ${isAdmin ? 'white' : '#1e293b'}; padding: 10px 16px;
+            border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; max-width: 80%;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};`;
             div.innerHTML = `<div style="font-size: 0.88rem; line-height: 1.5;">${m.message}</div>
-                             <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
-                                ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                             </div>`;
+                <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
+                    ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>`;
             hist.appendChild(div);
             hist.scrollTop = hist.scrollHeight;
         }
@@ -1990,11 +1993,11 @@
             const q = document.getElementById('chatSearch').value.toLowerCase();
             const filtered = chatUsers.filter(u => u.mobile.includes(q));
             document.getElementById('chatUserList').innerHTML = filtered.map(u => `
-                <div class="msg-row ${currentChatUser && currentChatUser.id === u.id ? 'active' : ''}" onclick="openChat('${u.id}')">
+                    <div class="msg-row ${currentChatUser && currentChatUser.id === u.id ? 'active' : ''}" onclick="openChat('${u.id}')">
                     <div class="msg-row-top"><span class="msg-row-title">${u.mobile}</span></div>
                     <div class="msg-row-preview">${u.username || 'Investor'}</div>
                 </div>
-            `).join('');
+                `).join('');
         }
 
         function renderTabs() {
@@ -2004,7 +2007,7 @@
                 <div class="tab-tag ${t === active ? 'active' : ''}" onclick="switchPage('${t}')">
                     ${PAGE_NAMES[t] || t} ${t !== 'home' ? `<i data-lucide="x" size="12" onclick="event.stopPropagation(); closeTab('${t}')"></i>` : ''}
                 </div>
-            `).join('');
+                `).join('');
             lucide.createIcons();
         }
 
@@ -2120,16 +2123,16 @@
             showLoader(true);
             const client = DB.getClient();
             const ext = file.name.split('.').pop();
-            const filePath = `kyc/${targetKycUser}_${side}_${Date.now()}.${ext}`;
+            const filePath = `kyc / ${targetKycUser}_${side}_${Date.now()}.${ext} `;
 
             try {
                 const { data, error } = await client.storage.from('kyc').upload(filePath, file);
                 if (error) throw error;
 
                 const { data: { publicUrl } } = client.storage.from('kyc').getPublicUrl(filePath);
-                document.getElementById(`ek_${side}_img`).src = publicUrl;
-                document.getElementById(`ek_${side}_img`).style.display = 'block';
-                document.getElementById(`ek_${side}_plus`).style.display = 'none';
+                document.getElementById(`ek_${side} _img`).src = publicUrl;
+                document.getElementById(`ek_${side} _img`).style.display = 'block';
+                document.getElementById(`ek_${side} _plus`).style.display = 'none';
                 alert(`Upload Successful: ${side} side updated.`);
             } catch (e) {
                 console.error(e);
@@ -2140,18 +2143,46 @@
         }
 
         function removeKycImg(side) {
-            document.getElementById(`ek_${side}_img`).src = '';
-            document.getElementById(`ek_${side}_img`).style.display = 'none';
-            document.getElementById(`ek_${side}_plus`).style.display = 'block';
+            document.getElementById(`ek_${side} _img`).src = '';
+            document.getElementById(`ek_${side} _img`).style.display = 'none';
+            document.getElementById(`ek_${side} _plus`).style.display = 'block';
         }
 
         async function sendMsg() {
             const tid = document.getElementById('msgTarget').value;
-            const m = JSON.stringify({ title: document.getElementById('msgTitle').value, body: document.getElementById('msgBody').value });
+            const title = document.getElementById('msgTitle').value;
+            const body = document.getElementById('msgBody').value;
+
+            if (!title || !body) { alert("Please enter both title and message content."); return; }
+
+            // Use 'Admin' sender to satisfy DB constraint, but add flag to distinguish from Chat
+            const m = JSON.stringify({ title: title, body: body, is_notification: true });
             showLoader(true);
             const c = DB.getClient();
-            if (tid === 'all') await c.from('messages').insert(allUsers.map(u => ({ user_id: u.id, message: m, sender: 'Admin' })));
-            else await c.from('messages').insert({ user_id: parseInt(tid), message: m, sender: 'Admin' });
+
+            let error = null;
+            try {
+                if (tid === 'all') {
+                    // Batch insert could be large, but usually okay for < 1000
+                    const { error: e } = await c.from('messages').insert(allUsers.map(u => ({ user_id: u.id, message: m, sender: 'Admin' })));
+                    error = e;
+                } else {
+                    const { error: e } = await c.from('messages').insert({ user_id: parseInt(tid), message: m, sender: 'Admin' });
+                    error = e;
+                }
+            } catch (err) {
+                error = err;
+            }
+
+            showLoader(false);
+
+            if (error) {
+                console.error("Send Notification Error:", error);
+                alert("Failed to send notification: " + (error.message || error));
+                return;
+            }
+
+            alert("Notification sent successfully to User(s)!");
             document.getElementById('msgModal').style.display = 'none';
             init();
         }
