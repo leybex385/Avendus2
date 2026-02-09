@@ -848,13 +848,22 @@
                         <i data-lucide="file-check" size="18"></i> View KYC
                     </div>
                 </div>
-                <div class="settings-item" onclick="openResetPassword()">
+                <div class="settings-item" onclick="toggleSecurityMenu()">
                     <div class="settings-item-icon"><i data-lucide="lock" size="20"></i></div>
                     <div class="settings-item-info">
                         <div class="settings-item-title">Security</div>
                         <div class="settings-item-desc">Update your system security settings.</div>
                     </div>
-                    <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                    <i data-lucide="chevron-down" id="securityChevron" class="settings-chevron" size="18"
+                        style="transition: transform 0.2s;"></i>
+                </div>
+                <div id="securitySubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openWithdrawalPinModal()">
+                        <i data-lucide="shield-check" size="18"></i> Withdrawal PIN
+                    </div>
+                    <div class="submenu-item" onclick="openResetPassword()">
+                        <i data-lucide="key" size="18"></i> Change Login Password
+                    </div>
                 </div>
                 <div class="settings-item" onclick="window.location.href='bank_accounts.html'">
                     <div class="settings-item-icon"><i data-lucide="landmark" size="20"></i></div>
@@ -872,13 +881,7 @@
                     </div>
                     <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
                 </div>
-                <div class="settings-item" onclick="alert('Connection Status: Strong (14ms)')">
-                    <div class="settings-item-icon"><i data-lucide="search" size="20"></i></div>
-                    <div class="settings-item-info">
-                        <div class="settings-item-title">Test Connection</div>
-                        <div class="settings-item-desc">Test and Diagnosis</div>
-                    </div>
-                </div>
+
             </div>
             <div class="logout-btn-container">
                 <button class="logout-btn" onclick="DB.logout()">Logout</button>
@@ -906,13 +909,13 @@
     </div>
 
     <!-- Reset Password Modal (Logged-In) -->
-    <div id="resetPasswordModal" class="settings-modal" onclick="if(event.target == this) closeResetPassword()">
-        <div class="settings-content" style="max-width: 450px;">
-            <button class="settings-close" onclick="closeResetPassword()"><i data-lucide="x" size="24"></i></button>
-            <div class="settings-header" style="margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b;">Reset Password</h2>
+    <div id="resetPasswordModal" class="center-popup-modal" onclick="if(event.target == this) closeResetPassword()">
+        <div class="center-popup-content" style="max-width: 450px;">
+            <div class="popup-header">
+                <h2>Reset Password</h2>
+                <button class="popup-close" onclick="closeResetPassword()"><i data-lucide="x" size="24"></i></button>
             </div>
-            <div style="padding: 1rem 0;">
+            <div class="popup-body">
                 <div class="reg-input-group" style="margin-bottom: 1.5rem;">
                     <label
                         style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Current
@@ -957,392 +960,445 @@
         </div>
     </div>
 
-    <!-- Avatar Modal -->
-    <div id="avatarModal" class="center-popup-modal">
-        <div class="center-popup-content avatar-form" style="max-width: 400px;">
-            <div class="popup-header"
-                style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
-                <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
-            </div>
-            <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
-                <div class="avatar-preview-lg" id="avatarPreviewContainer"
-                    onclick="document.getElementById('avatarInput').click()">
-                    <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
-                    <img id="avatarPreviewImg" src="" style="display:none;">
-                    <div class="avatar-change-overlay">Change Image</div>
-                </div>
-                <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
-                <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                    <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
-                    <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- KYC Modal -->
-    <div id="kycModal" class="center-popup-modal">
-        <div class="center-popup-content">
+    <!-- Withdrawal PIN Modal -->
+    <div id="withdrawalPinModal" class="center-popup-modal"
+        onclick="if(event.target == this) closeWithdrawalPinModal()">
+        <div class="center-popup-content" style="max-width: 450px;">
             <div class="popup-header">
-                <h2>View KYC</h2>
-                <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+                <h2 id="wpModalTitle">Withdrawal PIN</h2>
+                <button class="popup-close" onclick="closeWithdrawalPinModal()"><i data-lucide="x"
+                        size="24"></i></button>
             </div>
             <div class="popup-body">
-                <div class="kyc-form-grid">
-                    <div class="kyc-field-label">Full Name</div>
-                    <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
-                    <div class="kyc-field-label">Mobile Number</div>
-                    <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
-                    <div class="kyc-field-label">ID Number</div>
-                    <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
-                    <div class="kyc-field-label">Submitted On</div>
-                    <input type="text" id="kycSubmitted" class="kyc-field-input" readonly style="background: #f8fafc;">
-                    <div class="kyc-field-label">Approval Status</div>
-                    <input type="text" id="kycApproved" class="kyc-field-input" readonly style="background: #f8fafc;">
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
-                    <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
-                        <div class="plus-icon">+ Front</div>
-                        <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
-                        <input type="file" id="kycFrontInput" hidden
-                            onchange="previewKYCImage(this, 'kycFrontPreview')">
+                <p id="wpModalDesc" style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">Set or update your
+                    4-6 digit withdrawal PIN.</p>
+                <div style="padding: 1rem 0;">
+                    <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                            Withdrawal PIN (4-6 digits)</label>
+                        <input type="password" id="wpNewPin" class="reg-input" maxlength="6" pattern="\d*"
+                            inputmode="numeric" placeholder="Enter New PIN"
+                            style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
                     </div>
-                    <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
-                        <div class="plus-icon">+ Back</div>
-                        <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
-                        <input type="file" id="kycBackInput" hidden onchange="previewKYCImage(this, 'kycBackPreview')">
+                    <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Confirm
+                            New PIN</label>
+                        <input type="password" id="wpConfirmPin" class="reg-input" maxlength="6" pattern="\d*"
+                            inputmode="numeric" placeholder="Confirm New PIN"
+                            style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
                     </div>
+                    <div class="reg-input-group" style="margin-bottom: 2rem;">
+                        <label
+                            style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Verify
+                            Login Password</label>
+                        <div class="reg-password-wrapper" style="position: relative;">
+                            <input type="password" id="wpLoginPass" class="reg-input" placeholder="Enter Login Password"
+                                style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                            <i data-lucide="eye-off"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                                onclick="toggleInternalPass('wpLoginPass', this)"></i>
+                        </div>
+                    </div>
+                    <button id="wpSubmitBtn" class="logout-btn" style="background: #fb923c;"
+                        onclick="handleWithdrawalPinSubmit()">Update
+                        Withdrawal PIN</button>
+                    <button class="logout-btn" style="background: #f1f5f9; color: #64748b; margin-top: 1rem;"
+                        onclick="closeWithdrawalPinModal()">Cancel</button>
                 </div>
-                <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
-                    Verification</button>
             </div>
         </div>
-    </div>
 
-    <script src="script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            if (typeof initCarousel === 'function') initCarousel();
-            checkAuthState();
-            syncUserData();
+        <!-- Avatar Modal -->
+        <div id="avatarModal" class="center-popup-modal">
+            <div class="center-popup-content avatar-form" style="max-width: 400px;">
+                <div class="popup-header"
+                    style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
+                    <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
+                </div>
+                <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
+                    <div class="avatar-preview-lg" id="avatarPreviewContainer"
+                        onclick="document.getElementById('avatarInput').click()">
+                        <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
+                        <img id="avatarPreviewImg" src="" style="display:none;">
+                        <div class="avatar-change-overlay">Change Image</div>
+                    </div>
+                    <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
+                    <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
+                        <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            // Recommendation Toggle
-            const recHeader = document.getElementById('recommendationHeader');
-            const recList = document.getElementById('recommendationList');
-            const recChevron = document.getElementById('recommendationChevron');
-            if (recHeader && recList) {
-                recHeader.addEventListener('click', () => {
-                    const isHidden = recList.style.display === 'none';
-                    if (isHidden) {
-                        recList.style.display = 'block';
-                        setTimeout(() => {
-                            recList.style.maxHeight = '2000px';
-                            if (recChevron) recChevron.style.transform = 'rotate(180deg)';
-                        }, 10);
-                    } else {
-                        recList.style.maxHeight = '0';
-                        if (recChevron) recChevron.style.transform = 'rotate(0deg)';
-                        setTimeout(() => recList.style.display = 'none', 400);
-                    }
-                });
-            }
+        <!-- KYC Modal -->
+        <div id="kycModal" class="center-popup-modal">
+            <div class="center-popup-content">
+                <div class="popup-header">
+                    <h2>View KYC</h2>
+                    <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+                </div>
+                <div class="popup-body">
+                    <div class="kyc-form-grid">
+                        <div class="kyc-field-label">Full Name</div>
+                        <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
+                        <div class="kyc-field-label">Mobile Number</div>
+                        <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
+                        <div class="kyc-field-label">ID Number</div>
+                        <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
+                        <div class="kyc-field-label">Submitted On</div>
+                        <input type="text" id="kycSubmitted" class="kyc-field-input" readonly
+                            style="background: #f8fafc;">
+                        <div class="kyc-field-label">Approval Status</div>
+                        <input type="text" id="kycApproved" class="kyc-field-input" readonly
+                            style="background: #f8fafc;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                        <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
+                            <div class="plus-icon">+ Front</div>
+                            <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                            <input type="file" id="kycFrontInput" hidden
+                                onchange="previewKYCImage(this, 'kycFrontPreview')">
+                        </div>
+                        <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
+                            <div class="plus-icon">+ Back</div>
+                            <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                            <input type="file" id="kycBackInput" hidden
+                                onchange="previewKYCImage(this, 'kycBackPreview')">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
+                        Verification</button>
+                </div>
+            </div>
+        </div>
 
-            // Persist CS Modal State
-            if (localStorage.getItem('avendus_cs_open') === 'true') {
-                window.openCS();
-            }
-        });
+        <script src="script.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                lucide.createIcons();
+                if (typeof initCarousel === 'function') initCarousel();
+                checkAuthState();
+                syncUserData();
 
-        function checkAuthState() {
-            const user = DB.getCurrentUser();
-            const loggedIn = !!user;
-            const portBar = document.getElementById('portfolioBar');
-            if (portBar) portBar.style.display = loggedIn ? 'flex' : 'none';
-            const promo = document.getElementById('promoActions');
-            if (promo) promo.style.display = loggedIn ? 'none' : 'flex';
-
-            if (loggedIn) {
-                // Ensure interaction has happened for audio
-                setTimeout(() => {
-                    startChatListener();
-                    updateCSRVisibility();
-                }, 1000);
-            }
-        }
-
-        function playNotificationSound() {
-            try {
-                // More reliable notification sound
-                const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
-                audio.volume = 0.5;
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(e => console.log("Audio blocked. Interact with page first."));
-                }
-            } catch (e) { }
-        }
-
-        window.openSettings = () => {
-            const sm = document.getElementById('settingsModal');
-            if (sm) sm.style.display = 'flex';
-            lucide.createIcons();
-        };
-        window.closeSettings = () => {
-            const sm = document.getElementById('settingsModal');
-            if (sm) sm.style.display = 'none';
-        };
-
-        window.syncUserData = async function () {
-            const user = DB.getCurrentUser();
-            if (!user) return;
-
-            const setName = document.querySelector('.settings-name');
-            const greetingName = document.querySelector('.user-text h3');
-            const setPhone = document.querySelector('.settings-phone');
-            const setVip = document.querySelector('.s-badge.vip');
-            const setCredit = document.querySelector('.s-badge.credit');
-
-            if (setName) setName.textContent = user.full_name || 'Set Name';
-            if (greetingName) greetingName.textContent = user.full_name || user.mobile;
-            if (setPhone) setPhone.textContent = user.mobile;
-
-            const avatars = document.querySelectorAll('.user-avatar, .avatar-circle');
-            const renderAvatar = (url) => {
-                avatars.forEach(av => {
-                    if (url) av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-                    else av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
-                });
-            };
-            if (user.avatar_url) renderAvatar(user.avatar_url);
-
-            const client = DB.getClient();
-            if (client) {
-                try {
-                    const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
-                    if (dbUser) {
-                        let changed = false;
-                        if (dbUser.avatar_url && dbUser.avatar_url !== user.avatar_url) { user.avatar_url = dbUser.avatar_url; changed = true; }
-                        if (dbUser.full_name && dbUser.full_name !== user.full_name) { user.full_name = dbUser.full_name; changed = true; }
-
-                        if (changed) {
-                            localStorage.setItem('avendus_current_user', JSON.stringify(user));
-                            renderAvatar(user.avatar_url);
-                            if (setName) setName.textContent = user.full_name;
-                            if (greetingName) greetingName.textContent = user.full_name;
+                // Recommendation Toggle
+                const recHeader = document.getElementById('recommendationHeader');
+                const recList = document.getElementById('recommendationList');
+                const recChevron = document.getElementById('recommendationChevron');
+                if (recHeader && recList) {
+                    recHeader.addEventListener('click', () => {
+                        const isHidden = recList.style.display === 'none';
+                        if (isHidden) {
+                            recList.style.display = 'block';
+                            setTimeout(() => {
+                                recList.style.maxHeight = '2000px';
+                                if (recChevron) recChevron.style.transform = 'rotate(180deg)';
+                            }, 10);
+                        } else {
+                            recList.style.maxHeight = '0';
+                            if (recChevron) recChevron.style.transform = 'rotate(0deg)';
+                            setTimeout(() => recList.style.display = 'none', 400);
                         }
+                    });
+                }
 
-                        if (setVip) setVip.innerHTML = `<i data-lucide="shield-check" size="18"></i> VIP: ${dbUser.vip || 0}`;
-
-                        let creditScore = dbUser.credit_score;
-                        if (creditScore === undefined || creditScore === null || creditScore === 'undefined') creditScore = 100;
-                        if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
-
-                        const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
-                        const balanceEls = document.querySelectorAll('.stat-value.green');
-                        if (balanceEls.length > 0) balanceEls[0].textContent = fmt((dbUser.balance || 0) + (dbUser.invested || 0));
-                        const investedEls = document.querySelectorAll('.stat-value.blue');
-                        if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
-
-                        lucide.createIcons();
-                    }
-                } catch (e) { }
-            }
-        };
-
-        // Customer Service
-        let isChatSubscribed = false;
-        window.openCS = () => {
-            closeSettings();
-            const modal = document.getElementById('csModal');
-            if (modal) modal.style.display = 'flex';
-            localStorage.setItem('avendus_cs_open', 'true');
-            loadCSMessages();
-        };
-        window.closeCS = () => {
-            document.getElementById('csModal').style.display = 'none';
-            localStorage.setItem('avendus_cs_open', 'false');
-        };
-
-        async function loadCSMessages() {
-            const user = DB.getCurrentUser();
-            const targetBox = document.getElementById('chatBox');
-            if (!user || !targetBox) return;
-
-            const msgs = await DB.getMessages(user.id);
-            renderMessages(msgs);
-
-            // Clear badges when chat is opened
-            const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
-            badges.forEach(b => {
-                if (b) {
-                    b.style.display = 'none';
-                    b.textContent = '0';
+                // Persist CS Modal State
+                if (localStorage.getItem('avendus_cs_open') === 'true') {
+                    window.openCS();
                 }
             });
 
-            targetBox.scrollTop = targetBox.scrollHeight;
-        }
+            function checkAuthState() {
+                const user = DB.getCurrentUser();
+                const loggedIn = !!user;
+                const portBar = document.getElementById('portfolioBar');
+                if (portBar) portBar.style.display = loggedIn ? 'flex' : 'none';
+                const promo = document.getElementById('promoActions');
+                if (promo) promo.style.display = loggedIn ? 'none' : 'flex';
 
-        async function startChatListener() {
-            const user = DB.getCurrentUser();
-            if (!user || isChatSubscribed) return;
-
-            const client = DB.getClient();
-            if (!client) return;
-
-            client.channel('public:messages')
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'messages',
-                    filter: `user_id=eq.${user.id}`
-                }, payload => {
-                    const m = payload.new;
-                    const isUser = m.sender === 'User' || m.sender === 'user';
-
-                    // Always append if modal is open
-                    const modal = document.getElementById('csModal');
-                    if (modal && modal.style.display === 'flex') {
-                        appendSingleMessage(m);
-                    }
-
-                    // Notify if from Support
-                    if (!isUser) {
-                        playNotificationSound();
-                        const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
-                        badges.forEach(badge => {
-                            if (badge && (modal && modal.style.display !== 'flex')) {
-                                const count = parseInt(badge.textContent || '0') + 1;
-                                badge.textContent = count;
-                                badge.style.display = 'block';
-                            }
-                        });
-                    }
-                }).subscribe();
-
-            isChatSubscribed = true;
-        }
-
-        function renderMessages(msgs) {
-            const targetBox = document.getElementById('chatBox');
-            targetBox.innerHTML = '';
-            msgs.forEach(m => appendSingleMessage(m));
-        }
-
-        function appendSingleMessage(m) {
-            const targetBox = document.getElementById('chatBox');
-            if (!targetBox) return;
-
-            const div = document.createElement('div');
-            const isUser = m.sender === 'User' || m.sender === 'user';
-
-            div.className = `chat-bubble ${isUser ? 'user' : 'support'}`;
-
-            // Handle JSON messages if admin sends structured data
-            let content = m.message;
-            try {
-                if (content.startsWith('{')) {
-                    const parsed = JSON.parse(content);
-                    content = `<strong>${parsed.title || ''}</strong><br>${parsed.body || parsed.message || ''}`;
+                if (loggedIn) {
+                    // Ensure interaction has happened for audio
+                    setTimeout(() => {
+                        startChatListener();
+                        updateCSRVisibility();
+                    }, 1000);
                 }
-            } catch (e) { }
+            }
 
-            div.innerHTML = `
+            function playNotificationSound() {
+                try {
+                    // More reliable notification sound
+                    const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+                    audio.volume = 0.5;
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.log("Audio blocked. Interact with page first."));
+                    }
+                } catch (e) { }
+            }
+
+            window.openSettings = () => {
+                const sm = document.getElementById('settingsModal');
+                if (sm) sm.style.display = 'flex';
+                lucide.createIcons();
+            };
+            window.closeSettings = () => {
+                const sm = document.getElementById('settingsModal');
+                if (sm) sm.style.display = 'none';
+            };
+
+            window.syncUserData = async function () {
+                const user = DB.getCurrentUser();
+                if (!user) return;
+
+                const setName = document.querySelector('.settings-name');
+                const greetingName = document.querySelector('.user-text h3');
+                const setPhone = document.querySelector('.settings-phone');
+                const setVip = document.querySelector('.s-badge.vip');
+                const setCredit = document.querySelector('.s-badge.credit');
+
+                if (setName) setName.textContent = user.full_name || 'Set Name';
+                if (greetingName) greetingName.textContent = user.full_name || user.mobile;
+                if (setPhone) setPhone.textContent = user.mobile;
+
+                const avatars = document.querySelectorAll('.user-avatar, .avatar-circle');
+                const renderAvatar = (url) => {
+                    avatars.forEach(av => {
+                        if (url) av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                        else av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
+                    });
+                };
+                if (user.avatar_url) renderAvatar(user.avatar_url);
+
+                const client = DB.getClient();
+                if (client) {
+                    try {
+                        const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
+                        if (dbUser) {
+                            let changed = false;
+                            if (dbUser.avatar_url && dbUser.avatar_url !== user.avatar_url) { user.avatar_url = dbUser.avatar_url; changed = true; }
+                            if (dbUser.full_name && dbUser.full_name !== user.full_name) { user.full_name = dbUser.full_name; changed = true; }
+
+                            if (changed) {
+                                localStorage.setItem('avendus_current_user', JSON.stringify(user));
+                                renderAvatar(user.avatar_url);
+                                if (setName) setName.textContent = user.full_name;
+                                if (greetingName) greetingName.textContent = user.full_name;
+                            }
+
+                            if (setVip) setVip.innerHTML = `<i data-lucide="shield-check" size="18"></i> VIP: ${dbUser.vip || 0}`;
+
+                            let creditScore = dbUser.credit_score;
+                            if (creditScore === undefined || creditScore === null || creditScore === 'undefined') creditScore = 100;
+                            if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
+
+                            const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+                            const balanceEls = document.querySelectorAll('.stat-value.green');
+                            if (balanceEls.length > 0) balanceEls[0].textContent = fmt((dbUser.balance || 0) + (dbUser.invested || 0));
+                            const investedEls = document.querySelectorAll('.stat-value.blue');
+                            if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
+
+                            lucide.createIcons();
+                        }
+                    } catch (e) { }
+                }
+            };
+
+            // Customer Service
+            let isChatSubscribed = false;
+            window.openCS = () => {
+                closeSettings();
+                const modal = document.getElementById('csModal');
+                if (modal) modal.style.display = 'flex';
+                localStorage.setItem('avendus_cs_open', 'true');
+                loadCSMessages();
+            };
+            window.closeCS = () => {
+                document.getElementById('csModal').style.display = 'none';
+                localStorage.setItem('avendus_cs_open', 'false');
+            };
+
+            async function loadCSMessages() {
+                const user = DB.getCurrentUser();
+                const targetBox = document.getElementById('chatBox');
+                if (!user || !targetBox) return;
+
+                const msgs = await DB.getMessages(user.id);
+                renderMessages(msgs);
+
+                // Clear badges when chat is opened
+                const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
+                badges.forEach(b => {
+                    if (b) {
+                        b.style.display = 'none';
+                        b.textContent = '0';
+                    }
+                });
+
+                targetBox.scrollTop = targetBox.scrollHeight;
+            }
+
+            async function startChatListener() {
+                const user = DB.getCurrentUser();
+                if (!user || isChatSubscribed) return;
+
+                const client = DB.getClient();
+                if (!client) return;
+
+                client.channel('public:messages')
+                    .on('postgres_changes', {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'messages',
+                        filter: `user_id=eq.${user.id}`
+                    }, payload => {
+                        const m = payload.new;
+                        const isUser = m.sender === 'User' || m.sender === 'user';
+
+                        // Always append if modal is open
+                        const modal = document.getElementById('csModal');
+                        if (modal && modal.style.display === 'flex') {
+                            appendSingleMessage(m);
+                        }
+
+                        // Notify if from Support
+                        if (!isUser) {
+                            playNotificationSound();
+                            const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
+                            badges.forEach(badge => {
+                                if (badge && (modal && modal.style.display !== 'flex')) {
+                                    const count = parseInt(badge.textContent || '0') + 1;
+                                    badge.textContent = count;
+                                    badge.style.display = 'block';
+                                }
+                            });
+                        }
+                    }).subscribe();
+
+                isChatSubscribed = true;
+            }
+
+            function renderMessages(msgs) {
+                const targetBox = document.getElementById('chatBox');
+                targetBox.innerHTML = '';
+                msgs.forEach(m => appendSingleMessage(m));
+            }
+
+            function appendSingleMessage(m) {
+                const targetBox = document.getElementById('chatBox');
+                if (!targetBox) return;
+
+                const div = document.createElement('div');
+                const isUser = m.sender === 'User' || m.sender === 'user';
+
+                div.className = `chat-bubble ${isUser ? 'user' : 'support'}`;
+
+                // Handle JSON messages if admin sends structured data
+                let content = m.message;
+                try {
+                    if (content.startsWith('{')) {
+                        const parsed = JSON.parse(content);
+                        content = `<strong>${parsed.title || ''}</strong><br>${parsed.body || parsed.message || ''}`;
+                    }
+                } catch (e) { }
+
+                div.innerHTML = `
                 <div class="message-text">${content}</div>
                 <div class="message-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
             `;
 
-            targetBox.appendChild(div);
-            targetBox.scrollTop = targetBox.scrollHeight;
-        }
-
-        window.sendCSMessage = async () => {
-            const input = document.getElementById('csInput');
-            const text = input.value.trim();
-            const user = DB.getCurrentUser();
-            if (!text || !user) return;
-
-            input.value = '';
-            const { success, error } = await DB.sendMessage(user.id, text, 'User');
-            if (!success) {
-                console.error("Chat Error:", error);
-                alert("Message failed to send. Please try again.");
+                targetBox.appendChild(div);
+                targetBox.scrollTop = targetBox.scrollHeight;
             }
-        };
 
-        // Allow 'Enter' key to send message
-        document.getElementById('csInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') window.sendCSMessage();
-        });
+            window.sendCSMessage = async () => {
+                const input = document.getElementById('csInput');
+                const text = input.value.trim();
+                const user = DB.getCurrentUser();
+                if (!text || !user) return;
 
-        window.handleGuestClick = (url) => {
-            if (DB.getCurrentUser()) { if (url && url !== '#') window.location.href = url; }
-            else showAlert();
-        };
+                input.value = '';
+                const { success, error } = await DB.sendMessage(user.id, text, 'User');
+                if (!success) {
+                    console.error("Chat Error:", error);
+                    alert("Message failed to send. Please try again.");
+                }
+            };
 
-        window.handleGuestTabClick = (type) => {
-            const user = DB.getCurrentUser();
-            if (!user) {
-                showAlert();
-                return;
+            // Allow 'Enter' key to send message
+            document.getElementById('csInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') window.sendCSMessage();
+            });
+
+            window.handleGuestClick = (url) => {
+                if (DB.getCurrentUser()) { if (url && url !== '#') window.location.href = url; }
+                else showAlert();
+            };
+
+            window.handleGuestTabClick = (type) => {
+                const user = DB.getCurrentUser();
+                if (!user) {
+                    showAlert();
+                    return;
+                }
+                if (type === 'me') {
+                    window.location.href = 'market.html?view=me';
+                } else if (type === 'portfolio') {
+                    window.location.href = 'market.html?view=portfolio';
+                }
+            };
+
+            function showAlert() {
+                const container = document.getElementById('topAlertContainer');
+                if (container) {
+                    container.style.display = 'block';
+                    setTimeout(() => container.style.display = 'none', 5000);
+                }
             }
-            if (type === 'me') {
-                window.location.href = 'market.html?view=me';
-            } else if (type === 'portfolio') {
-                window.location.href = 'market.html?view=portfolio';
-            }
-        };
 
-        function showAlert() {
-            const container = document.getElementById('topAlertContainer');
-            if (container) {
-                container.style.display = 'block';
-                setTimeout(() => container.style.display = 'none', 5000);
-            }
-        }
+            window.previewKYCImage = (input, previewId) => {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.getElementById(previewId);
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        img.parentElement.classList.add('has-image');
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
 
-        window.previewKYCImage = (input, previewId) => {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.getElementById(previewId);
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    img.parentElement.classList.add('has-image');
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        };
+            // Note: openAvatarModal, closeAvatarModal, toggleUserProfile, openKYCModal, etc. 
+            // are handled by script.js. No need to redefine them here unless specific behavior is needed.
+            // If they are missing from script.js, add them there or define here.
 
-        // Note: openAvatarModal, closeAvatarModal, toggleUserProfile, openKYCModal, etc. 
-        // are handled by script.js. No need to redefine them here unless specific behavior is needed.
-        // If they are missing from script.js, add them there or define here.
+            window.toggleMessageCenter = () => {
+                document.getElementById('messageCenter').classList.toggle('active');
+                document.getElementById('messageCenterOverlay').classList.toggle('active');
+            };
+        </script>
 
-        window.toggleMessageCenter = () => {
-            document.getElementById('messageCenter').classList.toggle('active');
-            document.getElementById('messageCenterOverlay').classList.toggle('active');
-        };
-    </script>
+        <!-- Floating CSR Button -->
+        <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: none;">
+            <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
+            <i data-lucide="headset"></i>
+            <span>Support</span>
+        </div>
 
-    <!-- Floating CSR Button -->
-    <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: none;">
-        <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
-        <i data-lucide="headset"></i>
-        <span>Support</span>
-    </div>
-
-    <script>
-        // Update CSR visibility based on login
-        const updateCSRVisibility = () => {
-            const user = DB.getCurrentUser();
-            const btn = document.getElementById('floatingCSR');
-            if (btn) btn.style.display = user ? 'flex' : 'none';
-        };
-        // Initial check
-        updateCSRVisibility();
-    </script>
+        <script>
+            // Update CSR visibility based on login
+            const updateCSRVisibility = () => {
+                const user = DB.getCurrentUser();
+                const btn = document.getElementById('floatingCSR');
+                if (btn) btn.style.display = user ? 'flex' : 'none';
+            };
+            // Initial check
+            updateCSRVisibility();
+        </script>
 </body>
 
 </html>
