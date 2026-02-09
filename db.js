@@ -212,18 +212,22 @@ window.DB = {
         const client = this.getClient();
         const packet = { user_id: userId, ...accountData }; // Simplified packet
 
-        // 1. Try Online First
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+        // Since user changed DB column to TEXT, we can accept ANY ID now.
+        // No more UUID restriction.
 
-        if (isUUID) {
-            const { data, error } = await client.from('bank_accounts').insert([packet]);
-            if (!error) return { success: true };
+        const { data, error } = await client
+            .from('bank_accounts')
+            .insert([packet]);
+
+        if (error) {
+            console.error("Supabase Error:", error);
+            // Fallback to offline IF online actually fails (network/server error)
             console.warn("Online Add Failed, saving offline:", error);
+            this.saveOfflineBank(userId, accountData);
+            return { success: true, offline: true };
+        } else {
+            return { success: true };
         }
-
-        // 2. Fallback to Offline
-        this.saveOfflineBank(userId, accountData);
-        return { success: true, offline: true };
     },
 
     async updateBankAccount(id, accountData) {
