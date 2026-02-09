@@ -78,6 +78,76 @@ window.closeResetPassword = function () {
     if (el) el.style.display = 'none';
 };
 
+window.toggleInternalPass = function (id, el) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        el.setAttribute('data-lucide', 'eye');
+    } else {
+        input.type = 'password';
+        el.setAttribute('data-lucide', 'eye-off');
+    }
+    if (window.lucide) lucide.createIcons();
+};
+
+window.handleInternalReset = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) {
+        alert("Please login first.");
+        return;
+    }
+
+    const currentPass = document.getElementById('currentPass')?.value;
+    const newPass = document.getElementById('newPassInternal')?.value;
+    const confirmPass = document.getElementById('confirmPassInternal')?.value;
+
+    if (!currentPass || !newPass || !confirmPass) {
+        alert("All fields are required.");
+        return;
+    }
+
+    if (currentPass !== user.password) {
+        alert("Current password is incorrect.");
+        return;
+    }
+
+    if (newPass !== confirmPass) {
+        alert("New passwords do not match.");
+        return;
+    }
+
+    if (newPass.length < 6) {
+        alert("New password must be at least 6 characters.");
+        return;
+    }
+
+    const btn = document.querySelector('#resetPasswordModal .logout-btn');
+    const originalText = btn ? btn.textContent : 'Update Password';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Updating...';
+    }
+
+    try {
+        const result = await window.DB.updateUser(user.id, { password: newPass });
+        if (result.success) {
+            alert("Password updated successfully! Please login again.");
+            window.DB.logout();
+        } else {
+            alert("Failed to update password: " + (result.error?.message || "Unknown error"));
+        }
+    } catch (e) {
+        console.error(e);
+        alert("An error occurred. Please try again.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+};
+
 window.handleGuestClick = function (url) {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (user) {
