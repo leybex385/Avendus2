@@ -290,31 +290,9 @@
             <div id="stockContent" class="market-main-container">
                 <!-- Left Column: Chart -->
                 <div class="market-left-col">
-                    <div class="main-index-view">
-                        <div class="price-hero">
-                            <div>
-                                <div id="chartTitle"
-                                    style="font-weight: 600; font-size: 1.1rem; color: #1e293b; margin-bottom: 0.5rem;">
-                                    Loading...</div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <h2 id="indexPrice">--.--</h2>
-                                    <div id="heroChange" class="index-chg" style="font-size: 1.1rem; margin-left:1rem;">
-                                        Live from Chart
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="timeframe-btns">
-                            <button class="tf-btn" onclick="changeInterval('1', this)">1m</button>
-                            <button class="tf-btn" onclick="changeInterval('30', this)">30m</button>
-                            <button class="tf-btn" onclick="changeInterval('60', this)">1h</button>
-                            <button class="tf-btn active" onclick="changeInterval('D', this)">1D</button>
-                            <button class="tf-btn" onclick="changeInterval('W', this)">1W</button>
-                            <button class="tf-btn" onclick="changeInterval('M', this)">1M</button>
-                        </div>
-
-                        <div class="chart-container-realtime">
+                    <div class="main-index-view" style="padding: 0;">
+                        <div class="chart-container-realtime"
+                            style="height: 700px; margin-bottom: 0; border: none; border-radius: 16px; overflow: hidden;">
                             <div id="tradingview_widget" style="height:100%; width:100%;"></div>
                         </div>
                     </div>
@@ -476,7 +454,6 @@
             currentStockName = name;
 
             // Set Titles
-            document.getElementById('chartTitle').innerText = `${name} (${sym})`;
             document.getElementById('bpStockSymbol').innerText = sym;
             document.title = `${name} - Stock Detail`;
 
@@ -490,39 +467,29 @@
                 currentPrice = 1000.00; // Default fallback
             }
             document.getElementById('bpCurrentPrice').innerText = '₹' + currentPrice.toLocaleString('en-IN');
-            document.getElementById('indexPrice').innerText = currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
             updateBuyTotal();
             startSimulation(); // Start the ticker
         }
 
         function loadWidget(symbol) {
-            // Simplified Logic: 
-            // 1. If symbol has .BSE or .NSE, replace dot with colon (Standard TV format)
-            // 2. Otherwise assume BSE (safest default for Indian Stocks)
-
             let tvSymbol = symbol;
             if (symbol.includes('.')) {
-                // e.g. SBIN.BSE -> BSE:SBIN
                 const parts = symbol.split('.');
                 if (parts.length === 2) {
                     tvSymbol = `${parts[1]}:${parts[0]}`;
                 }
             } else if (!symbol.includes(':')) {
-                // e.g. SBIN -> BSE:SBIN
                 tvSymbol = `BSE:${symbol}`;
             }
 
-            console.log("Loading Chart (Simple):", tvSymbol);
-
-            // Ensure container is clean
             const container = document.getElementById('tradingview_widget');
             if (container) container.innerHTML = '';
 
             new TradingView.widget({
                 "autosize": true,
                 "symbol": tvSymbol,
-                "interval": currentInterval,
+                "interval": "D",
                 "timezone": "Asia/Kolkata",
                 "theme": "light",
                 "style": "1",
@@ -531,22 +498,19 @@
                 "enable_publishing": false,
                 "allow_symbol_change": true,
                 "container_id": "tradingview_widget",
-                "hide_side_toolbar": true,
+                "hide_side_toolbar": false,
                 "withdateranges": true,
-                "save_image": false,
+                "save_image": true,
                 "details": true,
                 "hotlist": true,
-                "calendar": false,
-                "studies": ["Volume@tv-basicstudies"]
+                "calendar": true,
+                "show_popup_button": true,
+                "popup_width": "1000",
+                "popup_height": "650",
+                "studies": ["Volume@tv-basicstudies", "MAExp@tv-basicstudies"]
             });
         }
 
-        function changeInterval(interval, btn) {
-            currentInterval = interval;
-            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            loadWidget(currentActiveSymbol);
-        }
 
         // --- Buy Logic ---
         function updateBuyTotal() {
@@ -676,17 +640,20 @@
 
                 // Update UI Prices
                 const elPrice = document.getElementById('bpCurrentPrice');
-                const elIndexPrice = document.getElementById('indexPrice');
-                const elHeroChange = document.getElementById('heroChange');
+                const sdPrice = document.getElementById('sdPrice');
+                const sdSymbol = document.getElementById('sdSymbol');
 
                 if (elPrice) elPrice.innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                if (elIndexPrice) {
-                    elIndexPrice.innerText = currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (sdPrice) sdPrice.innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (sdSymbol) sdSymbol.innerText = currentActiveSymbol;
 
-                    // Simple flash effect
-                    const color = changePct >= 0 ? '#10b981' : '#ef4444';
-                    elIndexPrice.style.color = color;
-                    setTimeout(() => { elIndexPrice.style.color = '#1e293b'; }, 800);
+                // Update Progress on Detail Page (Mock)
+                const sdProgress = document.getElementById('sdProgress');
+                const sdMarker = document.getElementById('sdSliderMarker');
+                if (sdProgress && sdMarker) {
+                    const mockPct = 30 + (Math.random() * 40); // Random wiggle
+                    sdProgress.style.width = mockPct + '%';
+                    sdMarker.style.left = mockPct + '%';
                 }
 
                 // Also update Total Cost if quantity is entered
@@ -698,3 +665,4 @@
 </body>
 
 </html>
+<style>.mini-tf-btn { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s; }.mini-tf-btn.active { background: #1e56a0; color: white; border-color: #1e56a0; }.range-dot, #rangeProgress { transition: all 0.5s ease; }.styled-chart-box { background: white; border-radius: 16px; padding: 1.5rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }</style>
