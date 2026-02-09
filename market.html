@@ -3019,230 +3019,7 @@
             </footer>
         </div>
 
-        <!-- Settings Modal -->
-        <div id="settingsModal" class="settings-modal" onclick="if(event.target == this) closeSettings()">
-            <div class="settings-content">
-                <button class="settings-close" onclick="closeSettings()"><i data-lucide="x" size="24"></i></button>
-                <div class="settings-header">
-                    <div class="avatar-circle">9</div>
-                    <div class="settings-phone">918108038029</div>
-                    <div class="badge-row">
-                        <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
-                        <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
-                    </div>
-                </div>
 
-                <div class="settings-list">
-                    <div class="settings-item" onclick="toggleSettingsAccordion(this, 'userProfileSub')">
-                        <div class="settings-item-icon"><i data-lucide="user" size="20"></i></div>
-                        <div class="settings-item-info">
-                            <div class="settings-item-title">User Profile</div>
-                            <div class="settings-item-desc">Update your profile information.</div>
-                        </div>
-                        <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
-                    </div>
-                    <div id="userProfileSub" class="sub-menu">
-                        <div class="sub-item" onclick="openUpdateAvatar()">
-                            <i data-lucide="user-circle" size="18"></i> Update Avatar
-                        </div>
-                        <div class="sub-item" onclick="location.href='admin_login.html?action=kyc'">
-                            <i data-lucide="contact" size="18"></i> View KYC
-                        </div>
-                    </div>
-
-                    <div class="settings-item" onclick="toggleSettingsAccordion(this, 'securitySub')">
-                        <div class="settings-item-icon"><i data-lucide="lock" size="20"></i></div>
-                        <div class="settings-item-info">
-                            <div class="settings-item-title">Security</div>
-                            <div class="settings-item-desc">Update your system security settings.</div>
-                        </div>
-                        <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
-                    </div>
-                    <div id="securitySub" class="sub-menu">
-                        <div class="sub-item">
-                            <i data-lucide="shield-check" size="18"></i> Withdrawal PIN
-                        </div>
-                        <div class="sub-item" onclick="openInternalResetPassword()">
-                            <i data-lucide="key" size="18"></i> Change Login Password
-                        </div>
-                    </div>
-                    <div class="settings-item" onclick="location.href='bank_accounts.html'">
-                        <div class="settings-item-icon"><i data-lucide="landmark" size="20"></i></div>
-                        <div class="settings-item-info">
-                            <div class="settings-item-title">Bank Accounts</div>
-                            <div class="settings-item-desc">Manage bank accounts and info</div>
-                        </div>
-                    </div>
-                    <div class="settings-item" onclick="openCS()">
-                        <div class="settings-item-icon"><i data-lucide="headset" size="20"></i></div>
-                        <div class="settings-item-info">
-                            <div class="settings-item-title">Customer Service</div>
-                            <div class="settings-item-desc">Contact customer service</div>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-icon"><i data-lucide="search" size="20"></i></div>
-                        <div class="settings-item-info">
-                            <div class="settings-item-title">Test Connection</div>
-                            <div class="settings-item-desc">Test and Diagnosis</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="logout-btn-container">
-                    <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Change Password Modal -->
-        <div id="resetPasswordModal" class="settings-modal"
-            onclick="if(event.target == this) closeInternalResetPassword()">
-            <div class="settings-content" style="max-width: 550px;">
-                <button class="settings-close" onclick="closeInternalResetPassword()"><i data-lucide="x"
-                        size="24"></i></button>
-                <div class="settings-header" style="margin-bottom: 1.5rem;">
-                    <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">Change Login Password</h2>
-                </div>
-
-                <div class="cp-input-group">
-                    <label class="cp-label">Current Login Password <span style="color: #ef4444">*</span></label>
-                    <div style="position: relative;">
-                        <input type="password" id="cpCurrent" class="cp-input">
-                        <i data-lucide="eye-off" class="cp-eye-icon"
-                            onclick="togglePassVisibility('cpCurrent', this)"></i>
-                    </div>
-                </div>
-
-                <div class="cp-input-group">
-                    <label class="cp-label">New Password <span style="color: #ef4444">*</span></label>
-                    <div style="position: relative;">
-                        <input type="password" id="cpNew" class="cp-input">
-                        <i data-lucide="eye-off" class="cp-eye-icon" onclick="togglePassVisibility('cpNew', this)"></i>
-                    </div>
-                </div>
-
-                <div class="cp-input-group">
-                    <label class="cp-label">Confirm New Password <span style="color: #ef4444">*</span></label>
-                    <div style="position: relative;">
-                        <input type="password" id="cpConfirm" class="cp-input">
-                        <i data-lucide="eye-off" class="cp-eye-icon"
-                            onclick="togglePassVisibility('cpConfirm', this)"></i>
-                    </div>
-                </div>
-
-                <div class="cp-warning">
-                    You will need to login again after password changed successfully
-                </div>
-
-                <button id="cpSubmitBtn" class="cp-submit-btn" style="background-color: #fca5a5;"
-                    onclick="submitPasswordChange()">Change Login Password</button>
-            </div>
-        </div>
-
-
-        <!-- Update Avatar Modal -->
-        <div id="updateAvatarModal" class="settings-modal" onclick="if(event.target == this) closeUpdateAvatar()">
-            <div class="settings-content" style="max-width: 500px;">
-                <button class="settings-close" onclick="closeUpdateAvatar()"><i data-lucide="x" size="24"></i></button>
-                <div class="settings-header" style="margin-bottom: 2rem;">
-                    <h2 style="font-size: 1.2rem; font-weight: 700; color: #1e293b;">Update Avatar</h2>
-                </div>
-
-                <div class="avatar-upload-container"
-                    style="flex-direction: row; justify-content: space-around; width: 100%;">
-
-                    <div class="file-input-wrapper">
-                        <button class="btn-choose-file">Choose File</button>
-                        <input type="file" id="avatarInput" class="file-input-actual" accept="image/*"
-                            onchange="previewAvatar(this)">
-                    </div>
-
-                    <div class="avatar-preview-area">
-                        <span class="avatar-preview-label">Avatar Preview</span>
-                        <div class="avatar-preview-circle" id="avatarPreviewCircle">
-                            <span class="avatar-preview-placeholder">Avatar<br>Preview</span>
-                        </div>
-                    </div>
-
-                    <button id="uploadAvatarBtn" class="btn-upload-avatar" onclick="uploadAvatar()">Upload
-                        Avatar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- KYC Modal -->
-        <div id="kycModal" class="settings-modal" onclick="if(event.target == this) closeKYC()">
-            <div class="settings-content" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
-                <button class="settings-close" onclick="closeKYC()"><i data-lucide="x" size="24"></i></button>
-                <div class="settings-header" style="margin-bottom: 1.5rem;">
-                    <h2 style="font-size: 1.2rem; font-weight: 700; color: #1e293b;">View KYC</h2>
-                </div>
-
-                <div class="kyc-section-title">Personal Information</div>
-
-                <div class="kyc-form-group">
-                    <label class="kyc-label">Full Name</label>
-                    <input type="text" id="kycName" class="kyc-input" placeholder="Enter Full Name">
-                </div>
-
-                <div class="kyc-form-group">
-                    <label class="kyc-label">ID Card/Doc's Number</label>
-                    <input type="text" id="kycID" class="kyc-input" placeholder="Enter ID Number">
-                </div>
-
-                <div class="kyc-form-group">
-                    <label class="kyc-label">Mobile No.</label>
-                    <input type="text" id="kycMobile" class="kyc-input" placeholder="Enter Mobile Number">
-                </div>
-
-                <div class="kyc-form-group">
-                    <label class="kyc-label">Submitted On</label>
-                    <input type="text" class="kyc-input" disabled placeholder="">
-                </div>
-
-                <div class="kyc-form-group" style="margin-bottom: 2rem;">
-                    <label class="kyc-label">Approved On</label>
-                    <input type="text" class="kyc-input" disabled placeholder="">
-                </div>
-
-                <div class="kyc-images-row">
-                    <div class="kyc-image-block">
-                        <label class="kyc-label">Front of ID Image:</label>
-                        <div class="kyc-image-upload-box" onclick="document.getElementById('kycFrontInput').click()">
-                            <i data-lucide="plus" class="kyc-plus-icon" id="kycFrontIcon"></i>
-                            <img id="kycFrontPreview" class="kyc-preview-img" alt="Front ID">
-                            <input type="file" id="kycFrontInput" hidden accept="image/*"
-                                onchange="previewKYCImage(this, 'kycFrontPreview', 'kycFrontIcon')">
-                        </div>
-                    </div>
-                    <div class="kyc-image-block">
-                        <label class="kyc-label">Back of ID Image:</label>
-                        <div class="kyc-image-upload-box" onclick="document.getElementById('kycBackInput').click()">
-                            <i data-lucide="plus" class="kyc-plus-icon" id="kycBackIcon"></i>
-                            <img id="kycBackPreview" class="kyc-preview-img" alt="Back ID">
-                            <input type="file" id="kycBackInput" hidden accept="image/*"
-                                onchange="previewKYCImage(this, 'kycBackPreview', 'kycBackIcon')">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="kyc-notice">
-                    <strong>Confidentiality Notice:</strong>
-                    The Know Your Customer (KYC) information provided above is strictly confidential and forms a core
-                    part
-                    of your client profile. It is securely stored and protected in accordance with regulatory
-                    requirements
-                    and our internal data protection policies.
-                    <br><br>
-                    This information will not be disclosed to any third parties without your explicit consent, except
-                    where
-                    required by applicable laws or regulatory authorities.
-                </div>
-
-                <button class="kyc-submit-btn" onclick="submitKYC()">Submit</button>
-            </div>
-        </div>
 
         <script>
             function setActiveNav(element) {
@@ -3955,182 +3732,26 @@
                 else showMarketView();
             });
 
-            // Customer Service Logic
-            let isChatSubscribed = false;
-
-            function openCS() {
-                if (typeof closeSettings === 'function') closeSettings();
-                document.getElementById('csModal').style.display = 'flex';
-                loadCSMessages();
-            }
-
-            function closeCS() {
-                document.getElementById('csModal').style.display = 'none';
-            }
-
-            async function loadCSMessages() {
-                const user = DB.getCurrentUser();
-                if (!user) return;
-
-                const msgs = await DB.getMessages(user.id);
-                const chatBody = document.getElementById('csBody');
-                if (!chatBody) return;
-
-                // Filter out internal notification messages (JSON formatted buttons/stencils)
-                chatBody.innerHTML = msgs.filter(m => {
-                    try {
-                        const p = JSON.parse(m.message);
-                        return p.title === undefined;
-                    } catch (e) { return true; }
-                }).map(m => {
-                    const type = m.sender === 'User' ? 'user' : 'service';
-                    const avatarUrl = type === 'service'
-                        ? 'https://api.dicebear.com/7.x/bottts/svg?seed=Support'
-                        : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.username;
-
-                    const timeStr = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    return `
-                    <div class="cs-msg ${type}">
-                        <div class="cs-msg-avatar">
-                            <img src="${avatarUrl}" alt="avatar">
-                        </div>
-                        <div class="cs-msg-bubble">
-                            ${m.message}
-                            <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 4px; text-align: right;">${timeStr}</div>
-                        </div>
-                    </div>
-                `;
-                }).join('');
-                chatBody.scrollTop = chatBody.scrollHeight;
-
-                if (!isChatSubscribed) {
-                    const client = DB.getClient();
-                    if (client) {
-                        client.channel('public:messages')
-                            .on('postgres_changes', {
-                                event: 'INSERT',
-                                schema: 'public',
-                                table: 'messages',
-                                filter: `user_id=eq.${user.id}`
-                            }, payload => {
-                                const m = payload.new;
-                                // Ignore structured messages (stencils)
-                                try { const p = JSON.parse(m.message); if (p.title !== undefined) return; } catch (e) { }
-
-                                // Prevent duplicates
-                                const items = chatBody.querySelectorAll('.cs-msg-bubble');
-                                for (let item of items) {
-                                    if (item.innerText.includes(m.message)) return;
-                                }
-
-                                addCSMessage(m.sender === 'User' ? 'user' : 'service', m.message,
-                                    new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                            })
-                            .subscribe();
-                        isChatSubscribed = true;
-                    }
-                }
-            }
-
-            function addCSMessage(type, text, time = '') {
-                const chatBody = document.getElementById('csBody');
-                const msgDiv = document.createElement('div');
-                msgDiv.className = `cs-msg ${type}`;
-
-                const user = DB.getCurrentUser();
-                const avatarUrl = type === 'service'
-                    ? 'https://api.dicebear.com/7.x/bottts/svg?seed=Support'
-                    : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (user ? user.username : 'Sharad');
-
-                msgDiv.innerHTML = `
-                <div class="cs-msg-avatar">
-                    <img src="${avatarUrl}" alt="avatar">
-                </div>
-                <div class="cs-msg-bubble">
-                    ${text}
-                    ${time ? `<div style="font-size: 0.7rem; opacity: 0.7; margin-top: 4px; text-align: right;">${time}</div>` : ''}
-                </div>
-            `;
-                chatBody.appendChild(msgDiv);
-                chatBody.scrollTop = chatBody.scrollHeight;
-            }
-
-            let csAttachment = null;
-
-            async function sendCSMessage() {
-                const input = document.getElementById('csInput');
-                const text = input.value.trim();
-                const user = DB.getCurrentUser();
-                if ((!text && !csAttachment) || !user) return;
-
-                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                // Optimistic UI update
-                addCSMessage('user', text, time);
-                input.value = '';
-                document.getElementById('csEmojiPicker').style.display = 'none';
-
-                const res = await DB.sendMessage(user.id, text, 'User');
-                if (!res.success) {
-                    console.error("Failed to send message:", res.error);
-                    // Could show a "Failed" badge here
-                }
-            }
-
-            function csTool(action) {
-                if (action === 'emoji') {
-                    const picker = document.getElementById('csEmojiPicker');
-                    picker.style.display = picker.style.display === 'grid' ? 'none' : 'grid';
-                } else if (action === 'image' || action === 'file' || action === 'video') {
-                    document.getElementById('csFileInput').click();
-                }
-            }
-
-            function addEmoji(emoji) {
-                const input = document.getElementById('csInput');
-                input.value += emoji;
-                input.focus();
-                document.getElementById('csEmojiPicker').style.display = 'none';
-            }
-
-            function handleCSFile(input) {
-                if (input.files && input.files[0]) {
-                    const file = input.files[0];
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        csAttachment = {
-                            name: file.name,
-                            type: file.type,
-                            url: e.target.result
-                        };
-
-                        const preview = document.getElementById('csAttachmentPreview');
-                        const previewImg = document.getElementById('csPreviewImg');
-                        const fileNameSpan = document.getElementById('csFileName');
-
-                        preview.style.display = 'flex';
-                        if (file.type.startsWith('image/')) {
-                            previewImg.src = e.target.result;
-                            previewImg.style.display = 'block';
-                            fileNameSpan.style.display = 'none';
-                        } else {
-                            previewImg.style.display = 'none';
-                            fileNameSpan.innerText = file.name;
-                            fileNameSpan.style.display = 'block';
-                        }
-                        lucide.createIcons();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-
-            function clearAttachment() {
-                csAttachment = null;
-                document.getElementById('csAttachmentPreview').style.display = 'none';
-                document.getElementById('csFileInput').value = '';
-            }
+            // Customer Service Logic handled by script.js
         </script>
+
+
+
+        <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: flex;">
+            <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
+            <i data-lucide="headset"></i>
+            <span>Support</span>
+        </div>
+
+        <!-- Modals -->
+        <div id="topAlertContainer" class="top-alert-container">
+            <div class="top-alert">
+                <i data-lucide="alert-circle"></i>
+                <span>Please sign in to continue.</span>
+                <i data-lucide="x" class="close-alert" onclick="closeAlert()"></i>
+            </div>
+        </div>
+
         <div id="messageCenterOverlay" class="message-center-overlay" onclick="toggleMessageCenter()"></div>
         <div id="messageCenter" class="message-center-modal">
             <div class="mc-header">
@@ -4145,7 +3766,6 @@
                 <button class="mc-btn delete-all" onclick="deleteAllMessages()">Delete all</button>
             </div>
             <div class="mc-list" id="mcList">
-                <!-- Item 1 -->
                 <div class="mc-item">
                     <div class="mc-dot unread"></div>
                     <div class="mc-content">
@@ -4155,7 +3775,6 @@
                         <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
                     </div>
                 </div>
-                <!-- Item 2 -->
                 <div class="mc-item">
                     <div class="mc-dot unread"></div>
                     <div class="mc-content">
@@ -4165,166 +3784,216 @@
                         <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
                     </div>
                 </div>
-                <!-- Item 3 -->
-                <div class="mc-item">
-                    <div class="mc-dot unread"></div>
-                    <div class="mc-content">
-                        <div class="mc-msg-title">IPO Listed now!</div>
-                        <div class="mc-time">07-01-2026 10:10:05</div>
-                        <div class="mc-tag">IPO:LIST</div>
-                        <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
+            </div>
+        </div>
+
+        <div id="settingsModal" class="settings-modal" onclick="if(event.target == this) closeSettings()">
+            <div class="settings-content">
+                <button class="settings-close" onclick="closeSettings()"><i data-lucide="x" size="24"></i></button>
+                <div class="settings-header">
+                    <div class="avatar-circle">U</div>
+                    <div class="settings-name"
+                        style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 0.5rem;">User Name</div>
+                    <div class="settings-phone" style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
+                    <div class="badge-row">
+                        <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
+                        <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
                     </div>
                 </div>
-                <!-- Item 4 -->
-                <div class="mc-item">
-                    <div class="mc-dot"></div>
-                    <div class="mc-content">
-                        <div class="mc-msg-title">IPO Listed now!</div>
-                        <div class="mc-time">07-01-2026 10:10:04</div>
-                        <div class="mc-tag">IPO:LIST</div>
-                        <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
+                <div class="settings-list">
+                    <div class="settings-item" onclick="toggleUserProfile()">
+                        <div class="settings-item-icon"><i data-lucide="user" size="20"></i></div>
+                        <div class="settings-item-info">
+                            <div class="settings-item-title">User Profile</div>
+                            <div class="settings-item-desc">Update your profile information.</div>
+                        </div>
+                        <i data-lucide="chevron-down" id="userProfileChevron" class="settings-chevron" size="18"
+                            style="transition: transform 0.2s;"></i>
+                    </div>
+                    <div id="userProfileSubmenu" class="settings-submenu">
+                        <div class="submenu-item" onclick="openAvatarModal()">
+                            <i data-lucide="image" size="18"></i> Update Avatar
+                        </div>
+                        <div class="submenu-item" onclick="openKYCModal()">
+                            <i data-lucide="file-check" size="18"></i> View KYC
+                        </div>
+                    </div>
+                    <div class="settings-item" onclick="openResetPassword()">
+                        <div class="settings-item-icon"><i data-lucide="lock" size="20"></i></div>
+                        <div class="settings-item-info">
+                            <div class="settings-item-title">Security</div>
+                            <div class="settings-item-desc">Update your system security settings.</div>
+                        </div>
+                        <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                    </div>
+                    <div class="settings-item" onclick="window.location.href='bank_accounts.html'">
+                        <div class="settings-item-icon"><i data-lucide="landmark" size="20"></i></div>
+                        <div class="settings-item-info">
+                            <div class="settings-item-title">Bank Accounts</div>
+                            <div class="settings-item-desc">Manage bank accounts and info</div>
+                        </div>
+                        <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                    </div>
+                    <div class="settings-item" onclick="openCS()">
+                        <div class="settings-item-icon"><i data-lucide="headset" size="20"></i></div>
+                        <div class="settings-item-info">
+                            <div class="settings-item-title">Customer Service</div>
+                            <div class="settings-item-desc">Contact customer service</div>
+                        </div>
+                        <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                    </div>
+                    <div class="settings-item" onclick="alert('Connection Status: Strong (14ms)')">
+                        <div class="settings-item-icon"><i data-lucide="search" size="20"></i></div>
+                        <div class="settings-item-info">
+                            <div class="settings-item-title">Test Connection</div>
+                            <div class="settings-item-desc">Test and Diagnosis</div>
+                        </div>
                     </div>
                 </div>
-                <!-- Item 5 -->
-                <div class="mc-item">
-                    <div class="mc-dot"></div>
-                    <div class="mc-content">
-                        <div class="mc-msg-title">IPO Listed now!</div>
-                        <div class="mc-time">07-01-2026 10:10:04</div>
-                        <div class="mc-tag">IPO:LIST</div>
-                        <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
-                    </div>
-                </div>
-                <!-- Item 6 -->
-                <div class="mc-item">
-                    <div class="mc-dot"></div>
-                    <div class="mc-content">
-                        <div class="mc-msg-title">IPO Listed now!</div>
-                        <div class="mc-time">07-01-2026 10:10:04</div>
-                        <div class="mc-tag">IPO:LIST</div>
-                        <button class="mc-delete-item">Delete</button>
-                    </div>
+                <div class="logout-btn-container">
+                    <button class="logout-btn" onclick="DB.logout()">Logout</button>
                 </div>
             </div>
         </div>
 
         <!-- Customer Service Modal -->
-        <div id="csModal" class="cs-modal" onclick="if(event.target == this) closeCS()">
-            <div class="cs-content">
-                <!-- Header -->
-                <div class="cs-header">
-                    <div class="cs-header-avatar">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Support" alt="Support">
-                    </div>
-                    <div class="cs-header-info">
-                        <div class="cs-header-title">VSL Customer Service</div>
-                        <div class="cs-header-hours">Service Hours: 8:30 AM - 10:00 PM</div>
-                    </div>
-                    <button class="cs-close" onclick="closeCS()">
-                        <i data-lucide="x" size="24"></i>
-                    </button>
+        <div id="csModal" class="settings-modal" onclick="if(event.target == this) closeCS()">
+            <div class="settings-content"
+                style="max-width: 500px; height: 600px; display: flex; flex-direction: column;">
+                <button class="settings-close" onclick="closeCS()"><i data-lucide="x" size="24"></i></button>
+                <div class="settings-header" style="margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">Customer Service</h2>
                 </div>
-
-                <!-- Body / Chat History -->
-                <div class="cs-body" id="csBody">
-                    <!-- Messages injected via JS -->
+                <div id="chatBox"
+                    style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
                 </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="csInput" placeholder="Type a message..."
+                        style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    <button onclick="sendCSMessage()"
+                        style="background: #3b82f6; color: white; border: none; padding: 0 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Send</button>
+                </div>
+            </div>
+        </div>
 
-                <!-- Footer / Input Area -->
-                <div class="cs-footer">
-                    <div id="csEmojiPicker" class="cs-emoji-picker">
-                        <button class="cs-emoji-btn" onclick="addEmoji('😊')">😊</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('😂')">😂</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('🤣')">🤣</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('❤️')">❤️</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('👍')">👍</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('🙏')">🙏</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('🔥')">🔥</button>
-                        <button class="cs-emoji-btn" onclick="addEmoji('🚀')">🚀</button>
-                    </div>
-
-                    <div id="csAttachmentPreview" class="cs-attachment-preview">
-                        <img id="csPreviewImg" src=""
-                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; display: none;">
-                        <span id="csFileName"
-                            style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
-                        <i data-lucide="x" style="cursor: pointer;" onclick="clearAttachment()" size="16"></i>
-                    </div>
-
-                    <div class="cs-input-area">
-                        <input type="file" id="csFileInput" style="display:none;" onchange="handleCSFile(this)">
-                        <div class="cs-input-row">
-                            <input type="text" id="csInput" class="cs-input" placeholder="Type a message..."
-                                onkeypress="if(event.key === 'Enter') sendCSMessage()">
+        <!-- Reset Password Modal (Logged-In) -->
+        <div id="resetPasswordModal" class="settings-modal" onclick="if(event.target == this) closeResetPassword()">
+            <div class="settings-content" style="max-width: 450px;">
+                <button class="settings-close" onclick="closeResetPassword()"><i data-lucide="x" size="24"></i></button>
+                <div class="settings-header" style="margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b;">Reset Password</h2>
+                </div>
+                <div style="padding: 1rem 0;">
+                    <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Current
+                            Password</label>
+                        <div class="reg-password-wrapper" style="position: relative;">
+                            <input type="password" id="currentPass" class="reg-input"
+                                style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                            <i data-lucide="eye-off"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                                onclick="toggleInternalPass('currentPass', this)"></i>
                         </div>
-                        <div class="cs-actions">
-                            <div class="cs-tools">
-                                <button class="cs-tool-btn" onclick="csTool('emoji')" title="Emoji">
-                                    <i data-lucide="smile" size="20"></i>
-                                </button>
-                                <button class="cs-tool-btn" onclick="csTool('image')" title="Send Image">
-                                    <i data-lucide="camera" size="20"></i>
-                                </button>
-                                <button class="cs-tool-btn" onclick="csTool('file')" title="Send File">
-                                    <i data-lucide="paperclip" size="20"></i>
-                                </button>
-                            </div>
-                            <button class="cs-send-btn" onclick="sendCSMessage()">
-                                <i data-lucide="send" size="18"></i>
-                            </button>
+                    </div>
+                    <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                            Password</label>
+                        <div class="reg-password-wrapper" style="position: relative;">
+                            <input type="password" id="newPassInternal" class="reg-input"
+                                style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                            <i data-lucide="eye-off"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                                onclick="toggleInternalPass('newPassInternal', this)"></i>
                         </div>
+                    </div>
+                    <div class="reg-input-group" style="margin-bottom: 2rem;">
+                        <label
+                            style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Confirm
+                            New Password</label>
+                        <div class="reg-password-wrapper" style="position: relative;">
+                            <input type="password" id="confirmPassInternal" class="reg-input"
+                                style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                            <i data-lucide="eye-off"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                                onclick="toggleInternalPass('confirmPassInternal', this)"></i>
+                        </div>
+                    </div>
+                    <button class="logout-btn" style="background: #3b82f6;" onclick="handleInternalReset()">Update
+                        Password</button>
+                    <button class="logout-btn" style="background: #f1f5f9; color: #64748b; margin-top: 1rem;"
+                        onclick="closeResetPassword()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avatar Modal -->
+        <div id="avatarModal" class="center-popup-modal">
+            <div class="center-popup-content avatar-form" style="max-width: 400px;">
+                <div class="popup-header"
+                    style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
+                    <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
+                </div>
+                <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
+                    <div class="avatar-preview-lg" id="avatarPreviewContainer"
+                        onclick="document.getElementById('avatarInput').click()">
+                        <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
+                        <img id="avatarPreviewImg" src="" style="display:none;">
+                        <div class="avatar-change-overlay">Change Image</div>
+                    </div>
+                    <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
+                    <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
+                        <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Floating CSR Button (Matches Homepage) -->
-        <style>
-            .floating-csr {
-                position: fixed;
-                bottom: 2rem;
-                right: 2rem;
-                background: #3b82f6;
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: 50px;
-                display: flex;
-                align-items: center;
-                gap: 0.8rem;
-                box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
-                cursor: pointer;
-                transition: transform 0.2s, box-shadow 0.2s;
-                z-index: 9999;
-                font-weight: 600;
-            }
-
-            .floating-csr:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.6);
-            }
-
-            .csr-badge {
-                position: absolute;
-                top: -5px;
-                right: -5px;
-                background: #ef4444;
-                color: white;
-                font-size: 0.7rem;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 700;
-                border: 2px solid white;
-            }
-        </style>
-        <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: flex;">
-            <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
-            <i data-lucide="headset"></i>
-            <span>Support</span>
+        <!-- KYC Modal -->
+        <div id="kycModal" class="center-popup-modal">
+            <div class="center-popup-content">
+                <div class="popup-header">
+                    <h2>View KYC</h2>
+                    <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+                </div>
+                <div class="popup-body">
+                    <div class="kyc-form-grid">
+                        <div class="kyc-field-label">Full Name</div>
+                        <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
+                        <div class="kyc-field-label">Mobile Number</div>
+                        <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
+                        <div class="kyc-field-label">ID Number</div>
+                        <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
+                        <div class="kyc-field-label">Submitted On</div>
+                        <input type="text" id="kycSubmitted" class="kyc-field-input" readonly
+                            style="background: #f8fafc;">
+                        <div class="kyc-field-label">Approval Status</div>
+                        <input type="text" id="kycApproved" class="kyc-field-input" readonly
+                            style="background: #f8fafc;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                        <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
+                            <div class="plus-icon">+ Front</div>
+                            <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                            <input type="file" id="kycFrontInput" hidden
+                                onchange="previewKYCImage(this, 'kycFrontPreview')">
+                        </div>
+                        <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
+                            <div class="plus-icon">+ Back</div>
+                            <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                            <input type="file" id="kycBackInput" hidden
+                                onchange="previewKYCImage(this, 'kycBackPreview')">
+                        </div>
+                    </div>
+                    <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
+                        Verification</button>
+                </div>
+            </div>
         </div>
+        <script src="script.js"></script>
 </body>
 
 </html>
