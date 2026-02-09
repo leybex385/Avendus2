@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Detail - Avendus Capital</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <style>
+        /* Reusing styles from market.html */
+        .market-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .stock-detail-content {
+            padding: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- Split Layout --- */
+        .market-main-container {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .market-left-col {
+            flex: 1;
+        }
+
+        .market-right-col {
+            width: 350px;
+            display: flex;
+            /* Always visible in this view */
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* --- Buy Panel Styles --- */
+        .buy-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .bp-header {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bp-row {
+            margin-bottom: 1rem;
+        }
+
+        .bp-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .bp-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .bp-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .bp-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .bp-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+
+        .bp-btn {
+            width: 100%;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .bp-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* --- Transactions List --- */
+        .trans-list-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .tl-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .tl-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .tl-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tl-symbol {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        .tl-date {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .tl-right {
+            text-align: right;
+        }
+
+        .tl-qty {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .tl-price {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Chart Area */
+        .main-index-view {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2rem;
+        }
+
+        .price-hero h2 {
+            font-size: 3.5rem;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .index-chg {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .index-chg.green {
+            color: #10b981;
+        }
+
+        .index-chg.red {
+            color: #ef4444;
+        }
+
+        .chart-container-realtime {
+            height: 600px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        /* Timeframe Buttons */
+        .timeframe-btns {
+            display: flex;
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .tf-btn {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tf-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .tf-btn.active {
+            background: #1e56a0;
+            color: white;
+            border-color: #1e56a0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="market-wrapper">
+        <header class="header" style="padding: 1rem 2rem;">
+            <div class="header-left">
+                <a href="market.html"
+                    style="text-decoration:none; display:flex; align-items:center; gap:0.5rem; color:#1e293b; font-weight:600;">
+                    <button class="settings-btn"><i data-lucide="arrow-left"></i></button>
+                    Back to Market
+                </a>
+            </div>
+            <nav class="nav">
+                <!-- Simplified Nav -->
+                <span style="font-weight: 700; color: #1e56a0; font-size: 1.2rem;">Stock Details</span>
+            </nav>
+            <div class="header-right">
+                <button class="settings-btn"><i data-lucide="settings"></i></button>
+            </div>
+        </header>
+
+        <main class="stock-detail-content">
+            <!-- Auth Lock Check (simplified) -->
+            <div id="authCheck" style="display:none; text-align:center; padding:4rem;">
+                <h2>Please Log In</h2>
+                <a href="login.html" style="color:#3b82f6;">Go to Login</a>
+            </div>
+
+            <div id="stockContent" class="market-main-container">
+                <!-- Left Column: Chart -->
+                <div class="market-left-col">
+                    <div class="main-index-view">
+                        <div class="price-hero">
+                            <div>
+                                <div id="chartTitle"
+                                    style="font-weight: 600; font-size: 1.1rem; color: #1e293b; margin-bottom: 0.5rem;">
+                                    Loading...</div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h2 id="indexPrice">--.--</h2>
+                                    <div id="heroChange" class="index-chg" style="font-size: 1.1rem; margin-left:1rem;">
+                                        Live from Chart
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeframe-btns">
+                            <button class="tf-btn" onclick="changeInterval('1', this)">1m</button>
+                            <button class="tf-btn" onclick="changeInterval('30', this)">30m</button>
+                            <button class="tf-btn" onclick="changeInterval('60', this)">1h</button>
+                            <button class="tf-btn active" onclick="changeInterval('D', this)">1D</button>
+                            <button class="tf-btn" onclick="changeInterval('W', this)">1W</button>
+                            <button class="tf-btn" onclick="changeInterval('M', this)">1M</button>
+                        </div>
+
+                        <div class="chart-container-realtime">
+                            <div id="tradingview_widget" style="height:100%; width:100%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Buy Panel -->
+                <div class="market-right-col">
+                    <div class="buy-panel">
+                        <div class="bp-header">
+                            <span style="color:#1e56a0;">Buy Stock</span>
+                            <span id="bpStockSymbol" style="font-size:0.9rem; color:#64748b;">...</span>
+                        </div>
+
+                        <div class="bp-info-row">
+                            <span style="color:#64748b;">Current Price:</span>
+                            <span id="bpCurrentPrice" style="font-weight:700; color:#1e293b;">₹0.00</span>
+                        </div>
+
+                        <div class="bp-info-row" style="margin-bottom:1.5rem;">
+                            <span style="color:#64748b;">Your Balance:</span>
+                            <span id="bpUserBalance" style="font-weight:700; color:#10b981;">₹0.00</span>
+                        </div>
+
+                        <div class="bp-row">
+                            <label class="bp-label">Quantity (Shares)</label>
+                            <input type="number" id="bpQuantity" class="bp-input" value="1" min="1"
+                                oninput="updateBuyTotal()">
+                        </div>
+
+                        <div class="bp-total-row">
+                            <span>Total Cost:</span>
+                            <span id="bpTotalCost" style="color:#1e56a0;">₹0.00</span>
+                        </div>
+
+                        <button class="bp-btn" onclick="executeBuyOrder()">
+                            BUY NOW
+                        </button>
+                    </div>
+
+                    <!-- Holdings List -->
+                    <div class="trans-list-panel">
+                        <div class="bp-header" style="margin-bottom:0.5rem; border:none; padding-bottom:0;">
+                            <span style="color:#1e293b;">Your Holdings</span>
+                            <i data-lucide="history" size="16" color="#64748b"></i>
+                        </div>
+                        <div id="holdingsListWrapper" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Items will be injected here -->
+                            <div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">
+                                No active holdings
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Stock Data for Pricing Fallbacks
+        // (Copying a subset or full list from market.html to ensure price availability)
+        // In a real app, this should be in a shared JS file or fetched from API.
+        const INDIAN_STOCKS = [
+            { s: 'BSE:SENSEX', n: 'SENSEX Index', p: 83580.40 },
+            { s: 'NSE:NIFTY', n: 'NIFTY 50', p: 25641.65 },
+            { s: 'NSE:BANKNIFTY', n: 'NIFTY BANK', p: 60045.35 },
+            { s: 'NSE:RELIANCE', n: 'Reliance Industries Ltd', p: 2985.50 },
+            { s: 'NSE:TCS', n: 'Tata Consultancy Services', p: 4250.20 },
+            { s: 'NSE:HDFCBANK', n: 'HDFC Bank Ltd', p: 1680.75 },
+            { s: 'NSE:INFY', n: 'Infosys Ltd', p: 1890.30 },
+            { s: 'NSE:ICICIBANK', n: 'ICICI Bank Ltd', p: 1250.40 },
+            { s: 'NSE:HINDUNILVR', n: 'Hindustan Unilever Ltd', p: 2780.10 },
+            { s: 'NSE:SBIN', n: 'State Bank of India', p: 795.60 },
+            { s: 'NSE:BHARTIARTL', n: 'Bharti Airtel Ltd', p: 1650.20 },
+            { s: 'NSE:ITC', n: 'ITC Ltd', p: 510.40 },
+            { s: 'NSE:KOTAKBANK', n: 'Kotak Mahindra Bank', p: 1820.50 },
+            { s: 'NSE:LT', n: 'Larsen & Toubro Ltd', p: 3750.80 },
+            { s: 'NSE:AXISBANK', n: 'Axis Bank Ltd', p: 1190.30 },
+            { s: 'NSE:HCLTECH', n: 'HCL Technologies', p: 1760.40 },
+            { s: 'NSE:MARUTI', n: 'Maruti Suzuki India', p: 12450.00 },
+            { s: 'NSE:TITAN', n: 'Titan Company Ltd', p: 3580.20 },
+            { s: 'NSE:BAJFINANCE', n: 'Bajaj Finance Ltd', p: 7450.60 },
+            { s: 'NSE:SUNPHARMA', n: 'Sun Pharmaceutical', p: 1890.10 },
+            { s: 'NSE:TATAMOTORS', n: 'Tata Motors Ltd', p: 980.50 },
+            { s: 'NSE:ULTRACEMCO', n: 'UltraTech Cement', p: 11250.00 },
+            { s: 'NSE:ASIANPAINT', n: 'Asian Paints Ltd', p: 3250.40 },
+            { s: 'NSE:NTPC', n: 'NTPC Ltd', p: 410.20 },
+            { s: 'NSE:M_M', n: 'Mahindra & Mahindra', p: 2890.50 },
+            { s: 'NSE:POWERGRID', n: 'Power Grid Corp', p: 345.60 },
+            { s: 'NSE:ADANIENT', n: 'Adani Enterprises', p: 3150.80 },
+            { s: 'NSE:ADANIPORTS', n: 'Adani Ports & SEZ', p: 1450.30 },
+            { s: 'NSE:COALINDIA', n: 'Coal India Ltd', p: 510.20 },
+            { s: 'NSE:WIPRO', n: 'Wipro Ltd', p: 540.60 },
+            { s: 'NSE:ONGC', n: 'ONGC', p: 320.10 },
+            { s: 'NSE:JSWSTEEL', n: 'JSW Steel Ltd', p: 980.40 },
+            { s: 'NSE:BAJAJFINSV', n: 'Bajaj Finserv Ltd', p: 1850.20 },
+            { s: 'NSE:GRASIM', n: 'Grasim Industries', p: 2650.50 },
+            { s: 'NSE:TECHM', n: 'Tech Mahindra Ltd', p: 1540.30 },
+            { s: 'NSE:EICHERMOT', n: 'Eicher Motors Ltd', p: 4850.60 },
+            { s: 'NSE:NESTLEIND', n: 'Nestle India Ltd', p: 2540.20 },
+            { s: 'NSE:TATASTEEL', n: 'Tata Steel Ltd', p: 165.40 },
+            { s: 'NSE:INDUSINDBK', n: 'IndusInd Bank Ltd', p: 1450.30 },
+            { s: 'NSE:BRITANNIA', n: 'Britannia Industries', p: 5890.50 },
+            { s: 'NSE:CIPLA', n: 'Cipla Ltd', p: 1620.40 },
+            { s: 'NSE:HEROMOTOCO', n: 'Hero MotoCorp Ltd', p: 5650.20 },
+            { s: 'NSE:APOLLOHOSP', n: 'Apollo Hospitals', p: 6850.40 },
+            { s: 'NSE:DIVISLAB', n: 'Divi\'s Laboratories', p: 5450.80 },
+            { s: 'NSE:DRREDDY', n: 'Dr. Reddy\'s Labs', p: 6780.20 },
+            { s: 'NSE:SBILIFE', n: 'SBI Life Insurance', p: 1780.50 },
+            { s: 'NSE:HDFCLIFE', n: 'HDFC Life Insurance', p: 720.40 },
+            { s: 'NSE:BPCL', n: 'Bharat Petroleum', p: 340.20 },
+            { s: 'NSE:LTIM', n: 'LTIMindtree Ltd', p: 5950.60 },
+            { s: 'NSE:TATACONSUM', n: 'Tata Consumer', p: 1250.30 }
+        ];
+
+        // Helper to find price
+        function getStockPrice(sym) {
+            const s = INDIAN_STOCKS.find(x => x.s === sym);
+            return s ? s.p : 0;
+        }
+
+        let currentActiveSymbol = '';
+        let currentStockName = '';
+        let currentPrice = 0;
+        let currentInterval = 'D';
+
+        window.onload = function () {
+            // Check Auth
+            const user = window.DB.getCurrentUser();
+            if (!user) {
+                document.getElementById('stockContent').style.display = 'none';
+                document.getElementById('authCheck').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('stockContent').style.display = 'flex';
+                document.getElementById('bpUserBalance').innerText = '₹' + parseFloat(user.balance || 0).toLocaleString('en-IN');
+            }
+
+            // Parse URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const sym = urlParams.get('symbol');
+            const name = urlParams.get('name') || sym;
+
+            if (sym) {
+                initPage(sym, name);
+            } else {
+                alert("No stock specified.");
+                window.location.href = 'market.html';
+            }
+
+            loadHoldings();
+        };
+
+        function initPage(sym, name) {
+            currentActiveSymbol = sym;
+            currentStockName = name;
+
+            // Set Titles
+            document.getElementById('chartTitle').innerText = `${name} (${sym})`;
+            document.getElementById('bpStockSymbol').innerText = sym;
+            document.title = `${name} - Stock Detail`;
+
+            // Load Widget
+            loadWidget(sym);
+
+            // Set Price (Simulated/Static fallback)
+            currentPrice = getStockPrice(sym);
+            if (currentPrice === 0) {
+                // Try to parse from name or just default
+                currentPrice = 1000.00; // Default fallback
+            }
+            document.getElementById('bpCurrentPrice').innerText = '₹' + currentPrice.toLocaleString('en-IN');
+            document.getElementById('indexPrice').innerText = currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            updateBuyTotal();
+            startSimulation(); // Start the ticker
+        }
+
+        function loadWidget(symbol) {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": symbol,
+                "interval": currentInterval,
+                "timezone": "Etc/UTC",
+                "theme": "light",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "allow_symbol_change": false,
+                "container_id": "tradingview_widget",
+                "hide_side_toolbar": true,
+                "withdateranges": true,
+                "details": true,
+                "hotlist": false,
+                "calendar": false,
+                "studies": ["Volume@tv-basicstudies"]
+            });
+        }
+
+        function changeInterval(interval, btn) {
+            currentInterval = interval;
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadWidget(currentActiveSymbol);
+        }
+
+        // --- Buy Logic ---
+        function updateBuyTotal() {
+            const qty = parseInt(document.getElementById('bpQuantity').value) || 0;
+            const total = qty * currentPrice;
+            document.getElementById('bpTotalCost').innerText = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        async function executeBuyOrder() {
+            const user = window.DB.getCurrentUser();
+            if (!user) return; // Should be handled on load
+
+            const qty = parseInt(document.getElementById('bpQuantity').value) || 0;
+            if (qty <= 0) { alert("Invalid quantity"); return; }
+
+            // Re-fetch price just in case (mock here)
+            const tradePrice = currentPrice;
+            const totalCost = qty * tradePrice;
+
+            if (totalCost > parseFloat(user.balance || 0)) {
+                alert("Insufficient balance!");
+                return;
+            }
+
+            if (!confirm(`Confirm buy: ${qty} shares of ${currentActiveSymbol} @ ₹${tradePrice}?`)) return;
+
+            const btn = document.querySelector('.bp-btn');
+            btn.innerText = "Processing...";
+
+            try {
+                // Update Balance
+                let newBalance = parseFloat(user.balance) - totalCost;
+                let holdings = user.holdings || [];
+
+                const existing = holdings.find(h => h.s === currentActiveSymbol);
+                if (existing) {
+                    const oldVal = existing.q * existing.avg;
+                    existing.avg = (oldVal + totalCost) / (existing.q + qty);
+                    existing.q += qty;
+                } else {
+                    holdings.push({
+                        s: currentActiveSymbol,
+                        n: currentStockName,
+                        q: qty,
+                        avg: tradePrice,
+                        t: Date.now()
+                    });
+                }
+
+                const { success, error } = await window.DB.updateUser(user.id, {
+                    balance: newBalance,
+                    holdings: holdings
+                });
+
+                if (success) {
+                    alert("Purchase Successful!");
+                    user.balance = newBalance;
+                    user.holdings = holdings;
+                    localStorage.setItem('avendus_current_user', JSON.stringify(user));
+
+                    document.getElementById('bpUserBalance').innerText = '₹' + newBalance.toLocaleString('en-IN');
+                    loadHoldings();
+                } else {
+                    alert("Failed: " + error.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error during purchase.");
+            } finally {
+                btn.innerText = "BUY NOW";
+            }
+        }
+
+        function loadHoldings() {
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+            const list = document.getElementById('holdingsListWrapper');
+            if (!list) return;
+
+            if (!user || !user.holdings || user.holdings.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">No active holdings</div>';
+                return;
+            }
+
+            // Filter for current stock? Or show all? User likely wants to see specific stock holdings here, or all. 
+            // "Dapat mag appear sa transactions kapag nabuy na ang stocks."
+            // Usually on a stock detail page, you see holdings for THAT stock.
+            // But let's show all for now, maybe highlight current?
+            // Let's filter to show ONLY current stock holdings to be cleaner "Detail Page".
+
+            // Check if we have holding for THIS stock
+            const myHolding = user.holdings.find(h => h.s === currentActiveSymbol);
+
+            if (myHolding) {
+                const curVal = myHolding.q * currentPrice;
+                const investVal = myHolding.q * myHolding.avg;
+                const pl = curVal - investVal;
+                const plPct = (pl / investVal) * 100;
+                const isProf = pl >= 0;
+
+                list.innerHTML = `
+                        <div class="tl-item">
+                            <div class="tl-left">
+                                <div class="tl-symbol">${myHolding.s}</div>
+                                <div class="tl-date">${myHolding.n}</div>
+                            </div>
+                            <div class="tl-right">
+                                <div class="tl-price">Avg: ₹${myHolding.avg.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+                                <div class="tl-qty">${myHolding.q} Qty <span style="font-weight:600; ${isProf ? 'color:#10b981' : 'color:#ef4444'}">(${isProf ? '+' : ''}${plPct.toFixed(2)}%)</span></div>
+                            </div>
+                        </div>
+                        `;
+            } else {
+                list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">You do not own this stock.</div>';
+            }
+        }
+
+        // --- SIMULATION ---
+        function startSimulation() {
+            // Simulate price ticks for the current stock
+            setInterval(() => {
+                // Random fluctuation between -0.1% and +0.1%
+                const changePct = (Math.random() - 0.5) * 0.002;
+                const changeAmount = currentPrice * changePct;
+                console.log("Simulating tick:", changePct, changeAmount); // Debug
+                currentPrice += changeAmount;
+                if (currentPrice < 0.01) currentPrice = 0.01; // Safety
+
+                // Update UI Prices
+                const elPrice = document.getElementById('bpCurrentPrice');
+                const elIndexPrice = document.getElementById('indexPrice');
+                const elHeroChange = document.getElementById('heroChange');
+
+                if (elPrice) elPrice.innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (elIndexPrice) {
+                    elIndexPrice.innerText = currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                    // Simple flash effect
+                    const color = changePct >= 0 ? '#10b981' : '#ef4444';
+                    elIndexPrice.style.color = color;
+                    setTimeout(() => { elIndexPrice.style.color = '#1e293b'; }, 800);
+                }
+
+                // Also update Total Cost if quantity is entered
+                updateBuyTotal();
+            }, 3000); // Update every 3 seconds
+        }
+
+    </script>
+</body>
+
+</html>
