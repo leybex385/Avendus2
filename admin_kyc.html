@@ -698,6 +698,9 @@
                 Real-name authentication</div>
             <div class="menu-item" id="btn_users" onclick="switchPage('users')"><i data-lucide="users" size="18"></i>
                 Customer Management</div>
+            <div class="menu-item" id="btn_bank_accounts" onclick="switchPage('bank_accounts')"><i
+                    data-lucide="credit-card" size="18"></i>
+                Bank Accounts</div>
             <div class="menu-item" onclick="toggleSub('financial')"><i data-lucide="wallet" size="18"></i> Financial
                 Management <i data-lucide="chevron-down" size="14" style="margin-left:auto;"></i></div>
             <div class="sub-menu" id="financialSub">
@@ -764,6 +767,34 @@
                 <div class="section-card">
                     <h3>Dashboard Summary</h3>
                     <div id="stat_summary" style="display:flex; gap:20px;"></div>
+                </div>
+            </div>
+
+            <div id="pageBankAccounts" class="vsl-page" style="display:none;">
+                <div class="section-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2>User Bank Accounts</h2>
+                        <button class="vsl-btn orange" onclick="loadBankAccounts()"><i data-lucide="refresh-cw"
+                                size="14"></i> Refresh</button>
+                    </div>
+                    <div style="overflow-x:auto; margin-top:20px;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                            <thead>
+                                <tr style="background:#f8fafc; text-align:left; color:#64748b;">
+                                    <th style="padding:12px;">User ID</th>
+                                    <th style="padding:12px;">Account Holder</th>
+                                    <th style="padding:12px;">Bank Name</th>
+                                    <th style="padding:12px;">Account No.</th>
+                                    <th style="padding:12px;">IFSC</th>
+                                    <th style="padding:12px;">Mobile</th>
+                                    <th style="padding:12px;">Date Added</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bankAccountsTableBody">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -1729,15 +1760,56 @@
 
         function switchPage(p) {
             if (!openTabs.includes(p)) openTabs.push(p);
+
+            // Hide all pages
             document.querySelectorAll('.vsl-page').forEach(x => x.style.display = 'none');
             document.querySelectorAll('.menu-item, .sub-item').forEach(x => x.classList.remove('active'));
-            const pg = document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1));
+
+            let pageId = 'page' + p.charAt(0).toUpperCase() + p.slice(1);
+
+            // Special case for Bank Accounts
+            if (p === 'bank_accounts') {
+                pageId = 'pageBankAccounts';
+            }
+
+            const pg = document.getElementById(pageId);
             if (pg) pg.style.display = 'block';
-            const btn = document.getElementById('btn_' + p); if (btn) btn.classList.add('active');
+
+            const btn = document.getElementById('btn_' + p);
+            if (btn) btn.classList.add('active');
+
             renderTabs();
             lucide.createIcons();
 
             if (p === 'livechat') initLiveChat();
+            if (p === 'bank_accounts') loadBankAccounts();
+        }
+
+        async function loadBankAccounts() {
+            const tbody = document.getElementById('bankAccountsTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Loading...</td></tr>';
+
+            // Fetch from DB
+            const res = await window.DB.getAllBankAccounts();
+
+            if (!res || res.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#94a3b8;">No bank accounts found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = res.map(acc => `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px;">${acc.user_id}</td>
+                    <td style="padding:12px; font-weight:600;">${acc.first_name || '-'} ${acc.last_name || '-'}</td>
+                    <td style="padding:12px;">${acc.bank_name || '-'}</td>
+                    <td style="padding:12px; font-family:monospace;">${acc.account_number}</td>
+                    <td style="padding:12px;">${acc.ifsc || '-'}</td>
+                    <td style="padding:12px;">${acc.mobile || '-'}</td>
+                    <td style="padding:12px; font-size:0.75rem; color:#64748b;">${acc.created_at ? new Date(acc.created_at).toLocaleString() : '-'}</td>
+                </tr>
+             `).join('');
         }
 
         // Live Chat Logic
