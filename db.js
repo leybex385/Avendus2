@@ -51,6 +51,10 @@ window.DB = {
             .single();
 
         if (error) return { success: false, message: error.message };
+
+        // Auto-login after registration
+        localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(data));
+
         return { success: true, user: data };
     },
 
