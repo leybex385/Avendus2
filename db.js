@@ -105,14 +105,28 @@ window.DB = {
         window.location.href = 'login.html';
     },
 
-    // --- MESSAGES / CHAT ---
+    // --- MESSAGES / CHAT / NOTICES ---
     async getMessages(userId) {
         const client = this.getClient();
         const { data, error } = await client
             .from('messages')
             .select('*')
             .eq('user_id', userId)
+            .neq('sender', 'System') // Exclude System Notices from Chat
             .order('created_at', { ascending: true });
+
+        return data || [];
+    },
+
+    // New: Get Notices (System Messages)
+    async getNotices(userId) {
+        const client = this.getClient();
+        const { data, error } = await client
+            .from('messages')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('sender', 'System') // Only System Notices
+            .order('created_at', { ascending: false });
 
         return data || [];
     },
@@ -123,6 +137,33 @@ window.DB = {
             .from('messages')
             .insert([{ user_id: userId, message, sender }]);
 
+        return { success: !error, error };
+    },
+
+    // New: Send Notice
+    async sendNotice(userId, title, message) {
+        const client = this.getClient();
+        // We pack title and message into the 'message' column or use a convention
+        // Let's use sender='System' and put title in the message for now or just message.
+        // If we want title, we might need to stringify JSON if 'message' is text.
+        // For simplicity: Message is the content. Title we can prepend or assume.
+
+        const content = message;
+
+        const { data, error } = await client
+            .from('messages')
+            .insert([{
+                user_id: userId,
+                message: content,
+                sender: 'System' // Mark as System Notice
+            }]);
+
+        return { success: !error, error };
+    },
+
+    async deleteMessage(id) {
+        const client = this.getClient();
+        const { error } = await client.from('messages').delete().eq('id', id);
         return { success: !error, error };
     },
 
