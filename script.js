@@ -243,6 +243,106 @@ window.toggleUserProfile = function () {
     }
 };
 
+window.toggleSecurityMenu = function () {
+    const submenu = document.getElementById('securitySubmenu');
+    const chevron = document.getElementById('securityChevron');
+
+    if (submenu) {
+        submenu.classList.toggle('open');
+        if (chevron) {
+            chevron.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+    }
+};
+
+window.openWithdrawalPinModal = function () {
+    const modal = document.getElementById('withdrawalPinModal');
+    if (!modal) return;
+
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    const title = document.getElementById('wpModalTitle');
+    const desc = document.getElementById('wpModalDesc');
+    const btn = document.getElementById('wpSubmitBtn');
+
+    // Check if user has a PIN (checking if property exists and is not empty)
+    const hasPin = user && user.withdrawal_pin && user.withdrawal_pin.length > 0;
+
+    if (hasPin) {
+        if (title) title.innerText = 'Update Withdrawal PIN';
+        if (desc) desc.innerText = 'Update your existing withdrawal PIN.';
+        if (btn) btn.innerText = 'Update Withdrawal PIN';
+    } else {
+        if (title) title.innerText = 'Create Withdrawal PIN';
+        if (desc) desc.innerText = 'Set a new 4-6 digit withdrawal PIN for security.';
+        if (btn) btn.innerText = 'Create Withdrawal PIN';
+    }
+
+    modal.style.display = 'flex';
+};
+
+window.closeWithdrawalPinModal = function () {
+    const modal = document.getElementById('withdrawalPinModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.handleWithdrawalPinSubmit = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) { alert("Please login first."); return; }
+
+    const loginPass = document.getElementById('wpLoginPass')?.value;
+    const newPin = document.getElementById('wpNewPin')?.value;
+    const confirmPin = document.getElementById('wpConfirmPin')?.value;
+
+    if (!loginPass || !newPin || !confirmPin) {
+        alert("All fields are required.");
+        return;
+    }
+
+    if (loginPass !== user.password) {
+        alert("Incorrect login password.");
+        return;
+    }
+
+    if (newPin !== confirmPin) {
+        alert("PINs do not match.");
+        return;
+    }
+
+    if (newPin.length < 4) {
+        alert("PIN must be at least 4 digits.");
+        return;
+    }
+
+    const btn = document.getElementById('wpSubmitBtn');
+    const originalText = btn ? btn.textContent : 'Submit';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+    }
+
+    try {
+        const result = await window.DB.updateUser(user.id, { withdrawal_pin: newPin });
+        if (result.success) {
+            alert("Withdrawal PIN updated successfully!");
+            // Update local user object
+            user.withdrawal_pin = newPin;
+            localStorage.setItem('avendus_current_user', JSON.stringify(user));
+            window.closeWithdrawalPinModal();
+        } else {
+            alert("Failed to update PIN: " + (result.error?.message || "Unknown error"));
+        }
+    } catch (e) {
+        console.error(e);
+        alert("An error occurred.");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Update Withdrawal PIN';
+        }
+    }
+};
+
 window.openAvatarModal = function () {
     const modal = document.getElementById('avatarModal');
     if (modal) modal.style.display = 'flex';
