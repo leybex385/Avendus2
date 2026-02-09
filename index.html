@@ -40,7 +40,10 @@
                     class="nav-item" id="navMe"><i data-lucide="user"></i> Me</a>
             </nav>
             <div class="header-right">
-                <button class="settings-btn" onclick="toggleMessageCenter()"><i data-lucide="mail"></i></button>
+                <button class="settings-btn" onclick="toggleMessageCenter()">
+                    <i data-lucide="bell"></i>
+                    <div class="notif-badge"></div>
+                </button>
                 <button class="settings-btn" onclick="openCS()" title="Customer Service" style="position: relative;">
                     <div class="csr-badge" id="csrHeaderBadge" style="display: none;"></div>
                     <i data-lucide="headset"></i>
@@ -786,7 +789,7 @@
     <div id="messageCenter" class="message-center-modal">
         <div class="mc-header">
             <div class="mc-title-row">
-                <span class="mc-title">Message Center</span>
+                <span class="mc-title">Notifications</span>
                 <span class="mc-subtitle" id="msgCount">10 Messages</span>
             </div>
             <button class="mc-close" onclick="toggleMessageCenter()"><i data-lucide="x" size="24"></i></button>
@@ -1376,19 +1379,53 @@
             // are handled by script.js. No need to redefine them here unless specific behavior is needed.
             // If they are missing from script.js, add them there or define here.
 
-            window.toggleMessageCenter = () => {
-                document.getElementById('messageCenter').classList.toggle('active');
-                document.getElementById('messageCenterOverlay').classList.toggle('active');
-            };
         </script>
+        <!-- Message Center Modal -->
+        <div id="messageCenterOverlay" onclick="toggleMessageCenter()"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2999;">
+        </div>
+        <div id="messageCenter" class="cs-content"
+            style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.9); opacity:0; transition: all 0.3s; z-index:3000; display:none; flex-direction:column; background:white; width:400px; height:600px; border-radius:16px;">
+            <div class="cs-header"
+                style="background:#1e56a0; color:white; padding:1.25rem; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:700; display:flex; gap:10px; align-items:center;"><i data-lucide="bell"
+                        size="20"></i> Notifications</div>
+                <button onclick="toggleMessageCenter()"
+                    style="background:transparent; border:none; color:white; cursor:pointer;"><i data-lucide="x"
+                        size="20"></i></button>
+            </div>
+            <div class="cs-body" id="mcList"
+                style="flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:1rem;">
+                <!-- Messages go here -->
+            </div>
+            <div style="padding:1rem; border-top:1px solid #eee; display:flex; justify-content:space-between;"
+                id="mcFooter">
+                <button onclick="makeAllRead()"
+                    style="background:#f1f5f9; border:none; padding:8px 16px; border-radius:6px; font-size:0.8rem; cursor:pointer; color:#64748b;">Mark
+                    all read</button>
+                <button onclick="deleteAllMessages()"
+                    style="background:#fee2e2; border:none; padding:8px 16px; border-radius:6px; font-size:0.8rem; cursor:pointer; color:#ef4444;">Delete
+                    all</button>
+            </div>
+        </div>
 
-        <!-- Floating CSR Button -->
+        <!--Notification Bell Floating Button-- >
+    <div class="cs-floating-tab" onclick="toggleMessageCenter()"
+        style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; background: #fff; border: 1px solid #e2e8f0; color: #64748b; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;">
+        <div style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+            <i data-lucide="bell" size="24" color="#1e56a0"></i>
+            <div id="msgBadge"
+                style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating CSR Button -->
         <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: none;">
             <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
             <i data-lucide="headset"></i>
             <span>Support</span>
         </div>
-
         <script>
             // Update CSR visibility based on login
             const updateCSRVisibility = () => {
