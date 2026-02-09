@@ -1438,6 +1438,171 @@
             color: #94a3b8;
         }
 
+        /* --- Split Layout for Market View --- */
+        .market-main-container {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .market-left-col {
+            flex: 1;
+            /* Takes remaining space */
+        }
+
+        .market-right-col {
+            width: 350px;
+            /* Fixed width for Buy Panel */
+            display: none;
+            /* Hidden by default until a stock is selected, or always show if design prefers */
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* --- Buy Panel Styles --- */
+        .buy-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .bp-header {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bp-row {
+            margin-bottom: 1rem;
+        }
+
+        .bp-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .bp-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .bp-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .bp-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .bp-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+
+        .bp-btn {
+            width: 100%;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .bp-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* --- Transactions List in Right Panel --- */
+        .trans-list-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .tl-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .tl-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .tl-item:first-child {
+            padding-top: 0;
+        }
+
+        .tl-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tl-symbol {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        .tl-date {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .tl-right {
+            text-align: right;
+        }
+
+        .tl-qty {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .tl-price {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+
         .f-item-id {
             font-size: 0.75rem;
             color: #cbd5e1;
@@ -1467,6 +1632,56 @@
             font-weight: 600;
             margin-top: 0.2rem;
         }
+
+        .search-results-dropdown {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .search-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .search-symbol {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+
+        .search-name {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .search-price-val {
+            font-weight: 600;
+            color: #10b981;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 
@@ -1474,9 +1689,11 @@
     <div class="market-wrapper">
         <header class="header" style="padding: 1rem 2rem;">
             <div class="header-left">
-                <div class="search-container">
+                <div class="search-container" style="position: relative;">
                     <i data-lucide="search" class="search-icon"></i>
-                    <input type="text" placeholder="Ctrl K" class="search-input">
+                    <input type="text" placeholder="Search Stocks (e.g. RELIANCE, TCS)..." class="search-input"
+                        id="globalSearchInput" autocomplete="off">
+                    <div id="searchResults" class="search-results-dropdown"></div>
                 </div>
             </div>
             <nav class="nav">
@@ -1736,91 +1953,100 @@
                             <a href="login.html" class="auth-lock-btn">Please log in to continue</a>
                         </div>
                         <div class="auth-locked-content">
-                            <div class="price-hero">
-                                <div>
-                                    <div id="chartTitle"
-                                        style="font-weight: 600; font-size: 1.1rem; color: #1e293b; margin-bottom: 0.5rem;">
-                                        SENSEX (BSE Index Live)</div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <h2 id="indexPrice">83,580.40</h2>
-                                        <div id="heroChange" class="index-chg green" style="font-size: 1.1rem;">+266.47
-                                            (+0.32%)
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="day-range-container">
-                                <div class="range-bar-wrapper">
-                                    <div class="slider-marker" id="sliderMarker" style="left: 65%;"></div>
-                                </div>
-                                <div class="range-labels">
-                                    <span class="low-val" id="dayLow">83,250.27</span>
-                                    <span class="high-val" id="dayHigh">83,784.17</span>
-                                </div>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <span class="info-label">Symbol:</span>
-                                        <span class="info-val-text" id="valSymbol">SENSEX</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Market:</span>
-                                        <span class="info-val-text">ININ</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">High:</span>
-                                        <span class="info-val-text" id="gridHigh">83,784.17</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Low:</span>
-                                        <span class="info-val-text" id="gridLow">83,250.27</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Prev Open:</span>
-                                        <span class="info-val-text" id="gridOpen">83,757.54</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Prev Close:</span>
-                                        <span class="info-val-text" id="gridClose">83,817.69</span>
-                                    </div>
-                                    <div class="info-item" style="grid-column: span 3;">
-                                        <div
-                                            style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; margin-top: 1rem;">
-                                            <span style="color: #10b981;"><i data-lucide="arrow-up" size="14"></i>
-                                                <span id="valAdvances">18</span>
-                                                Advances</span>
-                                            <span style="color: #ef4444;"><span id="valDeclines">4</span> Declines <i
-                                                    data-lucide="arrow-down" size="14"></i></span>
-                                        </div>
-                                        <div class="advances-bar"
-                                            style="display: flex; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-                                            <div id="barAdvances" class="adv-green"
-                                                style="background: #10b981; transition: flex 0.5s ease; flex: 18;">
-                                            </div>
-                                            <div id="barDeclines" class="adv-red"
-                                                style="background: #ef4444; transition: flex 0.5s ease; flex: 4;">
+                            <div class="market-main-container">
+                                <div class="market-left-col">
+                                    <div class="price-hero">
+                                        <div>
+                                            <div id="chartTitle"
+                                                style="font-weight: 600; font-size: 1.1rem; color: #1e293b; margin-bottom: 0.5rem;">
+                                                SENSEX (BSE Index Live)</div>
+                                            <div
+                                                style="display: flex; justify-content: space-between; align-items: center;">
+                                                <h2 id="indexPrice">83,580.40</h2>
+                                                <div id="heroChange" class="index-chg green" style="font-size: 1.1rem;">
+                                                    +266.47
+                                                    (+0.32%)
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="info-item" style="grid-column: span 3;">
-                                        <span class="info-label">Volume:</span>
-                                        <span class="info-val-text" id="valVol">14,913,178</span>
+
+                                    <div class="day-range-container">
+                                        <div class="range-bar-wrapper">
+                                            <div class="slider-marker" id="sliderMarker" style="left: 65%;"></div>
+                                        </div>
+                                        <div class="range-labels">
+                                            <span class="low-val" id="dayLow">83,250.27</span>
+                                            <span class="high-val" id="dayHigh">83,784.17</span>
+                                        </div>
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <span class="info-label">Symbol:</span>
+                                                <span class="info-val-text" id="valSymbol">SENSEX</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Market:</span>
+                                                <span class="info-val-text">ININ</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">High:</span>
+                                                <span class="info-val-text" id="gridHigh">83,784.17</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Low:</span>
+                                                <span class="info-val-text" id="gridLow">83,250.27</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Prev Open:</span>
+                                                <span class="info-val-text" id="gridOpen">83,757.54</span>
+                                            </div>
+                                            <div class="info-item">
+                                                <span class="info-label">Prev Close:</span>
+                                                <span class="info-val-text" id="gridClose">83,817.69</span>
+                                            </div>
+                                            <div class="info-item" style="grid-column: span 3;">
+                                                <div
+                                                    style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; margin-top: 1rem;">
+                                                    <span style="color: #10b981;"><i data-lucide="arrow-up"
+                                                            size="14"></i>
+                                                        <span id="valAdvances">18</span>
+                                                        Advances</span>
+                                                    <span style="color: #ef4444;"><span id="valDeclines">4</span>
+                                                        Declines <i data-lucide="arrow-down" size="14"></i></span>
+                                                </div>
+                                                <div class="advances-bar"
+                                                    style="display: flex; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                                                    <div id="barAdvances" class="adv-green"
+                                                        style="background: #10b981; transition: flex 0.5s ease; flex: 18;">
+                                                    </div>
+                                                    <div id="barDeclines" class="adv-red"
+                                                        style="background: #ef4444; transition: flex 0.5s ease; flex: 4;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="info-item" style="grid-column: span 3;">
+                                                <span class="info-label">Volume:</span>
+                                                <span class="info-val-text" id="valVol">14,913,178</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timeframe-btns">
+                                        <button class="tf-btn" onclick="changeInterval('1', this)">1m</button>
+                                        <button class="tf-btn" onclick="changeInterval('30', this)">30m</button>
+                                        <button class="tf-btn" onclick="changeInterval('60', this)">1h</button>
+                                        <button class="tf-btn active" onclick="changeInterval('D', this)">1D</button>
+                                        <button class="tf-btn" onclick="changeInterval('W', this)">1W</button>
+                                        <button class="tf-btn" onclick="changeInterval('M', this)">1M</button>
+                                    </div>
+
+                                    <div class="chart-container-realtime" style="height: 500px; width: 100%;">
+                                        <div id="tradingview_widget" style="height:100%; width:100%;"></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="timeframe-btns">
-                                <button class="tf-btn" onclick="changeInterval('1', this)">1m</button>
-                                <button class="tf-btn" onclick="changeInterval('30', this)">30m</button>
-                                <button class="tf-btn" onclick="changeInterval('60', this)">1h</button>
-                                <button class="tf-btn active" onclick="changeInterval('D', this)">1D</button>
-                                <button class="tf-btn" onclick="changeInterval('W', this)">1W</button>
-                                <button class="tf-btn" onclick="changeInterval('M', this)">1M</button>
-                            </div>
 
-                            <div class="chart-container-realtime" style="height: 500px; width: 100%;">
-                                <div id="tradingview_widget" style="height:100%; width:100%;"></div>
-                            </div>
                         </div>
                     </section>
 
@@ -1923,7 +2149,9 @@
                             loadWidget(symbol);
                         }
 
+
                         function syncUI() {
+                            // Rehydrate existing static data
                             for (const sym in indexData) {
                                 const d = indexData[sym];
                                 const diff = d.price - d.basePrice;
@@ -1934,15 +2162,17 @@
                                 const changeText = `${sign}${diff.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
                                 const formattedPrice = d.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                                // Update top cards
+                                // Cards
                                 const cardVal = document.getElementById(d.cardValId);
                                 if (cardVal) {
                                     cardVal.innerText = formattedPrice;
                                     const cardChg = document.getElementById(d.cardChgId);
-                                    cardChg.innerText = changeText;
-                                    cardChg.className = `index-chg ${colorClass}`;
+                                    if (cardChg) {
+                                        cardChg.innerText = changeText;
+                                        cardChg.className = `index-chg ${colorClass}`;
+                                    }
 
-                                    // Update Sparkline
+                                    // Sparkline
                                     const sparkPath = document.querySelector(`#${d.sparkId} .sparkline-path`);
                                     if (sparkPath) {
                                         const points = d.history.map((val, i) => `${i * 10} ${val}`).join(' L');
@@ -1950,53 +2180,164 @@
                                         sparkPath.className.baseVal = `sparkline-path ${colorClass}`;
                                     }
                                 }
+                            }
 
-                                // Update Hero (only if active)
-                                if (sym === currentActiveSymbol) {
-                                    const indexPriceEl = document.getElementById('indexPrice');
-                                    if (indexPriceEl) indexPriceEl.innerText = formattedPrice;
+                            // If it's one of the known indices, update Hero with static data
+                            if (indexData[currentActiveSymbol]) {
+                                const d = indexData[currentActiveSymbol];
+                                const diff = d.price - d.basePrice;
+                                const pct = (diff / d.basePrice) * 100;
+                                const isUp = diff >= 0;
+                                const colorClass = isUp ? 'green' : 'red';
+                                const sign = isUp ? '+' : '';
+                                const changeText = `${sign}${diff.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
 
-                                    const heroChg = document.getElementById('heroChange');
-                                    if (heroChg) {
-                                        heroChg.innerText = changeText;
-                                        heroChg.className = `index-chg ${colorClass}`;
-                                    }
-
-                                    if (document.getElementById('dayLow')) {
-                                        document.getElementById('dayLow').innerText = d.low.toLocaleString('en-IN');
-                                        document.getElementById('dayHigh').innerText = d.high.toLocaleString('en-IN');
-
-                                        const sliderPct = ((d.price - d.low) / (d.high - d.low)) * 100;
-                                        document.getElementById('sliderMarker').style.left = `${Math.max(0, Math.min(100, sliderPct))}%`;
-
-                                        document.getElementById('valSymbol').innerText = d.sym;
-                                        document.getElementById('gridHigh').innerText = d.high.toLocaleString('en-IN');
-                                        document.getElementById('gridLow').innerText = d.low.toLocaleString('en-IN');
-                                        document.getElementById('gridOpen').innerText = d.open.toLocaleString('en-IN');
-                                        document.getElementById('gridClose').innerText = d.close.toLocaleString('en-IN');
-                                        document.getElementById('valVol').innerText = d.vol;
-                                    }
-
-                                    // Update Advances/Declines Synchronization
-                                    if (d.sym === "SENSEX") {
-                                        const pct = ((d.price - d.basePrice) / d.basePrice) * 100;
-                                        const adv = Math.floor(15 + (pct * 10));
-                                        const safeAdv = Math.max(1, Math.min(25, adv));
-                                        const safeDec = 30 - safeAdv;
-
-                                        const advancesEl = document.getElementById('valAdvances');
-                                        const declinesEl = document.getElementById('valDeclines');
-                                        const barAdv = document.getElementById('barAdvances');
-                                        const barDec = document.getElementById('barDeclines');
-
-                                        if (advancesEl) advancesEl.innerText = safeAdv;
-                                        if (declinesEl) declinesEl.innerText = safeDec;
-                                        if (barAdv) barAdv.style.flex = safeAdv;
-                                        if (barDec) barDec.style.flex = safeDec;
-                                    }
+                                document.getElementById('indexPrice').innerText = d.price.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                                const hChg = document.getElementById('heroChange');
+                                if (hChg) {
+                                    hChg.innerText = changeText;
+                                    hChg.className = `index-chg ${colorClass}`;
                                 }
+                                if (document.getElementById('dayLow')) {
+                                    document.getElementById('dayLow').innerText = d.low.toLocaleString('en-IN');
+                                    document.getElementById('dayHigh').innerText = d.high.toLocaleString('en-IN');
+                                    const sliderPct = ((d.price - d.low) / (d.high - d.low)) * 100;
+                                    document.getElementById('sliderMarker').style.left = `${Math.max(0, Math.min(100, sliderPct))}%`;
+
+                                    document.getElementById('valSymbol').innerText = d.sym;
+                                    document.getElementById('gridHigh').innerText = d.high.toLocaleString('en-IN');
+                                    document.getElementById('gridLow').innerText = d.low.toLocaleString('en-IN');
+                                    document.getElementById('gridOpen').innerText = d.open.toLocaleString('en-IN');
+                                    document.getElementById('gridClose').innerText = d.close.toLocaleString('en-IN');
+                                    document.getElementById('valVol').innerText = d.vol;
+                                }
+                            } else {
+                                // Custom Stock Selected - Hide static hero details or set placeholder
+                                // For a better UX, we can try to simulate or clear them
+                                document.getElementById('indexPrice').innerText = "Loading...";
+                                document.getElementById('heroChange').innerText = "Live from Chart";
+                                document.getElementById('heroChange').className = "index-chg";
+                                document.getElementById('valSymbol').innerText = currentActiveSymbol.split(':')[1];
+
+                                // Reset grid to dashes or hide
+                                ['dayLow', 'dayHigh', 'gridHigh', 'gridLow', 'gridOpen', 'gridClose'].forEach(id => {
+                                    if (document.getElementById(id)) document.getElementById(id).innerText = '-';
+                                });
                             }
                         }
+
+                        // --- SEARCH FUNCTIONALITY ---
+                        const INDIAN_STOCKS = [
+                            { s: 'BSE:SENSEX', n: 'SENSEX Index', p: 83580.40 },
+                            { s: 'NSE:NIFTY', n: 'NIFTY 50', p: 25641.65 },
+                            { s: 'NSE:BANKNIFTY', n: 'NIFTY BANK', p: 60045.35 },
+                            { s: 'NSE:RELIANCE', n: 'Reliance Industries Ltd', p: 2985.50 },
+                            { s: 'NSE:TCS', n: 'Tata Consultancy Services', p: 4250.20 },
+                            { s: 'NSE:HDFCBANK', n: 'HDFC Bank Ltd', p: 1680.75 },
+                            { s: 'NSE:INFY', n: 'Infosys Ltd', p: 1890.30 },
+                            { s: 'NSE:ICICIBANK', n: 'ICICI Bank Ltd', p: 1250.40 },
+                            { s: 'NSE:HINDUNILVR', n: 'Hindustan Unilever Ltd', p: 2780.10 },
+                            { s: 'NSE:SBIN', n: 'State Bank of India', p: 795.60 },
+                            { s: 'NSE:BHARTIARTL', n: 'Bharti Airtel Ltd', p: 1650.20 },
+                            { s: 'NSE:ITC', n: 'ITC Ltd', p: 510.40 },
+                            { s: 'NSE:KOTAKBANK', n: 'Kotak Mahindra Bank', p: 1820.50 },
+                            { s: 'NSE:LT', n: 'Larsen & Toubro Ltd', p: 3750.80 },
+                            { s: 'NSE:AXISBANK', n: 'Axis Bank Ltd', p: 1190.30 },
+                            { s: 'NSE:HCLTECH', n: 'HCL Technologies', p: 1760.40 },
+                            { s: 'NSE:MARUTI', n: 'Maruti Suzuki India', p: 12450.00 },
+                            { s: 'NSE:TITAN', n: 'Titan Company Ltd', p: 3580.20 },
+                            { s: 'NSE:BAJFINANCE', n: 'Bajaj Finance Ltd', p: 7450.60 },
+                            { s: 'NSE:SUNPHARMA', n: 'Sun Pharmaceutical', p: 1890.10 },
+                            { s: 'NSE:TATAMOTORS', n: 'Tata Motors Ltd', p: 980.50 },
+                            { s: 'NSE:ULTRACEMCO', n: 'UltraTech Cement', p: 11250.00 },
+                            { s: 'NSE:ASIANPAINT', n: 'Asian Paints Ltd', p: 3250.40 },
+                            { s: 'NSE:NTPC', n: 'NTPC Ltd', p: 410.20 },
+                            { s: 'NSE:M_M', n: 'Mahindra & Mahindra', p: 2890.50 },
+                            { s: 'NSE:POWERGRID', n: 'Power Grid Corp', p: 345.60 },
+                            { s: 'NSE:ADANIENT', n: 'Adani Enterprises', p: 3150.80 },
+                            { s: 'NSE:ADANIPORTS', n: 'Adani Ports & SEZ', p: 1450.30 },
+                            { s: 'NSE:COALINDIA', n: 'Coal India Ltd', p: 510.20 },
+                            { s: 'NSE:WIPRO', n: 'Wipro Ltd', p: 540.60 },
+                            { s: 'NSE:ONGC', n: 'ONGC', p: 320.10 },
+                            { s: 'NSE:JSWSTEEL', n: 'JSW Steel Ltd', p: 980.40 },
+                            { s: 'NSE:BAJAJFINSV', n: 'Bajaj Finserv Ltd', p: 1850.20 },
+                            { s: 'NSE:GRASIM', n: 'Grasim Industries', p: 2650.50 },
+                            { s: 'NSE:TECHM', n: 'Tech Mahindra Ltd', p: 1540.30 },
+                            { s: 'NSE:EICHERMOT', n: 'Eicher Motors Ltd', p: 4850.60 },
+                            { s: 'NSE:NESTLEIND', n: 'Nestle India Ltd', p: 2540.20 },
+                            { s: 'NSE:TATASTEEL', n: 'Tata Steel Ltd', p: 165.40 },
+                            { s: 'NSE:INDUSINDBK', n: 'IndusInd Bank Ltd', p: 1450.30 },
+                            { s: 'NSE:BRITANNIA', n: 'Britannia Industries', p: 5890.50 },
+                            { s: 'NSE:CIPLA', n: 'Cipla Ltd', p: 1620.40 },
+                            { s: 'NSE:HEROMOTOCO', n: 'Hero MotoCorp Ltd', p: 5650.20 },
+                            { s: 'NSE:APOLLOHOSP', n: 'Apollo Hospitals', p: 6850.40 },
+                            { s: 'NSE:DIVISLAB', n: 'Divi\'s Laboratories', p: 5450.80 },
+                            { s: 'NSE:DRREDDY', n: 'Dr. Reddy\'s Labs', p: 6780.20 },
+                            { s: 'NSE:SBILIFE', n: 'SBI Life Insurance', p: 1780.50 },
+                            { s: 'NSE:HDFCLIFE', n: 'HDFC Life Insurance', p: 720.40 },
+                            { s: 'NSE:BPCL', n: 'Bharat Petroleum', p: 340.20 },
+                            { s: 'NSE:LTIM', n: 'LTIMindtree Ltd', p: 5950.60 },
+                            { s: 'NSE:TATACONSUM', n: 'Tata Consumer', p: 1250.30 }
+                        ];
+
+                        const sInput = document.getElementById('globalSearchInput');
+                        const sResults = document.getElementById('searchResults');
+
+                        if (sInput) {
+                            sInput.addEventListener('input', (e) => {
+                                const q = e.target.value.trim().toUpperCase();
+                                if (q.length < 1) {
+                                    sResults.style.display = 'none';
+                                    return;
+                                }
+
+                                const matches = INDIAN_STOCKS.filter(x => x.s.includes(q) || x.n.toUpperCase().includes(q));
+                                if (matches.length > 0) {
+                                    sResults.innerHTML = matches.map(m => `
+                                        <div class="search-item" onclick="selectStock('${m.s}', '${m.n}')">
+                                            <div>
+                                                <div class="search-symbol">${m.s}</div>
+                                                <div class="search-name">${m.n}</div>
+                                            </div>
+                                            <div class="search-price-val">₹${m.p.toLocaleString('en-IN')}</div>
+                                        </div>
+                                    `).join('');
+                                    sResults.style.display = 'block';
+                                } else {
+                                    sResults.innerHTML = '<div class="search-item" style="cursor:default; color:#94a3b8;">No results found</div>';
+                                    sResults.style.display = 'block';
+                                }
+                            });
+
+                            document.addEventListener('click', (e) => {
+                                if (!sInput.contains(e.target) && !sResults.contains(e.target)) {
+                                    sResults.style.display = 'none';
+                                }
+                            });
+                        }
+
+                        function selectStock(sym, name) {
+                            sInput.value = '';
+                            sResults.style.display = 'none';
+                            // Redirect to Stock Detail Page
+                            window.location.href = `stock_detail.html?symbol=${encodeURIComponent(sym)}&name=${encodeURIComponent(name)}`;
+                        }
+
+                        window.onload = function () {
+                            loadWidget(currentActiveSymbol);
+                            syncUI();
+                            // Optional: Mock live update for hero prices of default data
+                            setInterval(() => {
+                                for (let k in indexData) {
+                                    let v = indexData[k];
+                                    let change = (Math.random() - 0.5) * (v.price * 0.0005); // 0.05% fluctuation
+                                    v.price += change;
+                                    if (v.price < v.low) v.low = v.price;
+                                    if (v.price > v.high) v.high = v.price;
+                                }
+                                syncUI();
+                            }, 3000);
+                        };
 
                         function startSimulation() {
                             setInterval(() => {
