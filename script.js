@@ -164,14 +164,7 @@ window.handleGuestClick = function (url) {
     }
 };
 
-window.toggleMessageCenter = function () {
-    const modal = document.getElementById('messageCenter');
-    const overlay = document.getElementById('messageCenterOverlay');
-    if (modal && overlay) {
-        modal.classList.toggle('active');
-        overlay.classList.toggle('active');
-    }
-};
+// function moved to centralized async implementation below
 
 window.closeAlert = function () {
     const alertBox = document.querySelector('.top-alert-container');
@@ -657,44 +650,226 @@ window.syncUserData = async function () {
 };
 
 // --- Message Center Logic ---
-window.toggleMessageCenter = function () {
+// --- Message Center Logic (Notices) ---
+window.toggleMessageCenter = async function () {
     const modal = document.getElementById('messageCenter');
     const overlay = document.getElementById('messageCenterOverlay');
+    const list = document.getElementById('mcList');
+
     if (modal && overlay) {
         const isActive = modal.classList.contains('active');
         if (isActive) {
             modal.classList.remove('active');
             overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            setTimeout(() => overlay.style.display = 'none', 300);
         } else {
             overlay.style.display = 'block';
-            // slight delay to allow display block to take effect for transition
             setTimeout(() => {
                 modal.classList.add('active');
                 overlay.classList.add('active');
             }, 10);
+
+            // Hide Badges when opened
+            const badges = document.querySelectorAll('.notif-badge, #msgBadge');
+            badges.forEach(b => b.style.display = 'none');
+
+            // Fetch Notices via Chat History and Filter
+            if (window.DB && window.DB.getMessages) {
+                const user = window.DB.getCurrentUser();
+                if (user) {
+                    list.innerHTML = '<div style="padding:20px;text-align:center;">Loading...</div>';
+                    // We fetch ALL messages (Admin+User) to find notifications
+                    // This is inefficient but necessary without DB query changes for JSON
+                    // Optimally: DB.getMessages includes Admin messages.
+                    const allMsgs = await window.DB.getMessages(user.id);
+
+                    // Filter: Sender must be Admin AND have is_notification: true
+                    // OR Sender is System (legacy)
+                    const notices = allMsgs.filter(m => {
+                        if (m.sender === 'System') return true;
+                        if (m.sender === 'Admin') {
+                            try {
+                                const p = JSON.parse(m.message);
+                                return p.is_notification === true;
+                            } catch (e) { return false; }
+                        }
+                        return false;
+                    });
+
+                    renderNotices(notices);
+                }
+            }
         }
-    } else if (modal) {
-        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
     }
+};
+
+function renderNotices(notices) {
+    const list = document.getElementById('mcList');
+    const count = document.getElementById('msgCount');
+    if (!list) return;
+
+    if (!notices || notices.length === 0) {
+        list.innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+        if (count) count.textContent = '0 Messages';
+        return;
+    }
+
+    if (count) count.textContent = `${notices.length} Messages`;
+
+    list.innerHTML = notices.map(n => {
+        let title = n.title || 'System Notice';
+        let body = n.message || '';
+        try {
+            if (body.startsWith('{')) {
+                const p = JSON.parse(body);
+                if (p.title) title = p.title;
+                if (p.body) body = p.body;
+            }
+        } catch (e) { }
+
+        return `
+        <div class="notif-card" id="notif-${n.id}" onclick="toggleNotifView('${n.id}', event)">
+            <div class="notif-timeline ${n.read ? '' : 'unread'}"></div>
+            <div class="notif-header">
+                <div class="notif-main-info">
+                    <div class="notif-title">${title} <span class="notif-tag" style="font-size:10px; margin-left:5px;">${n.tag || 'NOTICE'}</span></div>
+                    <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
+                </div>
+                <button class="notif-delete-btn" onclick="deleteMessage('${n.id}', this); event.stopPropagation();">Delete</button>
+            </div>
+            <div class="notif-body">${body}</div>
+        </div>
+        `;
+    }).join('');
+}
+
+window.toggleNotifView = function (id, event) {
+    // Toggle Card Expansion
+    const card = document.getElementById(`notif-${id}`);
+    if (card) {
+        card.classList.toggle('expanded');
+
+        // Mark as read if expanding
+        if (card.classList.contains('expanded')) {
+            const timeline = card.querySelector('.notif-timeline');
+            if (timeline && timeline.classList.contains('unread')) {
+                timeline.classList.remove('unread');
+            }
+        }
+    }
+};
+
+// --- Selection Mode Logic ---
+window.isSelectMode = false;
+
+window.sysToggleSelect = function () {
+    window.isSelectMode = !window.isSelectMode;
+    const chks = document.querySelectorAll('.mc-select-box');
+    const footer = document.getElementById('mcFooter'); // We need to check if this exists or we inject it
+
+    // Toggle Checkboxes
+    chks.forEach(c => c.style.display = window.isSelectMode ? 'block' : 'none');
+
+    // Toggle Footer Buttons
+    // Ideally we replace the footer HTML entirely to swap buttons
+    const normalBtns = document.getElementById('mcNormalBtns');
+    const selectBtns = document.getElementById('mcSelectBtns');
+
+    if (normalBtns && selectBtns) {
+        normalBtns.style.display = window.isSelectMode ? 'none' : 'flex';
+        selectBtns.style.display = window.isSelectMode ? 'flex' : 'none';
+        // Reset selection
+        if (!window.isSelectMode) {
+            document.querySelectorAll('.mc-chk').forEach(c => c.checked = false);
+        }
+    }
+};
+
+window.updateDeleteBtn = function () {
+    const count = document.querySelectorAll('.mc-chk:checked').length;
+    const btn = document.getElementById('btnDeleteSelected');
+    if (btn) btn.textContent = `Delete Selected (${count})`;
+};
+
+window.deleteSelected = async function () {
+    const selected = Array.from(document.querySelectorAll('.mc-chk:checked')).map(c => c.value);
+    if (selected.length === 0) return;
+
+    if (!confirm(`Delete ${selected.length} notifications?`)) return;
+
+    for (const id of selected) {
+        if (window.DB && window.DB.deleteMessage) {
+            await window.DB.deleteMessage(id);
+            const el = document.getElementById(`notif-${id}`);
+            if (el) el.remove();
+        }
+    }
+
+    // Refresh list logic if empty?
+    if (document.querySelectorAll('.mc-item').length === 0) {
+        document.getElementById('mcList').innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+    }
+
+    // Exit select mode
+    window.sysToggleSelect();
 };
 
 window.makeAllRead = function () {
     document.querySelectorAll('.mc-dot.unread').forEach(el => el.classList.remove('unread'));
     const count = document.getElementById('msgCount');
     if (count) count.textContent = '0 Messages';
+    // Logic to mark read in DB could go here
 };
 
-window.deleteAllMessages = function () {
-    const list = document.getElementById('mcList');
-    if (list) list.innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
-    const count = document.getElementById('msgCount');
-    if (count) count.textContent = '0 Messages';
+window.deleteAllMessages = async function () {
+    if (!confirm("Are you sure you want to delete ALL notifications? This cannot be undone.")) return;
+
+    const cards = document.querySelectorAll('.notif-card');
+    if (cards.length === 0) return;
+
+    if (window.DB && window.DB.deleteMessage) {
+        // Collect IDs
+        const ids = Array.from(cards).map(c => c.id.replace('notif-', ''));
+
+        // Batch delete simulation (since API is single delete)
+        // Show loading state?
+        const btn = document.querySelector('button[onclick="deleteAllMessages()"]');
+        if (btn) btn.textContent = "Deleting...";
+
+        for (const id of ids) {
+            await window.DB.deleteMessage(id);
+        }
+
+        if (btn) btn.textContent = "Delete All";
+    }
+
+    // Clear UI
+    document.getElementById('mcList').innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+
+    // Reset Badge
+    const badge = document.getElementById('msgBadge');
+    if (badge) badge.style.display = 'none';
 };
 
-window.deleteMessage = function (btn) {
-    const item = btn.closest('.mc-item');
-    if (item) item.remove();
+window.deleteMessage = async function (id, btn) {
+    if (!confirm("Delete this notification?")) return;
+
+    if (window.DB && window.DB.deleteMessage) {
+        await window.DB.deleteMessage(id);
+    }
+
+    const item = btn.closest('.notif-card');
+    if (item) {
+        item.style.opacity = '0';
+        setTimeout(() => item.remove(), 300);
+
+        // Update Count
+        const count = document.getElementById('msgCount');
+        if (count && count.textContent) {
+            let c = parseInt(count.textContent);
+            if (!isNaN(c) && c > 0) count.textContent = `${c - 1} Messages`;
+        }
+    }
 };
 
 
@@ -752,6 +927,14 @@ window.startChatListener = async function () {
             filter: `user_id=eq.${user.id}`
         }, payload => {
             const m = payload.new;
+            if (m.sender === 'System') return; // Ignore System (if any exist)
+
+            // IGNORE NOTIFICATIONS in Chat (they have is_notification: true)
+            try {
+                const p = JSON.parse(m.message);
+                if (p.is_notification) return;
+            } catch (e) { }
+
             const isUser = m.sender === 'User' || m.sender === 'user';
 
             // Always append if modal is open
@@ -782,7 +965,16 @@ function renderMessages(msgs) {
     if (!targetBox) return;
     targetBox.innerHTML = '';
     if (msgs && msgs.forEach) {
-        msgs.forEach(m => appendSingleMessage(m));
+        msgs.forEach(m => {
+            // Filter out notifications
+            try {
+                if (m.sender === 'Admin') {
+                    const p = JSON.parse(m.message);
+                    if (p.is_notification) return;
+                }
+            } catch (e) { }
+            appendSingleMessage(m);
+        });
     }
 }
 
@@ -841,11 +1033,80 @@ function playNotificationSound() {
     } catch (e) { }
 }
 
+window.startNotificationListener = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) return;
+
+    const client = window.DB ? window.DB.getClient() : null;
+    if (!client) return;
+
+    // Listen for System OR Admin-as-Notification
+    client.channel('user-notices')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `user_id=eq.${user.id}`
+        }, payload => {
+            const m = payload.new;
+            let isNotif = false;
+
+            if (m.sender === 'System') isNotif = true;
+            else if (m.sender === 'Admin') {
+                try {
+                    const p = JSON.parse(m.message);
+                    if (p.is_notification) isNotif = true;
+                } catch (e) { }
+            }
+
+            if (isNotif) {
+                playNotificationSound();
+
+                // Update Bell Badges
+                const badges = document.querySelectorAll('.notif-badge, #msgBadge');
+                badges.forEach(b => {
+                    b.style.display = 'block';
+                });
+
+                // Trigger Ring Animation on all bell icons
+                const icons = document.querySelectorAll('i[data-lucide="bell"]');
+                icons.forEach(icon => {
+                    icon.classList.remove('bell-ring');
+                    void icon.offsetWidth; // Trigger reflow
+                    icon.classList.add('bell-ring');
+                    setTimeout(() => icon.classList.remove('bell-ring'), 1000);
+                });
+            }
+        })
+        .subscribe();
+
+    // Initial Check for Unread Notifications on Load
+    setTimeout(async () => {
+        if (window.DB && window.DB.getMessages) {
+            const allMsgs = await window.DB.getMessages(user.id);
+            const notices = allMsgs.filter(m => {
+                let isN = false;
+                if (m.sender === 'System') isN = true;
+                if (m.sender === 'Admin') {
+                    try { const p = JSON.parse(m.message); if (p.is_notification) isN = true; } catch (e) { }
+                }
+                return isN && !m.read;
+            });
+
+            if (notices.length > 0) {
+                const badges = document.querySelectorAll('.notif-badge, #msgBadge');
+                badges.forEach(b => b.style.display = 'block');
+            }
+        }
+    }, 2000);
+};
+
 // Auto-start chat listener and sync if logged in
 document.addEventListener('DOMContentLoaded', () => {
     if (window.DB && window.DB.getCurrentUser()) {
         setTimeout(() => {
             if (window.startChatListener) window.startChatListener();
+            if (window.startNotificationListener) window.startNotificationListener();
             // Update CSR visibility
             const btn = document.getElementById('floatingCSR');
             if (btn) btn.style.display = 'flex';
