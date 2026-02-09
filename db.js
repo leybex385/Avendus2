@@ -152,10 +152,14 @@ window.DB = {
     // --- BANK ACCOUNTS ---
     async getBankAccounts(userId) {
         const client = this.getClient();
+        // Force header update to ensure fresh data
         const { data, error } = await client
             .from('bank_accounts')
             .select('*')
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }); // Show newest first
+
+        if (error) console.error("Get Bank Accounts Error:", error);
         return data || [];
     },
 
