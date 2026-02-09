@@ -287,7 +287,7 @@ window.openKYCModal = async function () {
             if (nameInput) nameInput.value = kyc.full_name || user.full_name || '';
             document.getElementById('kycIdNum').value = kyc.id_number || user.id_number || '';
             document.getElementById('kycSubmitted').value = fmtDate(kyc.submitted_at || kyc.created_at);
-            document.getElementById('kycApproved').value = kyc.status === 'Approved' ? fmtDate(kyc.approved_at) : (kyc.status || 'Pending');
+            document.getElementById('kycApproved').value = kyc.status === 'Approved' ? `Approved (${fmtDate(kyc.approved_at)})` : (kyc.status || 'Not Submitted');
 
             if (kyc.id_front_url) {
                 const img = document.getElementById('kycFrontPreview');
@@ -427,3 +427,259 @@ window.submitKYC = async function () {
         }
     }
 };
+
+// --- Data Sync Logic ---
+window.syncUserData = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) return;
+
+    const setName = document.querySelector('.settings-name');
+    const greetingName = document.querySelector('.user-text h3');
+    const setPhone = document.querySelector('.settings-phone');
+    const setVip = document.querySelector('.s-badge.vip');
+    const setCredit = document.querySelector('.s-badge.credit');
+
+    if (setName) setName.textContent = user.full_name || 'Set Name';
+    if (greetingName) greetingName.textContent = user.full_name || user.mobile;
+    if (setPhone) setPhone.textContent = user.mobile;
+
+    const avatars = document.querySelectorAll('.user-avatar, .avatar-circle');
+    const renderAvatar = (url) => {
+        avatars.forEach(av => {
+            if (url) av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            else av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
+        });
+    };
+    if (user.avatar_url) renderAvatar(user.avatar_url);
+
+    const client = window.DB ? window.DB.getClient() : null;
+    if (client) {
+        try {
+            const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
+            if (dbUser) {
+                let changed = false;
+                if (dbUser.avatar_url && dbUser.avatar_url !== user.avatar_url) { user.avatar_url = dbUser.avatar_url; changed = true; }
+                if (dbUser.full_name && dbUser.full_name !== user.full_name) { user.full_name = dbUser.full_name; changed = true; }
+
+                if (changed) {
+                    localStorage.setItem('avendus_current_user', JSON.stringify(user));
+                    renderAvatar(user.avatar_url);
+                    if (setName) setName.textContent = user.full_name;
+                    if (greetingName) greetingName.textContent = user.full_name;
+                }
+
+                if (setVip) setVip.innerHTML = `<i data-lucide="shield-check" size="18"></i> VIP: ${dbUser.vip || 0}`;
+
+                let creditScore = dbUser.credit_score;
+                if (creditScore === undefined || creditScore === null || creditScore === 'undefined') creditScore = 100;
+                if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
+
+                const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+                const balanceEls = document.querySelectorAll('.stat-value.green');
+                if (balanceEls.length > 0) balanceEls[0].textContent = fmt((dbUser.balance || 0) + (dbUser.invested || 0));
+                const investedEls = document.querySelectorAll('.stat-value.blue');
+                if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
+
+                if (window.lucide) lucide.createIcons();
+            }
+        } catch (e) { }
+    }
+};
+
+// --- Message Center Logic ---
+window.toggleMessageCenter = function () {
+    const modal = document.getElementById('messageCenter');
+    const overlay = document.getElementById('messageCenterOverlay');
+    if (modal && overlay) {
+        const isActive = modal.classList.contains('active');
+        if (isActive) {
+            modal.classList.remove('active');
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        } else {
+            overlay.style.display = 'block';
+            // slight delay to allow display block to take effect for transition
+            setTimeout(() => {
+                modal.classList.add('active');
+                overlay.classList.add('active');
+            }, 10);
+        }
+    } else if (modal) {
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    }
+};
+
+window.makeAllRead = function () {
+    document.querySelectorAll('.mc-dot.unread').forEach(el => el.classList.remove('unread'));
+    const count = document.getElementById('msgCount');
+    if (count) count.textContent = '0 Messages';
+};
+
+window.deleteAllMessages = function () {
+    const list = document.getElementById('mcList');
+    if (list) list.innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+    const count = document.getElementById('msgCount');
+    if (count) count.textContent = '0 Messages';
+};
+
+window.deleteMessage = function (btn) {
+    const item = btn.closest('.mc-item');
+    if (item) item.remove();
+};
+
+
+// --- Customer Service Logic ---
+let isChatSubscribed = false;
+
+window.openCS = function () {
+    if (window.closeSettings) window.closeSettings();
+    const modal = document.getElementById('csModal');
+    if (modal) modal.style.display = 'flex';
+    localStorage.setItem('avendus_cs_open', 'true');
+    loadCSMessages();
+};
+
+window.closeCS = function () {
+    const modal = document.getElementById('csModal');
+    if (modal) modal.style.display = 'none';
+    localStorage.setItem('avendus_cs_open', 'false');
+};
+
+async function loadCSMessages() {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    const targetBox = document.getElementById('chatBox');
+    if (!user || !targetBox) return;
+
+    if (window.DB && window.DB.getMessages) {
+        const msgs = await window.DB.getMessages(user.id);
+        renderMessages(msgs);
+    }
+
+    // Clear badges when chat is opened
+    const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
+    badges.forEach(b => {
+        if (b) {
+            b.style.display = 'none';
+            b.textContent = '0';
+        }
+    });
+
+    targetBox.scrollTop = targetBox.scrollHeight;
+}
+
+window.startChatListener = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user || isChatSubscribed) return;
+
+    const client = window.DB ? window.DB.getClient() : null;
+    if (!client) return;
+
+    client.channel('public:messages')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `user_id=eq.${user.id}`
+        }, payload => {
+            const m = payload.new;
+            const isUser = m.sender === 'User' || m.sender === 'user';
+
+            // Always append if modal is open
+            const modal = document.getElementById('csModal');
+            if (modal && modal.style.display === 'flex') {
+                appendSingleMessage(m);
+            }
+
+            // Notify if from Support
+            if (!isUser) {
+                playNotificationSound();
+                const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
+                badges.forEach(badge => {
+                    if (badge && (modal && modal.style.display !== 'flex')) {
+                        const count = parseInt(badge.textContent || '0') + 1;
+                        badge.textContent = count;
+                        badge.style.display = 'block';
+                    }
+                });
+            }
+        }).subscribe();
+
+    isChatSubscribed = true;
+};
+
+function renderMessages(msgs) {
+    const targetBox = document.getElementById('chatBox');
+    if (!targetBox) return;
+    targetBox.innerHTML = '';
+    if (msgs && msgs.forEach) {
+        msgs.forEach(m => appendSingleMessage(m));
+    }
+}
+
+function appendSingleMessage(m) {
+    const targetBox = document.getElementById('chatBox');
+    if (!targetBox) return;
+
+    const div = document.createElement('div');
+    const isUser = m.sender === 'User' || m.sender === 'user';
+
+    div.className = `chat-bubble ${isUser ? 'user' : 'support'}`;
+
+    // Handle JSON messages if admin sends structured data
+    let content = m.message;
+    try {
+        if (content.startsWith('{')) {
+            const parsed = JSON.parse(content);
+            content = `<strong>${parsed.title || ''}</strong><br>${parsed.body || parsed.message || ''}`;
+        }
+    } catch (e) { }
+
+    div.innerHTML = `
+        <div class="message-text">${content}</div>
+        <div class="message-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+    `;
+
+    targetBox.appendChild(div);
+    targetBox.scrollTop = targetBox.scrollHeight;
+}
+
+window.sendCSMessage = async () => {
+    const input = document.getElementById('csInput');
+    const text = input ? input.value.trim() : '';
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!text || !user) return;
+
+    if (input) input.value = '';
+
+    if (window.DB && window.DB.sendMessage) {
+        const { success, error } = await window.DB.sendMessage(user.id, text, 'User');
+        if (!success) {
+            console.error("Chat Error:", error);
+            alert("Message failed to send. Please try again.");
+        }
+    }
+};
+
+function playNotificationSound() {
+    try {
+        const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+        audio.volume = 0.5;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log("Audio blocked via playNotificationSound"));
+        }
+    } catch (e) { }
+}
+
+// Auto-start chat listener and sync if logged in
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.DB && window.DB.getCurrentUser()) {
+        setTimeout(() => {
+            if (window.startChatListener) window.startChatListener();
+            // Update CSR visibility
+            const btn = document.getElementById('floatingCSR');
+            if (btn) btn.style.display = 'flex';
+            if (window.syncUserData) window.syncUserData();
+        }, 1000);
+    }
+});
