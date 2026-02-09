@@ -998,6 +998,9 @@
                                         Credit</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        PIN</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
                                         Operate</th>
                                 </tr>
                             </thead>
@@ -1340,6 +1343,12 @@
                     </div>
                 </div>
 
+                <div class="kyc-form-group" style="margin-bottom:20px;">
+                    <label>Withdrawal PIN <span style="color:#94a3b8; font-weight:400; font-size:0.75rem;">(Edit to
+                            reset user PIN)</span></label>
+                    <input type="text" id="ek_pin" class="kyc-input" placeholder="User PIN (e.g. 123456)">
+                </div>
+
                 <div class="kyc-image-grid">
                     <div>
                         <label
@@ -1489,6 +1498,7 @@
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance).toFixed(2)}</td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.vip}</td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.credit_score}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                             <div class="btn-edit-wrap">
                                 <i data-lucide="edit" size="16" style="cursor:pointer" onclick="openKycEdit('${x.id}')"></i>
@@ -1953,6 +1963,7 @@
                 document.getElementById('ek_idnum').value = user.id_number || 'No ID set';
                 document.getElementById('ek_phone').value = user.mobile || '';
                 document.getElementById('ek_status').value = user.kyc || 'Pending';
+                document.getElementById('ek_pin').value = user.withdrawal_pin || '';
                 // Note: dob/address might need schema check, using defaults for now
                 document.getElementById('ek_dob').value = '';
                 document.getElementById('ek_notes').value = '';
@@ -2001,7 +2012,8 @@
                 username: document.getElementById('ek_name').value,
                 id_number: document.getElementById('ek_idnum').value,
                 mobile: document.getElementById('ek_phone').value,
-                kyc: document.getElementById('ek_status').value
+                kyc: document.getElementById('ek_status').value,
+                withdrawal_pin: document.getElementById('ek_pin').value
             };
 
             const kycUpdates = {
