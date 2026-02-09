@@ -259,6 +259,32 @@ window.DB = {
         return { success: !error, error };
     },
 
+    // ADMIN: Get ALL bank accounts (Online + Offline)
+    async getAllBankAccounts() {
+        const client = this.getClient();
+        let onlineData = [];
+        try {
+            const { data, error } = await client
+                .from('bank_accounts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (!error && data) onlineData = data;
+        } catch (e) { console.warn("Admin Fetch Failed"); }
+
+        // Also get ALL offline banks (needs a bit of trickery since offline is by user)
+        // Since we are admin, we might want to see all local storage? 
+        // Actually, local storage is browser specific. So Admin will only see THEIR OWN local storage.
+        // But for completeness in this browser session:
+        let offlineData = [];
+        try {
+            const raw = localStorage.getItem('avendus_offline_banks');
+            offlineData = raw ? JSON.parse(raw) : [];
+        } catch (e) { }
+
+        return [...onlineData, ...offlineData];
+    },
+
     // --- ADMIN METHODS ---
     async getUsers() {
         const client = this.getClient();
