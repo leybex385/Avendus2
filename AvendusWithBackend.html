@@ -721,7 +721,7 @@
                 style="padding: 15px 15px 5px 15px; font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
                 Communication</div>
             <div class="menu-item" id="btn_messages" onclick="switchPage('messages')"><i data-lucide="send"
-                    size="18"></i> Internal messages</div>
+                    size="18"></i> Notification Center</div>
             <div class="menu-item" id="btn_livechat" onclick="switchPage('livechat')"><i data-lucide="message-circle"
                     size="18"></i> Customer Service Support <span id="chat_badge"
                     style="display:none; background:red; color:white; font-size:10px; padding:2px 6px; border-radius:10px; margin-left:auto;">0</span>
@@ -753,12 +753,11 @@
             <div id="pageMessages" class="vsl-page" style="display:none;">
                 <div class="section-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h2 style="font-size:1.1rem; margin:0;">Internal Messaging Center</h2>
+                        <h2 style="font-size:1.1rem; margin:0;">Notification Center</h2>
                         <div style="display:flex; gap:10px;">
                             <button class="vsl-btn orange" onclick="init()"><i data-lucide="refresh-cw" size="14"></i>
                                 refresh</button>
-                            <button class="vsl-btn green" onclick="openMsgModal()">Create a new internal
-                                message</button>
+                            <button class="vsl-btn green" onclick="openMsgModal()">Create a new notification</button>
                         </div>
                     </div>
 
@@ -784,7 +783,7 @@
                             <div class="msg-items-scroll" id="sentMsgs"></div>
                         </div>
                         <div class="msg-content-pane" id="msgContentArea">
-                            <p>Please select one internal message to view.</p>
+                            <p>Please select one notification to view.</p>
                         </div>
                     </div>
 
@@ -1832,6 +1831,7 @@
             client.channel('public:messages')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
                     const newMsg = payload.new;
+                    if (newMsg.sender === 'System') return; // Ignore System notices in Admin Chat
                     if (currentChatUser && newMsg.user_id === currentChatUser.id) {
                         appendMessage(newMsg);
                     }
@@ -1954,11 +1954,38 @@
 
         async function sendMsg() {
             const tid = document.getElementById('msgTarget').value;
-            const m = JSON.stringify({ title: document.getElementById('msgTitle').value, body: document.getElementById('msgBody').value });
+            const title = document.getElementById('msgTitle').value;
+            const body = document.getElementById('msgBody').value;
+
+            if (!title || !body) { alert("Please enter both title and message content."); return; }
+
+            // Use 'Admin' sender to satisfy DB constraint, but add flag to distinguish from Chat
+            const m = JSON.stringify({ title: title, body: body, is_notification: true });
             showLoader(true);
             const c = DB.getClient();
-            if (tid === 'all') await c.from('messages').insert(allUsers.map(u => ({ user_id: u.id, message: m, sender: 'Admin' })));
-            else await c.from('messages').insert({ user_id: parseInt(tid), message: m, sender: 'Admin' });
+
+            let error = null;
+            try {
+                if (tid === 'all') {
+                    const { error: e } = await c.from('messages').insert(allUsers.map(u => ({ user_id: u.id, message: m, sender: 'Admin' })));
+                    error = e;
+                } else {
+                    const { error: e } = await c.from('messages').insert({ user_id: parseInt(tid), message: m, sender: 'Admin' });
+                    error = e;
+                }
+            } catch (err) {
+                error = err;
+            }
+
+            showLoader(false);
+
+            if (error) {
+                console.error("Send Notification Error:", error);
+                alert("Failed to send notification: " + (error.message || error));
+                return;
+            }
+
+            alert("Notification sent successfully to User(s)!");
             document.getElementById('msgModal').style.display = 'none';
             init();
         }
@@ -1968,6 +1995,48 @@
         function showLoader(s) { document.getElementById('vslLoader').style.display = s ? 'flex' : 'none'; }
         window.onload = () => { switchPage('home'); init(); };
     </script>
+    <!-- Message Center Modal -->
+    <div id="messageCenterOverlay" onclick="toggleMessageCenter()"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2999;">
+    </div>
+    <div id="messageCenter" class="cs-content"
+        style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.9); opacity:0; transition: all 0.3s; z-index:3000; display:none; flex-direction:column; background:white; width:400px; height:600px; border-radius:16px;">
+        <div class="cs-header"
+            style="background:#1e56a0; color:white; padding:1.25rem; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700; display:flex; gap:10px; align-items:center;"><i data-lucide="bell"
+                    size="20"></i> Notifications</div>
+            <button onclick="toggleMessageCenter()"
+                style="background:transparent; border:none; color:white; cursor:pointer;"><i data-lucide="x"
+                    size="20"></i></button>
+        </div>
+        <div class="cs-body" id="mcList"
+            style="flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:1rem;">
+            <!-- Messages go here -->
+        </div>
+        <div style="padding:1rem; border-top:1px solid #eee; display:flex; justify-content:space-between;"
+            id="mcFooter">
+            <button onclick="makeAllRead()"
+                style="background:#f1f5f9; border:none; padding:8px 16px; border-radius:6px; font-size:0.8rem; cursor:pointer; color:#64748b;">Mark
+                all read</button>
+            <button onclick="deleteAllMessages()"
+                style="background:#fee2e2; border:none; padding:8px 16px; border-radius:6px; font-size:0.8rem; cursor:pointer; color:#ef4444;">Delete
+                all</button>
+        </div>
+    </div>
+
+    <!-- Notification Bell Floating Button -->
+    <div class="cs-floating-tab" onclick="toggleMessageCenter()"
+        style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; background: #fff; border: 1px solid #e2e8f0; color: #64748b; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;">
+        <div
+            style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+            <i data-lucide="bell" size="24" color="#1e56a0"></i>
+            <div id="msgBadge"
+                style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 
 </html>
