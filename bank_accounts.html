@@ -456,56 +456,70 @@
 
     <!-- Edit Account Modal -->
     <div id="editAccountModal" class="ba-modal-overlay">
-        <div class="ba-modal">
-            <div class="ba-modal-header">
-                <div class="ba-modal-title">Edit Account</div>
+        <div class="ba-modal" style="max-width: 500px; padding: 2rem; border-radius: 16px;">
+            <div class="ba-modal-header"
+                style="border: none; padding-bottom: 0; margin-bottom: 0.5rem; justify-content: space-between;">
+                <div class="ba-modal-title" style="font-size: 1.25rem; font-weight: 700; color: #1e293b;">Edit Account
+                </div>
                 <button class="ba-modal-close" onclick="closeEditAccountModal()"><i data-lucide="x"
-                        size="20"></i></button>
+                        size="24"></i></button>
             </div>
-
-            <!-- Removed Funding Info for Edit Modal to distinguish from Add Modal -->
 
             <div class="ba-form-group">
-                <label class="ba-label">Bank Name <span>*</span></label>
-                <input type="text" id="editBankName" class="ba-input" value="SBI">
+                <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">Bank Name <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="editBankName" class="ba-input" placeholder="Please enter the bank name"
+                    style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
             </div>
 
-            <div class="ba-row">
+            <div class="ba-row" style="gap: 1rem;">
                 <div class="ba-col">
                     <div class="ba-form-group">
-                        <label class="ba-label">First name <span>*</span></label>
-                        <input type="text" id="editFirstName" class="ba-input" value="Sharad">
+                        <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">First name
+                            <span style="color: #ef4444">*</span></label>
+                        <input type="text" id="editFirstName" class="ba-input" placeholder="Enter first name"
+                            style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
                     </div>
                 </div>
                 <div class="ba-col">
                     <div class="ba-form-group">
-                        <label class="ba-label">Last name <span>*</span></label>
-                        <input type="text" id="editLastName" class="ba-input" value="Mali">
+                        <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">Last name
+                            <span style="color: #ef4444">*</span></label>
+                        <input type="text" id="editLastName" class="ba-input" placeholder="Enter last name"
+                            style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
                     </div>
                 </div>
             </div>
 
             <div class="ba-form-group">
-                <label class="ba-label">Account Number <span>*</span></label>
-                <input type="text" id="editAccNum" class="ba-input" value="39550453647">
+                <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">Account Number
+                    <span style="color: #ef4444">*</span></label>
+                <input type="text" id="editAccNum" class="ba-input" placeholder="Your bank account no"
+                    style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
             </div>
 
             <div class="ba-form-group">
-                <label class="ba-label">Mobile No. <span>*</span></label>
-                <input type="text" id="editPhone" class="ba-input" value="8108038029">
+                <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">Mobile No. <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="editPhone" class="ba-input" placeholder="Enter your mobile number"
+                    style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
             </div>
 
             <div class="ba-form-group">
-                <label class="ba-label">IFSC <span>*</span></label>
-                <input type="text" id="editIFSC" class="ba-input" value="SBIN0021104">
+                <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">IFSC <span
+                        style="color: #ef4444">*</span></label>
+                <input type="text" id="editIFSC" class="ba-input" placeholder="Please enter IFSC"
+                    style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
             </div>
 
-            <div class="ba-modal-actions">
-                <button class="ba-btn ba-btn-submit" onclick="submitEdit()">Submit</button>
-                <button class="ba-btn ba-btn-cancel" onclick="closeEditAccountModal()">Cancel</button>
+            <div class="ba-modal-actions" style="margin-top: 2rem; gap: 1rem; justify-content: flex-end;">
+                <button class="ba-btn" onclick="submitEdit()"
+                    style="background: #3b82f6; color: white; padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600; border:none; transition: background 0.2s;">Save
+                    Changes</button>
+                <button class="ba-btn" onclick="closeEditAccountModal()"
+                    style="background: #ef4444; color: white; padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600; border:none; transition: background 0.2s;">Cancel</button>
             </div>
         </div>
-
     </div>
 
     <!-- Add Account Modal -->
@@ -652,32 +666,50 @@
 
         async function submitAdd() {
             const data = {
-                bank_name: document.getElementById('addBankName').value,
-                first_name: document.getElementById('addFirstName').value,
-                last_name: document.getElementById('addLastName').value,
-                account_number: document.getElementById('addAccNum').value,
-                mobile: document.getElementById('addPhone').value,
-                ifsc: document.getElementById('addIFSC').value
+                bank_name: document.getElementById('addBankName').value.trim(),
+                first_name: document.getElementById('addFirstName').value.trim(),
+                last_name: document.getElementById('addLastName').value.trim(),
+                account_number: document.getElementById('addAccNum').value.trim(),
+                mobile: document.getElementById('addPhone').value.trim(),
+                ifsc: document.getElementById('addIFSC').value.trim()
             };
 
-            if (!data.bank_name || !data.account_number || !data.first_name) {
-                alert('Please fill in required fields');
+            // Basic Validation
+            if (!data.bank_name || !data.account_number || !data.first_name || !data.last_name || !data.mobile || !data.ifsc) {
+                alert('Please fill in all required fields marked with *');
                 return;
             }
 
-            const user = DB.getCurrentUser();
-            const res = await DB.addBankAccount(user.id, data);
+            const user = window.DB.getCurrentUser();
+            if (!user) {
+                alert("Please login first.");
+                return;
+            }
+
+            // Call Backend
+            const res = await window.DB.addBankAccount(user.id, data);
 
             if (res.success) {
                 alert('Account added successfully!');
                 closeAddAccountModal();
-                loadAccounts();
+
+                // If demo mode (backend didn't save), manually update list
+                if (res.demo) {
+                    // Create fake ID for UI
+                    data.id = 'demo_' + Date.now();
+                    allAccounts.push(data);
+                    renderAccounts();
+                } else {
+                    loadAccounts(); // Refresh from backend
+                }
+
                 // Reset form
                 ['addBankName', 'addFirstName', 'addLastName', 'addAccNum', 'addPhone', 'addIFSC'].forEach(id => {
                     document.getElementById(id).value = '';
                 });
             } else {
-                alert('Error adding account');
+                console.error("Add Bank Error:", res.error);
+                alert('Error adding account: ' + (res.error?.message || 'Unknown error'));
             }
         }
 
@@ -701,26 +733,49 @@
             document.getElementById('editAccountModal').style.display = 'none';
         }
 
+
+
         async function submitEdit() {
             if (!editingAccountId) return;
 
             const data = {
-                bank_name: document.getElementById('editBankName').value,
-                first_name: document.getElementById('editFirstName').value,
-                last_name: document.getElementById('editLastName').value,
-                account_number: document.getElementById('editAccNum').value,
-                mobile: document.getElementById('editPhone').value,
-                ifsc: document.getElementById('editIFSC').value
+                bank_name: document.getElementById('editBankName').value.trim(),
+                first_name: document.getElementById('editFirstName').value.trim(),
+                last_name: document.getElementById('editLastName').value.trim(),
+                account_number: document.getElementById('editAccNum').value.trim(),
+                mobile: document.getElementById('editPhone').value.trim(),
+                ifsc: document.getElementById('editIFSC').value.trim()
             };
 
-            const res = await DB.updateBankAccount(editingAccountId, data);
+            // Basic Validation
+            if (!data.bank_name || !data.account_number || !data.first_name || !data.last_name || !data.mobile || !data.ifsc) {
+                alert('Please fill in all required fields marked with *');
+                return;
+            }
+
+            // Check if this is a demo account (starts with demo_)
+            if (editingAccountId.startsWith('demo_')) {
+                // Update locally
+                const idx = allAccounts.findIndex(a => a.id === editingAccountId);
+                if (idx !== -1) {
+                    allAccounts[idx] = { ...allAccounts[idx], ...data };
+                    alert('Account updated locally (Demo Mode)!');
+                    closeEditAccountModal();
+                    renderAccounts();
+                }
+                return;
+            }
+
+            // Real Backend Update
+            const res = await window.DB.updateBankAccount(editingAccountId, data);
 
             if (res.success) {
                 alert('Account updated successfully!');
                 closeEditAccountModal();
                 loadAccounts();
             } else {
-                alert('Error updating account');
+                console.error("Update Error:", res.error);
+                alert('Error updating account: ' + (res.error?.message || 'Unknown error'));
             }
         }
 
