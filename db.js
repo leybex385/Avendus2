@@ -150,69 +150,108 @@ window.DB = {
     },
 
     // --- BANK ACCOUNTS ---
+    // --- BANK ACCOUNTS (ULTIMATE HYBRID MODE) ---
+    getOfflineBanks(userId) {
+        try {
+            const raw = localStorage.getItem('avendus_offline_banks');
+            const all = raw ? JSON.parse(raw) : [];
+            return all.filter(b => b.user_id === userId);
+        } catch (e) { return []; }
+    },
+
+    saveOfflineBank(userId, accountData) {
+        const raw = localStorage.getItem('avendus_offline_banks');
+        const all = raw ? JSON.parse(raw) : [];
+        const newBank = { id: 'local_' + Date.now(), user_id: userId, ...accountData, created_at: new Date().toISOString() };
+        all.push(newBank);
+        localStorage.setItem('avendus_offline_banks', JSON.stringify(all));
+        return newBank;
+    },
+
+    updateOfflineBank(id, data) {
+        const raw = localStorage.getItem('avendus_offline_banks');
+        let all = raw ? JSON.parse(raw) : [];
+        const idx = all.findIndex(b => b.id === id);
+        if (idx !== -1) {
+            all[idx] = { ...all[idx], ...data };
+            localStorage.setItem('avendus_offline_banks', JSON.stringify(all));
+            return true;
+        }
+        return false;
+    },
+
+    deleteOfflineBank(id) {
+        const raw = localStorage.getItem('avendus_offline_banks');
+        let all = raw ? JSON.parse(raw) : [];
+        const filtered = all.filter(b => b.id !== id);
+        localStorage.setItem('avendus_offline_banks', JSON.stringify(filtered));
+    },
+
     async getBankAccounts(userId) {
         const client = this.getClient();
-        // Force header update to ensure fresh data
-        const { data, error } = await client
-            .from('bank_accounts')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false }); // Show newest first
 
-        if (error) console.error("Get Bank Accounts Error:", error);
-        return data || [];
+        let onlineData = [];
+        try {
+            const { data, error } = await client
+                .from('bank_accounts')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            if (!error && data) onlineData = data;
+        } catch (e) { console.warn("Supabase Fetch Failed, using offline."); }
+
+        // Merge with offline data
+        const offlineData = this.getOfflineBanks(userId);
+
+        // Combine (Unique by ID if needed, but usually distinct)
+        return [...onlineData, ...offlineData];
     },
 
     async addBankAccount(userId, accountData) {
         const client = this.getClient();
+        const packet = { user_id: userId, ...accountData }; // Simplified packet
 
-        // Ensure data is clean
-        const packet = {
-            user_id: userId,
-            bank_name: accountData.bank_name,
-            account_number: accountData.account_number,
-            first_name: accountData.first_name,
-            last_name: accountData.last_name,
-            mobile: accountData.mobile,
-            ifsc: accountData.ifsc
-        };
-
-        // Check if userId is valid UUID (Supabase requires UUID)
+        // 1. Try Online First
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
 
-        if (!isUUID) {
-            console.warn("User ID is not a UUID (Demo Mode?):", userId);
-            // In demo mode, we can't save to real Supabase with invalid ID.
-            // Mock success response so UI works
-            return { success: true, demo: true };
+        if (isUUID) {
+            const { data, error } = await client.from('bank_accounts').insert([packet]);
+            if (!error) return { success: true };
+            console.warn("Online Add Failed, saving offline:", error);
         }
 
-        const { data, error } = await client
-            .from('bank_accounts')
-            .insert([packet]);
+        // 2. Fallback to Offline
+        this.saveOfflineBank(userId, accountData);
+        return { success: true, offline: true };
+    },
+
+    async updateBankAccount(id, accountData) {
+        // If it's a local ID
+        if (id.toString().startsWith('local_') || id.toString().startsWith('demo_')) {
+            this.updateOfflineBank(id, accountData);
+            return { success: true };
+        }
+
+        const client = this.getClient();
+        const { data, error } = await client.from('bank_accounts').update(accountData).eq('id', id);
 
         if (error) {
-            console.error("Supabase Error:", error);
+            // If online update fails, maybe we can't do much unless we cache edits.
+            // For now, return error but user can retry.
             return { success: false, error };
         }
         return { success: true };
     },
 
-    async updateBankAccount(id, accountData) {
-        const client = this.getClient();
-        const { data, error } = await client
-            .from('bank_accounts')
-            .update(accountData)
-            .eq('id', id);
-        return { success: !error, error };
-    },
-
     async deleteBankAccount(id) {
+        if (id.toString().startsWith('local_') || id.toString().startsWith('demo_')) {
+            this.deleteOfflineBank(id);
+            return { success: true };
+        }
+
         const client = this.getClient();
-        const { error } = await client
-            .from('bank_accounts')
-            .delete()
-            .eq('id', id);
+        const { error } = await client.from('bank_accounts').delete().eq('id', id);
         return { success: !error, error };
     },
 
