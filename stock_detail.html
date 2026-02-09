@@ -497,22 +497,45 @@
         }
 
         function loadWidget(symbol) {
+            // Simplified Logic: 
+            // 1. If symbol has .BSE or .NSE, replace dot with colon (Standard TV format)
+            // 2. Otherwise assume BSE (safest default for Indian Stocks)
+
+            let tvSymbol = symbol;
+            if (symbol.includes('.')) {
+                // e.g. SBIN.BSE -> BSE:SBIN
+                const parts = symbol.split('.');
+                if (parts.length === 2) {
+                    tvSymbol = `${parts[1]}:${parts[0]}`;
+                }
+            } else if (!symbol.includes(':')) {
+                // e.g. SBIN -> BSE:SBIN
+                tvSymbol = `BSE:${symbol}`;
+            }
+
+            console.log("Loading Chart (Simple):", tvSymbol);
+
+            // Ensure container is clean
+            const container = document.getElementById('tradingview_widget');
+            if (container) container.innerHTML = '';
+
             new TradingView.widget({
                 "autosize": true,
-                "symbol": symbol,
+                "symbol": tvSymbol,
                 "interval": currentInterval,
-                "timezone": "Etc/UTC",
+                "timezone": "Asia/Kolkata",
                 "theme": "light",
                 "style": "1",
-                "locale": "en",
+                "locale": "in",
                 "toolbar_bg": "#f1f3f6",
                 "enable_publishing": false,
-                "allow_symbol_change": false,
+                "allow_symbol_change": true,
                 "container_id": "tradingview_widget",
                 "hide_side_toolbar": true,
                 "withdateranges": true,
+                "save_image": false,
                 "details": true,
-                "hotlist": false,
+                "hotlist": true,
                 "calendar": false,
                 "studies": ["Volume@tv-basicstudies"]
             });
