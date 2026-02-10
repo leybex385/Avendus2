@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
 
-        // Optional: Also show indices at top if query is short
+        // 1. Show small indices overview if query is short
         if (globalSearchInput.value.length < 3) {
             const indices = window.MarketEngine ? window.MarketEngine.getIndices() : [];
             html += `<div class="search-section-title">Market Overview</div>`;
@@ -185,17 +185,24 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `</div>`;
         }
 
-        if (localResults.length > 0) {
-            html += `<div class="search-section-title">Indian Markets</div>`;
-            html += localResults.map(m => `
-                <div class="search-item" onclick="globalSelectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
-                    <div style="flex: 1;">
-                        <div class="search-symbol">${m.symbol}</div>
-                        <div class="search-name">${m.name}</div>
-                    </div>
-                    <div class="search-price-val">₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-                </div>
-            `).join('');
+        // 2. Separate local results by type
+        const stocks = localResults.filter(r => r.type === 'stock');
+        const otcs = localResults.filter(r => r.type === 'OTC');
+        const ipos = localResults.filter(r => r.type === 'IPO');
+
+        if (stocks.length > 0) {
+            html += `<div class="search-section-title">Indian Stocks</div>`;
+            html += stocks.map(m => createSearchItemHtml(m)).join('');
+        }
+
+        if (otcs.length > 0) {
+            html += `<div class="search-section-title">OTC Markets</div>`;
+            html += otcs.map(m => createSearchItemHtml(m)).join('');
+        }
+
+        if (ipos.length > 0) {
+            html += `<div class="search-section-title">Active IPOs</div>`;
+            html += ipos.map(m => createSearchItemHtml(m)).join('');
         }
 
         if (isSearching) {
@@ -211,24 +218,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     }
 
-    function updateSearchResultsWithGlobal(localResults, globalItem) {
-        let html = '';
-
-        if (localResults.length > 0) {
-            html += `<div class="search-section-title">Indian Markets</div>`;
-            html += localResults.map(m => `
-                <div class="search-item" onclick="globalSelectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
-                    <div style="flex: 1;">
-                        <div class="search-symbol">${m.symbol}</div>
-                        <div class="search-name">${m.name}</div>
-                    </div>
-                    <div class="search-price-val">₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+    function createSearchItemHtml(m) {
+        return `
+            <div class="search-item" onclick="globalSelectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
+                <div style="flex: 1;">
+                    <div class="search-symbol">${m.symbol}</div>
+                    <div class="search-name">${m.name}</div>
                 </div>
-            `).join('');
-        }
+                <div class="search-price-val">₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            </div>
+        `;
+    }
 
-        html += `<div class="search-section-title">Global Markets</div>`;
-        html += `
+    function updateSearchResultsWithGlobal(localResults, globalItem) {
+        // Just re-run a partial or full render
+        renderGlobalSearchResults(localResults, false);
+
+        // Append global result at the bottom
+        let extraHtml = `<div class="search-section-title">Global Markets</div>`;
+        extraHtml += `
             <div class="search-item" onclick="globalSelectStock('${globalItem.symbol}', '${globalItem.symbol}', 'stock')">
                 <div style="flex: 1;">
                     <div class="search-symbol">${globalItem.symbol}</div>
@@ -237,9 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="search-price-val">₹${globalItem.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
             </div>
         `;
-
-        globalSearchResults.innerHTML = html;
-        globalSearchResults.style.display = 'block';
+        globalSearchResults.innerHTML += extraHtml;
     }
 
     window.globalSelectStock = (symbol, name, type) => {

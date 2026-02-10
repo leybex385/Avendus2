@@ -4253,50 +4253,31 @@
                 return;
             }
 
-            if (type === 'stocks') {
-                listContainer.style.display = 'grid';
-                listContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
-                listContainer.style.gap = '1rem';
-                listContainer.style.padding = '1rem 0';
+            listContainer.style.display = 'grid';
+            listContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+            listContainer.style.gap = '1rem';
+            listContainer.style.padding = '1rem 0';
 
-                listContainer.innerHTML = data.map(s => `
-                    <div class="sector-card" style="width: 100%; height: auto; padding: 1.5rem; text-align: left; align-items: flex-start; cursor: default;">
-                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 0.5rem;">
-                            <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}; width: 40px; height: 40px;">${s.symbol[0]}</div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Est. Return</div>
-                                <div style="font-size: 1.1rem; font-weight: 800; color: #10b981;">10% - 20%</div>
-                            </div>
+            listContainer.innerHTML = data.map(s => `
+                <div class="sector-card" style="width: 100%; height: auto; padding: 1.5rem; text-align: left; align-items: flex-start; cursor: default;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 0.5rem;">
+                        <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}; width: 40px; height: 40px;">${s.symbol[0]}</div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Est. Return</div>
+                            <div style="font-size: 1.1rem; font-weight: 800; color: #10b981;">10% - 20%</div>
                         </div>
-                        <div class="stock-ticker" style="font-size: 1.1rem; margin-top: 0.5rem;">${s.symbol}</div>
-                        <div class="stock-full-name" style="margin-bottom: 1.5rem;">${s.name}</div>
-                        
-                        <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 44px; background: #1e56a0; font-weight: 700;"
-                            onclick="openStockDetail('${s.symbol}', '${s.name}', 'NSE', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', '${s.type}')">
-                            Trade
-                        </button>
                     </div>
-                `).join('');
-            } else {
-                listContainer.style.display = 'block';
-                listContainer.innerHTML = data.map(s => `
-                    <div class="stock-row" style="cursor: pointer; padding: 1rem; border-bottom: 1px solid #f1f5f9;" 
+                    <div class="stock-ticker" style="font-size: 1.1rem; margin-top: 0.5rem;">${s.symbol}</div>
+                    <div class="stock-full-name" style="margin-bottom: 1.5rem;">
+                        ${s.name} ${s.type !== 'stock' ? `<span style="font-size:0.65rem; background:#eff6ff; color:#3b82f6; padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">${s.type}</span>` : ''}
+                    </div>
+                    
+                    <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 44px; background: #1e56a0; font-weight: 700;"
                         onclick="openStockDetail('${s.symbol}', '${s.name}', 'NSE', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', '${s.type}')">
-                        <div class="stock-ident">
-                            <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}">${s.symbol[0]}</div>
-                            <div>
-                                <div class="stock-ticker">${s.symbol}</div>
-                                <div class="stock-full-name">${s.name} • NSE</div>
-                                ${s.type !== 'stock' ? `<span style="font-size:0.65rem; background:#eff6ff; color:#3b82f6; padding:2px 6px; border-radius:4px; font-weight:700;">${s.type}</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="stock-price-col">
-                            <div class="stock-ticker">₹${s.price.toLocaleString('en-IN')}</div>
-                            <div class="index-chg ${s.change >= 0 ? 'green' : 'red'}" style="font-size: 0.75rem">${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%</div>
-                        </div>
-                    </div>
-                `).join('');
-            }
+                        Trade
+                    </button>
+                </div>
+            `).join('');
             lucide.createIcons();
         }
 

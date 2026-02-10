@@ -132,6 +132,10 @@
 
         getIndices() { return this.indices; }
 
+        getAllStocks() { return this.stocks; }
+        getOTC() { return this.otc; }
+        getIPO() { return this.ipo; }
+
         getProduct(symbol) {
             const all = [...this.stocks, ...this.otc, ...this.ipo, ...this.indices];
             return all.find(s => s.symbol === symbol);
