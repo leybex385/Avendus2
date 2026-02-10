@@ -2443,9 +2443,9 @@
                     const currentBalance = parseFloat(user.balance) || 0;
                     let newBalance = currentBalance;
 
-                    if (!isEdit || type === 'deposit') {
+                    if (type === 'deposit') {
                         newBalance = currentBalance + amount;
-                    } else {
+                    } else if (type === 'set') {
                         newBalance = amount;
                     }
 
