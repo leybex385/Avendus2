@@ -18,7 +18,6 @@
         .market-wrapper {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
         }
 
         /* Removed local header styles to use global styles.css */
@@ -950,8 +949,8 @@
             display: none;
             grid-template-columns: 280px 1fr;
             gap: 1.5rem;
-            padding: 1.5rem;
-            flex: 1;
+            padding: 0.5rem 1.5rem 1.5rem;
+            margin-top: 0;
         }
 
         .discover-sidebar {
@@ -988,7 +987,7 @@
         .discover-card {
             background: white;
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.5rem;
             position: relative;
         }
 
@@ -996,7 +995,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
         }
 
         .refresh-circle {
@@ -1015,7 +1014,7 @@
         .discover-tabs {
             display: flex;
             gap: 0.8rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
             flex-wrap: wrap;
         }
 
@@ -1451,12 +1450,11 @@
         }
 
         .market-right-col {
-            width: 350px;
-            /* Fixed width for Buy Panel */
-            display: none;
-            /* Hidden by default until a stock is selected, or always show if design prefers */
+            width: 320px;
+            /* Sidebar width */
+            display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
 
         /* --- Buy Panel Styles --- */
@@ -1681,6 +1679,305 @@
             font-weight: 600;
             color: #10b981;
             font-size: 0.85rem;
+        }
+
+        /* Redesigned Me View Styles - Fit to Screen */
+        .me-view-container {
+            display: none;
+            grid-template-columns: 500px 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem 2rem;
+            height: calc(100vh - 120px);
+            overflow: hidden;
+            background: #fdf2f2;
+            /* Light orange/red tint background */
+        }
+
+        .me-left-col,
+        .me-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            overflow-y: auto;
+            padding-right: 8px;
+            scroll-behavior: smooth;
+        }
+
+        /* Hide scrollbars for a cleaner look */
+        .me-left-col::-webkit-scrollbar,
+        .me-right-col::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .me-left-col::-webkit-scrollbar-thumb,
+        .me-right-col::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .me-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .me-card-tag {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            color: #3b82f6;
+        }
+
+        .me-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #3b82f6;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* Profile Styles */
+        .me-profile-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .me-p-avatar {
+            width: 70px;
+            height: 70px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .me-p-info h2 {
+            font-size: 1.25rem;
+            color: #1e40af;
+            margin-bottom: 0.25rem;
+        }
+
+        .me-p-info p {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.2rem;
+        }
+
+        .kyc-approved {
+            background: #d1fae5;
+            color: #059669;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .kyc-pending {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .kyc-rejected {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .kyc-not-verified {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .me-vip-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .me-stat-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .me-stat-item.blue {
+            border-color: #bee3f8;
+        }
+
+        .me-stat-item.gold {
+            border-color: #fef3c7;
+        }
+
+        .me-stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .me-stat-val {
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .me-stat-val.blue {
+            color: #3182ce;
+        }
+
+        .me-stat-val.gold {
+            color: #d69e2e;
+        }
+
+        .me-btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .me-btn {
+            border: none;
+            padding: 0.9rem;
+            border-radius: 10px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: opacity 0.2s;
+        }
+
+        .me-btn.deposit {
+            background: #10b981;
+        }
+
+        .me-btn.withdraw {
+            background: #f6993f;
+        }
+
+        /* Assets List */
+        .me-asset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 2fr);
+            gap: 1rem;
+        }
+
+        .me-as-card {
+            border: 1px solid #f1f5f9;
+            padding: 1rem;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .me-as-lbl {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .me-as-val {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0.3rem 0;
+        }
+
+        .me-as-sub {
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Gauge SVG */
+        .gauge-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .gauge-score-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Applications Right Col */
+        .me-apps-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .app-pill-row {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .app-pill {
+            padding: 6px 15px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .app-pill.active {
+            background: white;
+            border-color: #1e56a0;
+            color: #1e56a0;
+        }
+
+        .no-data-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 0;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .score-info-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #475569;
+            font-style: italic;
         }
     </style>
 </head>
@@ -2033,256 +2330,423 @@
                                             <div id="tradingview_widget" style="height:100%; width:100%;"></div>
                                         </div>
                                     </div>
+
+                                    <!-- Stock News & IPO (Red Box Area) -->
+                                    <div class="news-section m-card" style="padding: 1.5rem; margin-top: 1.25rem;">
+                                        <div class="side-list-title" style="margin-bottom: 1.25rem;">
+                                            <div
+                                                style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                                <i data-lucide="newspaper" size="18" color="#3b82f6"></i>
+                                                Stock News
+                                            </div>
+                                        </div>
+
+                                        <div class="news-item"
+                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                                            <div class="news-meta"
+                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
+                                                TECH • 3:45 PM</div>
+                                            <h4
+                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
+                                                Nifty IT Index Surges 3% as Powell Hints at Rate Cuts</h4>
+                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
+                                                Powell hints at possible rate cuts later this year, boosting
+                                                sentiment...</p>
+                                        </div>
+
+                                        <div class="news-item"
+                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                                            <div class="news-meta"
+                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
+                                                RELIANCE • 3:05 PM</div>
+                                            <h4
+                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
+                                                Reliance Retail to Acquire Stake in VogueIndia</h4>
+                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
+                                                RRVL set to acquire 51% stake in fashion tech startup...</p>
+                                        </div>
+
+                                        <div class="news-item"
+                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                                            <div class="news-meta"
+                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
+                                                SUNPHARMA • 2:35 PM</div>
+                                            <h4
+                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
+                                                USFDA Approval for Generic Diabetes Drug</h4>
+                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
+                                                Sun Pharma received final approval for generic Sitagliptin tablets...
+                                            </p>
+                                        </div>
+
+                                        <div class="news-item"
+                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                                            <div class="news-meta"
+                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
+                                                HDFCBANK • 2:10 PM</div>
+                                            <h4
+                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
+                                                HDFC Bank Q3 Net Profit Jumps 18%</h4>
+                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
+                                                Stellar growth in net profit for Q3, beating street estimates...</p>
+                                        </div>
+
+                                        <div class="news-item"
+                                            style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">
+                                            <div class="news-meta"
+                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
+                                                SENSEX • 1:45 PM</div>
+                                            <h4
+                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
+                                                Sensex Crosses Historic 84,000 Mark</h4>
+                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
+                                                Driven by robust FII investments and positive global cues...</p>
+                                        </div>
+                                    </div>
+
+                                </div> <!-- End market-left-col -->
+                            </div> <!-- End market-main-container -->
+                        </div> <!-- End auth-locked-content -->
+                    </section> <!-- End main-index-view -->
+                </div> <!-- End center-col -->
+
+                <!-- Sidebar Content (Far Right Side) -->
+                <div class="right-col" style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                    <section class="m-card"
+                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
+                        <div class="auth-locked-content" style="display: block;">
+                            <div class="side-list-title">
+                                <div style="font-weight: 700;"><i data-lucide="star" size="18" color="#f59e0b"></i>
+                                    Watch List
                                 </div>
                             </div>
+                            <div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.8rem;">No data.
+                            </div>
                         </div>
+                    </section>
 
+                    <section class="m-card"
+                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
+                        <div class="side-list-title">
+                            <div style="font-weight: 700;"><i data-lucide="trending-up" size="18" color="#10b981"></i>
+                                Top Gainer</div>
+                            <div style="font-size: 0.65rem; display: flex; gap: 0.35rem;">
+                                <span class="exchange-tab active" onclick="switchExchange('gainers', 'NSE')">NSE</span>
+                                <span class="exchange-tab" onclick="switchExchange('gainers', 'BSE')">BSE</span>
+                            </div>
+                        </div>
+                        <div id="gainersList">
+                            <div class="auth-locked-content" style="display: block;">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </section>
 
+                    <section class="m-card"
+                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
+                        <div class="side-list-title">
+                            <div style="font-weight: 700;"><i data-lucide="trending-down" size="18" color="#ef4444"></i>
+                                Top Loser</div>
+                            <div style="font-size: 0.65rem; display: flex; gap: 0.35rem;">
+                                <span class="exchange-tab active" onclick="switchExchange('losers', 'NSE')">NSE</span>
+                                <span class="exchange-tab" onclick="switchExchange('losers', 'BSE')">BSE</span>
+                            </div>
+                        </div>
+                        <div id="losersList">
+                            <div class="auth-locked-content" style="display: block;">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- IPO Calendar (Moved below Top Loser) -->
+                    <section class="m-card"
+                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
+                        <div class="side-list-title">
+                            <div style="font-weight: 700;"><i data-lucide="calendar" size="18" color="#6366f1"></i>
+                                IPO Calendar</div>
+                        </div>
+                        <div class="auth-locked-content" style="display: block;">
+                            <div class="ipo-item"
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9;">
+                                <div>
+                                    <div style="font-weight: 600; font-size: 0.85rem;">Armour Security</div>
+                                    <div style="font-size: 0.7rem; color: #64748b;">14-16 Jan</div>
+                                </div>
+                                <div
+                                    style="background: #eff6ff; color: #3b82f6; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    Upcoming</div>
+                            </div>
+                            <div class="ipo-item"
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9;">
+                                <div>
+                                    <div style="font-weight: 600; font-size: 0.85rem;">TechNova Sol</div>
+                                    <div style="font-size: 0.7rem; color: #64748b;">20-22 Jan</div>
+                                </div>
+                                <div
+                                    style="background: #f0fdf4; color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    Open</div>
+                            </div>
+                            <div class="ipo-item"
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: none;">
+                                <div>
+                                    <div style="font-weight: 600; font-size: 0.85rem;">Global Infra Ltd</div>
+                                    <div style="font-size: 0.7rem; color: #64748b;">25-27 Jan</div>
+                                </div>
+                                <div
+                                    style="background: #fef3c7; color: #f59e0b; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                                    Soon</div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-                </section>
+            </main>
+        </div>
 
 
 
 
-                <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-                <script type="text/javascript">
-                    let currentWidget = null;
-                    let currentActiveSymbol = 'BSE:SENSEX';
-                    let currentInterval = 'D';
 
-                    function loadWidgetWithInterval(interval, btn) {
-                        currentInterval = interval;
-                        document.querySelectorAll('.mini-tf-btn').forEach(b => b.classList.remove('active'));
-                        if (btn) btn.classList.add('active');
-                        loadWidget(currentActiveSymbol);
-                    }
+        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+        <script type="text/javascript">
+            let currentWidget = null;
+            let currentActiveSymbol = 'BSE:SENSEX';
+            let currentInterval = 'D';
 
-                    const indexData = {
-                        'BSE:SENSEX': {
-                            price: 83580.40,
-                            basePrice: 83313.93,
-                            low: 83250.27,
-                            high: 83784.17,
-                            open: 83757.54,
-                            close: 83817.69,
-                            vol: "14,913,178",
-                            sym: "SENSEX",
-                            cardValId: 'valSensexCard',
-                            cardChgId: 'chgSensexCard',
-                            sparkId: 'sparkSensex',
-                            history: [35, 38, 30, 32, 25, 28, 20, 22, 15, 18, 20]
-                        },
-                        'NSE:NIFTY': {
-                            price: 25641.65,
-                            basePrice: 25776.00,
-                            low: 25600.00,
-                            high: 25800.00,
-                            open: 25750.00,
-                            close: 25776.00,
-                            vol: "22,450,112",
-                            sym: "NIFTY 50",
-                            cardValId: 'valNiftyCard',
-                            cardChgId: 'chgNiftyCard',
-                            sparkId: 'sparkNifty',
-                            history: [30, 32, 35, 38, 36, 40, 38, 42, 40, 45, 42]
-                        },
-                        'NSE:BANKNIFTY': {
-                            price: 60045.35,
-                            basePrice: 60238.15,
-                            low: 59500.00,
-                            high: 60500.00,
-                            open: 60200.00,
-                            close: 60238.15,
-                            vol: "8,124,556",
-                            sym: "NIFTY BANK",
-                            cardValId: 'valBankNiftyCard',
-                            cardChgId: 'chgBankNiftyCard',
-                            sparkId: 'sparkBankNifty',
-                            history: [20, 22, 25, 22, 28, 25, 30, 28, 35, 32, 38]
-                        }
-                    };
+            function loadWidgetWithInterval(interval, btn) {
+                currentInterval = interval;
+                document.querySelectorAll('.mini-tf-btn').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                loadWidget(currentActiveSymbol);
+            }
 
-                    function loadWidget(symbol) {
-                        currentWidget = new TradingView.widget({
-                            "autosize": true,
-                            "symbol": symbol,
-                            "interval": currentInterval,
-                            "timezone": "Asia/Kolkata",
-                            "theme": "light",
-                            "style": "1",
-                            "locale": "in",
-                            "toolbar_bg": "#f1f3f6",
-                            "enable_publishing": false,
-                            "allow_symbol_change": true,
-                            "container_id": "tradingview_widget",
-                            "hide_side_toolbar": true,
-                            "withdateranges": false,
-                            "save_image": false,
-                            "details": false,
-                            "hotlist": false,
-                            "calendar": false,
-                            "studies": ["Volume@tv-basicstudies"]
-                        });
-                    }
+            const indexData = {
+                'BSE:SENSEX': {
+                    price: 83580.40,
+                    basePrice: 83313.93,
+                    low: 83250.27,
+                    high: 83784.17,
+                    open: 83757.54,
+                    close: 83817.69,
+                    vol: "14,913,178",
+                    sym: "SENSEX",
+                    cardValId: 'valSensexCard',
+                    cardChgId: 'chgSensexCard',
+                    sparkId: 'sparkSensex',
+                    history: [35, 38, 30, 32, 25, 28, 20, 22, 15, 18, 20]
+                },
+                'NSE:NIFTY': {
+                    price: 25641.65,
+                    basePrice: 25776.00,
+                    low: 25600.00,
+                    high: 25800.00,
+                    open: 25750.00,
+                    close: 25776.00,
+                    vol: "22,450,112",
+                    sym: "NIFTY 50",
+                    cardValId: 'valNiftyCard',
+                    cardChgId: 'chgNiftyCard',
+                    sparkId: 'sparkNifty',
+                    history: [30, 32, 35, 38, 36, 40, 38, 42, 40, 45, 42]
+                },
+                'NSE:BANKNIFTY': {
+                    price: 60045.35,
+                    basePrice: 60238.15,
+                    low: 59500.00,
+                    high: 60500.00,
+                    open: 60200.00,
+                    close: 60238.15,
+                    vol: "8,124,556",
+                    sym: "NIFTY BANK",
+                    cardValId: 'valBankNiftyCard',
+                    cardChgId: 'chgBankNiftyCard',
+                    sparkId: 'sparkBankNifty',
+                    history: [20, 22, 25, 22, 28, 25, 30, 28, 35, 32, 38]
+                }
+            };
 
-                    function updateChartInterval(interval, btn) {
-                        currentInterval = interval;
-                        document.querySelectorAll('.mini-tf-btn').forEach(b => b.classList.remove('active'));
-                        if (btn) btn.classList.add('active');
-                        loadWidget(currentActiveSymbol);
-                    }
+            function loadWidget(symbol) {
+                currentWidget = new TradingView.widget({
+                    "autosize": true,
+                    "symbol": symbol,
+                    "interval": currentInterval,
+                    "timezone": "Asia/Kolkata",
+                    "theme": "light",
+                    "style": "1",
+                    "locale": "in",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "allow_symbol_change": true,
+                    "container_id": "tradingview_widget",
+                    "hide_side_toolbar": true,
+                    "withdateranges": false,
+                    "save_image": false,
+                    "details": false,
+                    "hotlist": false,
+                    "calendar": false,
+                    "studies": ["Volume@tv-basicstudies"]
+                });
+            }
 
-                    function updateChart(symbol, title) {
-                        currentActiveSymbol = symbol;
-                        // Removed chartTitle update as it's now internal to the widget
-                        document.querySelectorAll('.index-card').forEach(c => c.classList.remove('active'));
+            function updateChartInterval(interval, btn) {
+                currentInterval = interval;
+                document.querySelectorAll('.mini-tf-btn').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                loadWidget(currentActiveSymbol);
+            }
 
-                        if (symbol === 'BSE:SENSEX') document.getElementById('cardSensex').classList.add('active');
-                        else if (symbol === 'NSE:NIFTY') document.getElementById('cardNifty').classList.add('active');
-                        else if (symbol === 'NSE:BANKNIFTY') document.getElementById('cardNiftyBank').classList.add('active');
+            function updateChart(symbol, title) {
+                currentActiveSymbol = symbol;
+                // Removed chartTitle update as it's now internal to the widget
+                document.querySelectorAll('.index-card').forEach(c => c.classList.remove('active'));
 
-                        syncUI();
-                        loadWidget(symbol);
-                    }
+                if (symbol === 'BSE:SENSEX') document.getElementById('cardSensex').classList.add('active');
+                else if (symbol === 'NSE:NIFTY') document.getElementById('cardNifty').classList.add('active');
+                else if (symbol === 'NSE:BANKNIFTY') document.getElementById('cardNiftyBank').classList.add('active');
+
+                syncUI();
+                loadWidget(symbol);
+            }
 
 
-                    function syncUI() {
-                        // Rehydrate existing static data
-                        for (const sym in indexData) {
-                            const d = indexData[sym];
-                            const diff = d.price - d.basePrice;
-                            const pct = (diff / d.basePrice) * 100;
-                            const isUp = diff >= 0;
-                            const colorClass = isUp ? 'green' : 'red';
-                            const sign = isUp ? '+' : '';
-                            const changeText = `${sign}${diff.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
-                            const formattedPrice = d.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            function syncUI() {
+                // Rehydrate existing static data
+                for (const sym in indexData) {
+                    const d = indexData[sym];
+                    const diff = d.price - d.basePrice;
+                    const pct = (diff / d.basePrice) * 100;
+                    const isUp = diff >= 0;
+                    const colorClass = isUp ? 'green' : 'red';
+                    const sign = isUp ? '+' : '';
+                    const changeText = `${sign}${diff.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
+                    const formattedPrice = d.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                            // Cards
-                            const cardVal = document.getElementById(d.cardValId);
-                            if (cardVal) {
-                                cardVal.innerText = formattedPrice;
-                                const cardChg = document.getElementById(d.cardChgId);
-                                if (cardChg) {
-                                    cardChg.innerText = changeText;
-                                    cardChg.className = `index-chg ${colorClass}`;
-                                }
-
-                                // Sparkline
-                                const sparkPath = document.querySelector(`#${d.sparkId} .sparkline-path`);
-                                if (sparkPath) {
-                                    const points = d.history.map((val, i) => `${i * 10} ${val}`).join(' L');
-                                    sparkPath.setAttribute('d', `M${points}`);
-                                    sparkPath.className.baseVal = `sparkline-path ${colorClass}`;
-                                }
-                            }
+                    // Cards
+                    const cardVal = document.getElementById(d.cardValId);
+                    if (cardVal) {
+                        cardVal.innerText = formattedPrice;
+                        const cardChg = document.getElementById(d.cardChgId);
+                        if (cardChg) {
+                            cardChg.innerText = changeText;
+                            cardChg.className = `index-chg ${colorClass}`;
                         }
 
-                        // If it's one of the known indices, update Hero with static data
-                        if (indexData[currentActiveSymbol]) {
-                            const d = indexData[currentActiveSymbol];
-                            const diff = d.price - d.basePrice;
-                            const pct = (diff / d.basePrice) * 100;
-                            const isUp = diff >= 0;
-                            const colorClass = isUp ? 'green' : 'red';
-                            const sign = isUp ? '+' : '';
-                            const changeText = `${sign}${(diff || 0).toFixed(2)} (${sign}${(pct || 0).toFixed(2)}%)`;
-
-                            // Update Stylish Header
-                            if (document.getElementById('indexPrice')) document.getElementById('indexPrice').innerText = (d.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-                            if (document.getElementById('valSymbol')) document.getElementById('valSymbol').innerText = d.sym;
-                            if (document.getElementById('valSymbolText')) document.getElementById('valSymbolText').innerText = d.sym;
-
-                            const hChg = document.getElementById('heroChange');
-                            if (hChg) {
-                                hChg.innerText = changeText;
-                                hChg.className = `index-chg ${colorClass}`;
-                                hChg.style.background = isUp ? '#eefcf4' : '#fff1f1';
-                                hChg.style.color = isUp ? '#10b981' : '#ef4444';
-                            }
-
-                            // Update Range Bar
-                            if (document.getElementById('dayLow')) {
-                                document.getElementById('dayLow').innerText = d.low.toLocaleString('en-IN');
-                                document.getElementById('dayHigh').innerText = d.high.toLocaleString('en-IN');
-                                if (document.getElementById('gridClose')) document.getElementById('gridClose').innerText = d.close.toLocaleString('en-IN');
-                                if (document.getElementById('valVol')) document.getElementById('valVol').innerText = d.vol;
-
-                                const range = d.high - d.low;
-                                const pos = d.price - d.low;
-                                const pctPos = (pos / range) * 100;
-                                const safePct = Math.max(0, Math.min(100, pctPos));
-
-                                document.getElementById('sliderMarker').style.left = `${safePct}%`;
-                                document.getElementById('rangeProgress').style.width = `${safePct}%`;
-                            }
-                        } else {
-                            // Custom Stock Selected
+                        // Sparkline
+                        const sparkPath = document.querySelector(`#${d.sparkId} .sparkline-path`);
+                        if (sparkPath) {
+                            const points = d.history.map((val, i) => `${i * 10} ${val}`).join(' L');
+                            sparkPath.setAttribute('d', `M${points}`);
+                            sparkPath.className.baseVal = `sparkline-path ${colorClass}`;
                         }
                     }
+                }
 
-                    // --- SEARCH FUNCTIONALITY WITH ALPHA VANTAGE ---
-                    const INDIAN_STOCKS = [
-                        { s: 'BSE:SENSEX', n: 'SENSEX Index', p: 83580.40 },
-                        { s: 'NSE:NIFTY', n: 'NIFTY 50', p: 25641.65 },
-                        { s: 'NSE:BANKNIFTY', n: 'NIFTY BANK', p: 60045.35 },
-                        { s: 'NSE:RELIANCE', n: 'Reliance Industries Ltd', p: 2985.50 },
-                        { s: 'NSE:TCS', n: 'Tata Consultancy Services', p: 4250.20 },
-                        { s: 'NSE:HDFCBANK', n: 'HDFC Bank Ltd', p: 1680.75 },
-                        // ... (rest of static list serves as fallback/cache)
-                    ];
+                // If it's one of the known indices, update Hero with static data
+                if (indexData[currentActiveSymbol]) {
+                    const d = indexData[currentActiveSymbol];
+                    const diff = d.price - d.basePrice;
+                    const pct = (diff / d.basePrice) * 100;
+                    const isUp = diff >= 0;
+                    const colorClass = isUp ? 'green' : 'red';
+                    const sign = isUp ? '+' : '';
+                    const changeText = `${sign}${(diff || 0).toFixed(2)} (${sign}${(pct || 0).toFixed(2)}%)`;
 
-                    // API CONFIG
-                    const AV_API_KEY = '0AQTPTM1OF8VJQA1';
-                    let searchTimeout = null;
+                    // Update Stylish Header
+                    if (document.getElementById('indexPrice')) document.getElementById('indexPrice').innerText = (d.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                    if (document.getElementById('valSymbol')) document.getElementById('valSymbol').innerText = d.sym;
+                    if (document.getElementById('valSymbolText')) document.getElementById('valSymbolText').innerText = d.sym;
 
-                    const sInput = document.getElementById('globalSearchInput');
-                    const sResults = document.getElementById('searchResults');
-
-                    if (sInput) {
-                        sInput.addEventListener('input', (e) => {
-                            const q = e.target.value.trim().toUpperCase();
-                            if (q.length < 2) { // Wait for at least 2 chars
-                                sResults.style.display = 'none';
-                                return;
-                            }
-
-                            // Debounce API calls (wait 1s after typing stops to save API limits)
-                            if (searchTimeout) clearTimeout(searchTimeout);
-                            searchTimeout = setTimeout(() => {
-                                fetchStockPrice(q);
-                            }, 1000);
-                        });
-
-                        document.addEventListener('click', (e) => {
-                            if (!sInput.contains(e.target) && !sResults.contains(e.target)) {
-                                sResults.style.display = 'none';
-                            }
-                        });
+                    const hChg = document.getElementById('heroChange');
+                    if (hChg) {
+                        hChg.innerText = changeText;
+                        hChg.className = `index-chg ${colorClass}`;
+                        hChg.style.background = isUp ? '#eefcf4' : '#fff1f1';
+                        hChg.style.color = isUp ? '#10b981' : '#ef4444';
                     }
 
-                    async function fetchStockPrice(query) {
-                        sResults.innerHTML = '<div class="search-item" style="color:#64748b;">Searching...</div>';
-                        sResults.style.display = 'block';
+                    // Update Range Bar
+                    if (document.getElementById('dayLow')) {
+                        document.getElementById('dayLow').innerText = d.low.toLocaleString('en-IN');
+                        document.getElementById('dayHigh').innerText = d.high.toLocaleString('en-IN');
+                        if (document.getElementById('gridClose')) document.getElementById('gridClose').innerText = d.close.toLocaleString('en-IN');
+                        if (document.getElementById('valVol')) document.getElementById('valVol').innerText = d.vol;
 
-                        try {
-                            // Try Alpha Vantage for Global Quote (Realtime Price)
-                            // Note: Alpha Vantage uses symbols like 'RELIANCE.BSE' or 'TCS.NSE'
-                            // We'll try appending .BSE or .NSE if not present. Default to BSE for generic search.
-                            let symbolForApi = query;
-                            if (!symbolForApi.includes('.')) symbolForApi += '.BSE';
+                        const range = d.high - d.low;
+                        const pos = d.price - d.low;
+                        const pctPos = (pos / range) * 100;
+                        const safePct = Math.max(0, Math.min(100, pctPos));
 
-                            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbolForApi}&apikey=${AV_API_KEY}`;
-                            const response = await fetch(url);
-                            const data = await response.json();
+                        document.getElementById('sliderMarker').style.left = `${safePct}%`;
+                        document.getElementById('rangeProgress').style.width = `${safePct}%`;
+                    }
+                } else {
+                    // Custom Stock Selected
+                }
+            }
 
-                            if (data['Global Quote'] && data['Global Quote']['05. price']) {
-                                const quote = data['Global Quote'];
-                                const price = parseFloat(quote['05. price']);
-                                const sym = quote['01. symbol'];
+            // --- SEARCH FUNCTIONALITY WITH ALPHA VANTAGE ---
+            const INDIAN_STOCKS = [
+                { s: 'BSE:SENSEX', n: 'SENSEX Index', p: 83580.40 },
+                { s: 'NSE:NIFTY', n: 'NIFTY 50', p: 25641.65 },
+                { s: 'NSE:BANKNIFTY', n: 'NIFTY BANK', p: 60045.35 },
+                { s: 'NSE:RELIANCE', n: 'Reliance Industries Ltd', p: 2985.50 },
+                { s: 'NSE:TCS', n: 'Tata Consultancy Services', p: 4250.20 },
+                { s: 'NSE:HDFCBANK', n: 'HDFC Bank Ltd', p: 1680.75 },
+                // ... (rest of static list serves as fallback/cache)
+            ];
 
-                                // Show API Result
-                                sResults.innerHTML = `
+            // API CONFIG
+            const AV_API_KEY = '0AQTPTM1OF8VJQA1';
+            let searchTimeout = null;
+
+            const sInput = document.getElementById('globalSearchInput');
+            const sResults = document.getElementById('searchResults');
+
+            if (sInput) {
+                sInput.addEventListener('input', (e) => {
+                    const q = e.target.value.trim().toUpperCase();
+                    if (q.length < 2) { // Wait for at least 2 chars
+                        sResults.style.display = 'none';
+                        return;
+                    }
+
+                    // Debounce API calls (wait 1s after typing stops to save API limits)
+                    if (searchTimeout) clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        fetchStockPrice(q);
+                    }, 1000);
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!sInput.contains(e.target) && !sResults.contains(e.target)) {
+                        sResults.style.display = 'none';
+                    }
+                });
+            }
+
+            async function fetchStockPrice(query) {
+                sResults.innerHTML = '<div class="search-item" style="color:#64748b;">Searching...</div>';
+                sResults.style.display = 'block';
+
+                try {
+                    // Try Alpha Vantage for Global Quote (Realtime Price)
+                    // Note: Alpha Vantage uses symbols like 'RELIANCE.BSE' or 'TCS.NSE'
+                    // We'll try appending .BSE or .NSE if not present. Default to BSE for generic search.
+                    let symbolForApi = query;
+                    if (!symbolForApi.includes('.')) symbolForApi += '.BSE';
+
+                    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbolForApi}&apikey=${AV_API_KEY}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data['Global Quote'] && data['Global Quote']['05. price']) {
+                        const quote = data['Global Quote'];
+                        const price = parseFloat(quote['05. price']);
+                        const sym = quote['01. symbol'];
+
+                        // Show API Result
+                        sResults.innerHTML = `
                                         <div class="search-item" onclick="selectStock('${sym}', '${sym}')">
                                             <div>
                                                 <div class="search-symbol">${sym}</div>
@@ -2291,21 +2755,21 @@
                                             <div class="search-price-val" style="color:#10b981;">₹${price.toLocaleString('en-IN')}</div>
                                         </div>
                                     `;
-                            } else {
-                                // Fallback to Static List if API limit reached or not found
-                                console.log("API limit or not found:", data);
-                                showFallbackResults(query);
-                            }
-                        } catch (e) {
-                            console.error("API Error", e);
-                            showFallbackResults(query);
-                        }
+                    } else {
+                        // Fallback to Static List if API limit reached or not found
+                        console.log("API limit or not found:", data);
+                        showFallbackResults(query);
                     }
+                } catch (e) {
+                    console.error("API Error", e);
+                    showFallbackResults(query);
+                }
+            }
 
-                    function showFallbackResults(q) {
-                        const matches = INDIAN_STOCKS.filter(x => x.s.includes(q) || x.n.toUpperCase().includes(q));
-                        if (matches.length > 0) {
-                            sResults.innerHTML = matches.map(m => `
+            function showFallbackResults(q) {
+                const matches = INDIAN_STOCKS.filter(x => x.s.includes(q) || x.n.toUpperCase().includes(q));
+                if (matches.length > 0) {
+                    sResults.innerHTML = matches.map(m => `
                                         <div class="search-item" onclick="selectStock('${m.s}', '${m.n}')">
                                             <div>
                                                 <div class="search-symbol">${m.s}</div>
@@ -2314,1049 +2778,971 @@
                                             <div class="search-price-val">₹${m.p.toLocaleString('en-IN')}</div>
                                         </div>
                                     `).join('');
-                        } else {
-                            sResults.innerHTML = '<div class="search-item" style="cursor:default; color:#94a3b8;">No results found</div>';
+                } else {
+                    sResults.innerHTML = '<div class="search-item" style="cursor:default; color:#94a3b8;">No results found</div>';
+                }
+                sResults.style.display = 'block';
+            }
+
+            function selectStock(sym, name) {
+                sInput.value = '';
+                sResults.style.display = 'none';
+                // Redirect to Stock Detail Page
+                window.location.href = `stock_detail.html?symbol=${encodeURIComponent(sym)}&name=${encodeURIComponent(name)}`;
+            }
+
+            window.onload = function () {
+                loadWidget(currentActiveSymbol);
+                syncUI();
+                // Optional: Mock live update for hero prices of default data
+                setInterval(() => {
+                    for (let k in indexData) {
+                        let v = indexData[k];
+                        let change = (Math.random() - 0.5) * (v.price * 0.0005); // 0.05% fluctuation
+                        v.price += change;
+                        if (v.price < v.low) v.low = v.price;
+                        if (v.price > v.high) v.high = v.price;
+                    }
+                    syncUI();
+                }, 3000);
+            };
+
+            function startSimulation() {
+                setInterval(() => {
+                    for (const sym in indexData) {
+                        const d = indexData[sym];
+                        const oldPrice = d.price;
+                        const change = (Math.random() - 0.5) * (d.price * 0.0006);
+                        d.price += change;
+
+                        // Keep within day range
+                        if (d.price < d.low) d.price = d.low + Math.abs(change);
+                        if (d.price > d.high) d.price = d.high - Math.abs(change);
+
+                        // Update Sparkline History (Simulated)
+                        // Every 3 seconds, shift history
+                        if (Date.now() % 3000 < 1000) {
+                            const lastVal = d.history[d.history.length - 1];
+                            const nextVal = Math.max(5, Math.min(35, lastVal + (Math.random() - 0.5) * 5));
+                            d.history.shift();
+                            d.history.push(nextVal);
                         }
-                        sResults.style.display = 'block';
                     }
 
-                    function selectStock(sym, name) {
-                        sInput.value = '';
-                        sResults.style.display = 'none';
-                        // Redirect to Stock Detail Page
-                        window.location.href = `stock_detail.html?symbol=${encodeURIComponent(sym)}&name=${encodeURIComponent(name)}`;
-                    }
-
-                    window.onload = function () {
-                        loadWidget(currentActiveSymbol);
-                        syncUI();
-                        // Optional: Mock live update for hero prices of default data
-                        setInterval(() => {
-                            for (let k in indexData) {
-                                let v = indexData[k];
-                                let change = (Math.random() - 0.5) * (v.price * 0.0005); // 0.05% fluctuation
-                                v.price += change;
-                                if (v.price < v.low) v.low = v.price;
-                                if (v.price > v.high) v.high = v.price;
-                            }
-                            syncUI();
-                        }, 3000);
-                    };
-
-                    function startSimulation() {
-                        setInterval(() => {
-                            for (const sym in indexData) {
-                                const d = indexData[sym];
-                                const oldPrice = d.price;
-                                const change = (Math.random() - 0.5) * (d.price * 0.0006);
-                                d.price += change;
-
-                                // Keep within day range
-                                if (d.price < d.low) d.price = d.low + Math.abs(change);
-                                if (d.price > d.high) d.price = d.high - Math.abs(change);
-
-                                // Update Sparkline History (Simulated)
-                                // Every 3 seconds, shift history
-                                if (Date.now() % 3000 < 1000) {
-                                    const lastVal = d.history[d.history.length - 1];
-                                    const nextVal = Math.max(5, Math.min(35, lastVal + (Math.random() - 0.5) * 5));
-                                    d.history.shift();
-                                    d.history.push(nextVal);
-                                }
-                            }
-
-                            // Fluatuate Sectors too
-                            for (let i = 1; i <= 9; i++) {
-                                const sectEl = document.getElementById(`sect-${i}`);
-                                if (sectEl) {
-                                    let curVal = parseFloat(sectEl.innerText);
-                                    let newVal = curVal + (Math.random() - 0.5) * 0.05;
-                                    sectEl.innerText = (newVal > 0 ? '+' : '') + newVal.toFixed(2) + '%';
-                                    sectEl.className = `sector-pct ${newVal >= 0 ? 'up' : 'down'}`;
-                                }
-                            }
-
-                            syncUI();
-                        }, 1000);
-                    }
-
-                    updateChart("BSE:SENSEX", "SENSEX (BSE Index Live)");
-                    startSimulation();
-                </script>
-
-                <!-- Stock News Section -->
-                <div class="news-section"
-                    style="background: white; border-radius: 16px; padding: 2rem 2rem 1rem 2rem; margin-top: 1.5rem;">
-                    <style>
-                        .news-item:last-child {
-                            margin-bottom: 0 !important;
-                            border-bottom: none !important;
-                            padding-bottom: 0 !important;
+                    // Fluatuate Sectors too
+                    for (let i = 1; i <= 9; i++) {
+                        const sectEl = document.getElementById(`sect-${i}`);
+                        if (sectEl) {
+                            let curVal = parseFloat(sectEl.innerText);
+                            let newVal = curVal + (Math.random() - 0.5) * 0.05;
+                            sectEl.innerText = (newVal > 0 ? '+' : '') + newVal.toFixed(2) + '%';
+                            sectEl.className = `sector-pct ${newVal >= 0 ? 'up' : 'down'}`;
                         }
-                    </style>
-                    <h3><i data-lucide="star" size="20" fill="#f59e0b" color="#f59e0b"></i> Stock News <span
-                            style="font-size: 0.8rem; font-weight: normal; color: #94a3b8; float: right;">Updated:
-                            5/2/2026, 1:54:08 pm</span></h3>
+                    }
 
-                    <div class="news-item">
-                        <div class="news-meta">AIR.RT • 2/5/2026, 1:22:20 PM</div>
-                        <h4>Pratt engine supply doubts weigh on Airbus output goal, sources say</h4>
-                        <p>By Tim Hepher Airbus' AIR main aircraft production target hangs in the balance as the
-                            planemaker remains without a supply deal with engine maker Pratt & Whitney RTX,
-                            industry
-                            sources said...</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">187870 • 2/5/2026, 1:22:24 PM</div>
-                        <h4>Device Co Ltd Wins 11 Billion Won Order</h4>
-                        <p>Device Co Ltd 187870: DEVICE CO LTD: WINS 11 BILLION WON ORDER</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">9432 • 2/5/2026, 1:22:32 PM</div>
-                        <h4>NTT, Inc. Nine Months Profit Climbs</h4>
-                        <p>TOKYO (dpa-AFX) - NTT, Inc. (NTTYY) announced earnings for its nine months that
-                            increased
-                            from last year. The company's bottom line came in at JPY926.06 billion, or JPY11.23
-                            per
-                            share...</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">TATA.MOT • 2/5/2026, 1:30:15 PM</div>
-                        <h4>Tata Motors Unveils Revolutionary EV Lineup for 2026</h4>
-                        <p>MUMBAI - Tata Motors has officially announced its ambitious EV roadmap for the fiscal
-                            year
-                            2026, targeting a 40% market share in the passenger electric vehicle segment...</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">SENSEX • 2/5/2026, 1:45:00 PM</div>
-                        <h4>Sensex Crosses Historic 84,000 Mark Amid Strong FII Inflows</h4>
-                        <p>DALAL STREET - The benchmark BSE Sensex created history today by crossing the 84,000
-                            psychological mark, driven by robust foreign institutional investments and positive
-                            global
-                            cues...</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">HDFCBANK • 2/5/2026, 2:10:45 PM</div>
-                        <h4>HDFC Bank Q3 Net Profit Jumps 18%, Asset Quality Improves</h4>
-                        <p>NEW DELHI - India's largest private sector lender reported a stellar 18% YoY growth in
-                            net
-                            profit for Q3, beating street estimates. Gross NPA ratio improved by 15 basis points...
-                        </p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">SUNPHARMA • 2/5/2026, 2:35:12 PM</div>
-                        <h4>Sun Pharma Receives USFDA Approval for Generic Diabetes Drug</h4>
-                        <p>MUMBAI - Sun Pharmaceutical Industries Ltd announced that it has received final approval
-                            from
-                            the US FDA for its Abbreviated New Drug Application (ANDA) for generic Sitagliptin
-                            tablets...</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">RELIANCE • 2/5/2026, 3:05:22 PM</div>
-                        <h4>Reliance Retail to Acquire Major Stake in Fashion Startup 'VogueIndia'</h4>
-                        <p>MUMBAI - Reliance Retail Ventures Limited (RRVL) is set to acquire a 51% stake in the
-                            emerging fashion tech startup VogueIndia for an undisclosed amount, strengthening its
-                            D2C
-                            portfolio...</p>
-                    </div>
-                    <div class="news-item">
-                        <div class="news-meta">TECH • 2/5/2026, 3:45:50 PM</div>
-                        <h4>Nifty IT Index Surges 3% as Powell Hints at Rate Cuts</h4>
-                        <p>BENGALURU - Information Technology stocks led the rally on D-Street today after the US
-                            Federal Reserve Chair hinted at possible rate cuts later this year, boosting sentiment
-                            for
-                            Indian IT exporters...</p>
-                    </div>
-                </div>
+                    syncUI();
+                }, 1000);
+            }
 
-        </div>
+            updateChart("BSE:SENSEX", "SENSEX (BSE Index Live)");
+            startSimulation();
+        </script>
 
-        <!-- Sidebar Content -->
-        <div class="right-col">
-
-            <section class="m-card" style="margin-top: 1.5rem;">
-                <div class="auth-locked-content" style="display: block;">
-                    <div class="side-list-title">
-                        <div style="font-weight: 700;"><i data-lucide="star" size="18" color="#f59e0b"></i>
-                            Watch List
-                        </div>
-                    </div>
-                    <div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.85rem;">No data.
-                    </div>
-                </div>
-            </section>
-
-            <section class="m-card" style="margin-top: 1.5rem;">
-                <div class="side-list-title">
-                    <div style="font-weight: 700;"><i data-lucide="trending-up" size="18" color="#10b981"></i>
-                        Top Gainer</div>
-                    <div style="font-size: 0.7rem; display: flex; gap: 0.4rem;">
-                        <span class="exchange-tab active" onclick="switchExchange('gainers', 'NSE')">NSE</span>
-                        <span class="exchange-tab" onclick="switchExchange('gainers', 'BSE')">BSE</span>
-                    </div>
-                </div>
-                <div id="gainersList">
-                    <div class="auth-locked-content" style="display: block;">
-                        <!-- Dynamic content -->
-                    </div>
-                </div>
-            </section>
-
-            <section class="m-card" style="margin-top: 1.5rem;">
-                <div class="side-list-title">
-                    <div style="font-weight: 700;"><i data-lucide="trending-down" size="18" color="#ef4444"></i>
-                        Top Loser</div>
-                    <div style="font-size: 0.7rem; display: flex; gap: 0.4rem;">
-                        <span class="exchange-tab active" onclick="switchExchange('losers', 'NSE')">NSE</span>
-                        <span class="exchange-tab" onclick="switchExchange('losers', 'BSE')">BSE</span>
-                    </div>
-                </div>
-                <div id="losersList">
-                    <div class="auth-locked-content" style="display: block;">
-                        <!-- Dynamic content -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- IPO Calendar Widget -->
-            <section class="m-card" style="margin-top: 1.5rem;">
-                <div class="side-list-title">
-                    <div style="font-weight: 700;"><i data-lucide="calendar" size="18" color="#6366f1"></i>
-                        IPO Calendar</div>
-                </div>
-                <div class="auth-locked-content" style="display: block;">
-                    <div class="ipo-item"
-                        style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9;">
-                        <div>
-                            <div style="font-weight: 600; font-size: 0.9rem;">Armour Security</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">14-16 Jan</div>
-                        </div>
-                        <div
-                            style="background: #eff6ff; color: #3b82f6; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                            Upcoming</div>
-                    </div>
-                    <div class="ipo-item"
-                        style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9;">
-                        <div>
-                            <div style="font-weight: 600; font-size: 0.9rem;">TechNova Sol</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">20-22 Jan</div>
-                        </div>
-                        <div
-                            style="background: #f0fdf4; color: #10b981; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                            Open</div>
-                    </div>
-                    <div class="ipo-item"
-                        style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0;">
-                        <div>
-                            <div style="font-weight: 600; font-size: 0.9rem;">Global Infra Ltd</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">25-27 Jan</div>
-                        </div>
-                        <div
-                            style="background: #fef3c7; color: #f59e0b; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                            Soon</div>
-                    </div>
-                </div>
-            </section>
-        </div>
-        </main>
-    </div>
-
-    <!-- Stock Detail View (Hidden by default) -->
-    <div id="stockDetailView" style="display: none;">
-        <div class="detail-left">
-            <section class="main-index-view" style="margin-top: 1.5rem;">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                    <div>
-                        <h2 id="detName" style="margin: 0; font-size: 1.5rem;">Bartronics India Limited</h2>
-                        <div id="detExchange" style="font-size: 0.8rem; color: #64748b; margin-top: 0.3rem;">NSE •
-                            IN</div>
-                    </div>
-                    <i data-lucide="heart" class="heart-icon" size="24"></i>
-                </div>
-
-                <div
-                    style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
-                    <h2 id="detPrice" style="font-size: 2.5rem; margin: 0;">₹14.34</h2>
-                    <div id="detChange" class="index-chg green" style="font-size: 1.1rem;">+2.39 (+20.00%)</div>
-                </div>
-
-                <div class="day-range-container">
-                    <div class="range-bar-wrapper">
-                        <div class="slider-marker" id="detSliderMarker" style="left: 100%;"></div>
-                    </div>
-                    <div class="range-labels">
-                        <span class="low-val" id="detLow">₹12.00</span>
-                        <span class="high-val" id="detHigh">₹14.34</span>
-                    </div>
-
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Symbol:</span>
-                            <span class="info-val-text" id="detSymbol">ASMS</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Market:</span>
-                            <span class="info-val-text">NSE</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">High:</span>
-                            <span class="info-val-text" id="detGridHigh">₹14.34</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Low:</span>
-                            <span class="info-val-text" id="detGridLow">₹12.00</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Prev Open:</span>
-                            <span class="info-val-text">₹12.12</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Prev Close:</span>
-                            <span class="info-val-text">₹11.95</span>
-                        </div>
-                        <div class="info-item" style="grid-column: span 3;">
-                            <span class="info-label">Volume:</span>
-                            <span class="info-val-text">10,608,975</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="timeframe-btns">
-                    <button class="tf-btn active">1D</button>
-                    <button class="tf-btn">1W</button>
-                    <button class="tf-btn">1M</button>
-                </div>
-
-                <div class="chart-container-realtime" id="detChartContainer">
-                    <div id="tradingview_det" style="height:100%; width:100%;"></div>
-                </div>
-
-                <div class="company-info-section">
-                    <h3>Company Info</h3>
-                    <p style="color: #64748b; font-size: 0.9rem;">-</p>
-                    <div class="company-info-grid">
-                        <div><span class="info-label">Website:</span> <span class="info-pair">-</span></div>
-                        <div><span class="info-label">Managing Director:</span> <span class="info-pair">-</span>
-                        </div>
-                        <div><span class="info-label">Established:</span> <span class="info-pair">-</span></div>
-                        <div><span class="info-label">Headquarters:</span> <span class="info-pair">-</span></div>
-                    </div>
-                </div>
-
-                <div class="stats-grid-container">
-                    <table class="stats-table">
-                        <tr>
-                            <td class="label">Daily High</td>
-                            <td class="val">₹11.00</td>
-                        </tr>
-                        <tr>
-                            <td class="label">52W High</td>
-                            <td class="val">₹20.00</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Daily Low</td>
-                            <td class="val">₹11.00</td>
-                        </tr>
-                        <tr>
-                            <td class="label">52W Low</td>
-                            <td class="val">₹10.00</td>
-                        </tr>
-                        <tr>
-                            <td class="label">1D Volume</td>
-                            <td class="val">261528</td>
-                        </tr>
-                        <tr>
-                            <td class="label">P/B</td>
-                            <td class="val">11.34580072</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Basic EPS (TTM)</td>
-                            <td class="val">0.07</td>
-                        </tr>
-                    </table>
-                    <table class="stats-table">
-                        <tr>
-                            <td class="label">1D Change (%)</td>
-                            <td class="val red">-3.83%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">1D Volatility</td>
-                            <td class="val">7.27%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">1W Perf (%)</td>
-                            <td class="val red">-0.27%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">1M Perf (%)</td>
-                            <td class="val red">-12.57%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">3M Perf (%)</td>
-                            <td class="val red">-19.86%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">YTD Perf (%)</td>
-                            <td class="val red">-8.52%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Mkt Cap</td>
-                            <td class="val">₹3,49,95,86,807.00</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div style="background: white; border-radius: 12px; margin-top: 1rem; padding: 1.5rem;">
-                    <table class="stats-table" style="width: 100%;">
-                        <tr>
-                            <td class="label">ISIN</td>
-                            <td class="val">INE855F01042</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Gross Margin (TTM)</td>
-                            <td class="val">9.41%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Net Margin (TTM)</td>
-                            <td class="val">5.30%</td>
-                        </tr>
-                        <tr>
-                            <td class="label">PE (TTM)</td>
-                            <td class="val">163.61</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Enterprise Value (EV)</td>
-                            <td class="val">₹3,48,72,50,807.00</td>
-                        </tr>
-                    </table>
-                </div>
-            </section>
-        </div>
-
-        <div class="detail-right" style="margin-top: 1.5rem;">
-            <section class="buy-widget">
-                <div class="input-group">
-                    <span class="input-label">Quantity</span>
-                    <div class="quantity-input-wrapper">
-                        <input type="number" class="q-input" value="0">
-                        <button class="max-btn">Max</button>
-                    </div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">Minimum investment
-                        required: ₹0.00</div>
-                </div>
-
-                <div style="margin: 1rem 0;">
-                    <input type="range" style="width: 100%;" min="0" max="100" value="0">
-                    <div style="text-align: center; color: #94a3b8; font-size: 0.75rem;">No available funds</div>
-                </div>
-
-                <div style="font-weight: 700; margin-top: 2rem; margin-bottom: 1rem;">Trading Information</div>
-                <table class="trading-info-table">
-                    <tr>
-                        <td>Buy Price</td>
-                        <td class="val" id="detBuyPrice">₹14.34</td>
-                    </tr>
-                    <tr>
-                        <td>Quantity</td>
-                        <td class="val">0</td>
-                    </tr>
-                    <tr>
-                        <td>Tax Fees</td>
-                        <td class="val">₹0.00</td>
-                    </tr>
-                    <tr>
-                        <td>Txn Charge</td>
-                        <td class="val">₹0.00</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: 700;">Total Est. Investment</td>
-                        <td class="val total">₹0.00</td>
-                    </tr>
-                </table>
-
-                <button class="buy-btn">Buy</button>
-            </section>
-
-            <section class="m-card" style="margin-top: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
-                        <i data-lucide="book-open" size="18"></i> Transactions
-                    </div>
-                    <i data-lucide="rotate-cw" size="18" color="#1e56a0" style="cursor: pointer;"></i>
-                </div>
-                <div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No data.</div>
-            </section>
-        </div>
-    </div>
-
-    <!-- Discover View (Hidden by default) -->
-    <div id="discoverView">
-        <aside class="discover-sidebar">
-            <div class="discover-nav-item active" onclick="switchDiscoverTab('trades')">
-                <i data-lucide="trending-up"></i> Trades
-            </div>
-            <div class="discover-nav-item" onclick="switchDiscoverTab('transactions')">
-                <i data-lucide="file-text"></i> Transactions
-            </div>
-            <div class="discover-nav-item" onclick="switchDiscoverTab('upcoming')">
-                <i data-lucide="calendar"></i> Upcoming
-            </div>
-        </aside>
-
-        <div class="discover-main">
-            <!-- Trades Section -->
-            <div id="tradesSection" class="discover-card">
-                <div class="discover-head">
+        <!-- Stock Detail View (Hidden by default) -->
+        <div id="stockDetailView" style="display: none;">
+            <div class="detail-left">
+                <section class="main-index-view" style="margin-top: 1.5rem;">
                     <div
-                        style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
-                        <i data-lucide="trending-up"></i> Trades
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                        <div>
+                            <h2 id="detName" style="margin: 0; font-size: 1.5rem;">Bartronics India Limited</h2>
+                            <div id="detExchange" style="font-size: 0.8rem; color: #64748b; margin-top: 0.3rem;">NSE •
+                                IN</div>
+                        </div>
+                        <i data-lucide="heart" class="heart-icon" size="24"></i>
                     </div>
-                    <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
-                </div>
-                <div class="discover-tabs">
-                    <div class="d-tab active"><i data-lucide="layout-grid" size="18"></i> All</div>
-                    <div class="d-tab"><i data-lucide="trending-up" size="18"></i> Ins. Stocks</div>
-                    <div class="d-tab"><i data-lucide="box" size="18"></i> OTC</div>
-                    <div class="d-tab"><i data-lucide="rocket" size="18"></i> IPO</div>
-                </div>
-                <div style="color: #94a3b8; font-size: 0.9rem;">No data.</div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+                        <h2 id="detPrice" style="font-size: 2.5rem; margin: 0;">₹14.34</h2>
+                        <div id="detChange" class="index-chg green" style="font-size: 1.1rem;">+2.39 (+20.00%)</div>
+                    </div>
+
+                    <div class="day-range-container">
+                        <div class="range-bar-wrapper">
+                            <div class="slider-marker" id="detSliderMarker" style="left: 100%;"></div>
+                        </div>
+                        <div class="range-labels">
+                            <span class="low-val" id="detLow">₹12.00</span>
+                            <span class="high-val" id="detHigh">₹14.34</span>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Symbol:</span>
+                                <span class="info-val-text" id="detSymbol">ASMS</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Market:</span>
+                                <span class="info-val-text">NSE</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">High:</span>
+                                <span class="info-val-text" id="detGridHigh">₹14.34</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Low:</span>
+                                <span class="info-val-text" id="detGridLow">₹12.00</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Prev Open:</span>
+                                <span class="info-val-text">₹12.12</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Prev Close:</span>
+                                <span class="info-val-text">₹11.95</span>
+                            </div>
+                            <div class="info-item" style="grid-column: span 3;">
+                                <span class="info-label">Volume:</span>
+                                <span class="info-val-text">10,608,975</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeframe-btns">
+                        <button class="tf-btn active">1D</button>
+                        <button class="tf-btn">1W</button>
+                        <button class="tf-btn">1M</button>
+                    </div>
+
+                    <div class="chart-container-realtime" id="detChartContainer">
+                        <div id="tradingview_det" style="height:100%; width:100%;"></div>
+                    </div>
+
+                    <div class="company-info-section">
+                        <h3>Company Info</h3>
+                        <p style="color: #64748b; font-size: 0.9rem;">-</p>
+                        <div class="company-info-grid">
+                            <div><span class="info-label">Website:</span> <span class="info-pair">-</span></div>
+                            <div><span class="info-label">Managing Director:</span> <span class="info-pair">-</span>
+                            </div>
+                            <div><span class="info-label">Established:</span> <span class="info-pair">-</span></div>
+                            <div><span class="info-label">Headquarters:</span> <span class="info-pair">-</span></div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid-container">
+                        <table class="stats-table">
+                            <tr>
+                                <td class="label">Daily High</td>
+                                <td class="val">₹11.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label">52W High</td>
+                                <td class="val">₹20.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Daily Low</td>
+                                <td class="val">₹11.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label">52W Low</td>
+                                <td class="val">₹10.00</td>
+                            </tr>
+                            <tr>
+                                <td class="label">1D Volume</td>
+                                <td class="val">261528</td>
+                            </tr>
+                            <tr>
+                                <td class="label">P/B</td>
+                                <td class="val">11.34580072</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Basic EPS (TTM)</td>
+                                <td class="val">0.07</td>
+                            </tr>
+                        </table>
+                        <table class="stats-table">
+                            <tr>
+                                <td class="label">1D Change (%)</td>
+                                <td class="val red">-3.83%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">1D Volatility</td>
+                                <td class="val">7.27%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">1W Perf (%)</td>
+                                <td class="val red">-0.27%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">1M Perf (%)</td>
+                                <td class="val red">-12.57%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">3M Perf (%)</td>
+                                <td class="val red">-19.86%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">YTD Perf (%)</td>
+                                <td class="val red">-8.52%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Mkt Cap</td>
+                                <td class="val">₹3,49,95,86,807.00</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div style="background: white; border-radius: 12px; margin-top: 1rem; padding: 1.5rem;">
+                        <table class="stats-table" style="width: 100%;">
+                            <tr>
+                                <td class="label">ISIN</td>
+                                <td class="val">INE855F01042</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Gross Margin (TTM)</td>
+                                <td class="val">9.41%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Net Margin (TTM)</td>
+                                <td class="val">5.30%</td>
+                            </tr>
+                            <tr>
+                                <td class="label">PE (TTM)</td>
+                                <td class="val">163.61</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Enterprise Value (EV)</td>
+                                <td class="val">₹3,48,72,50,807.00</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
             </div>
 
-            <!-- Transactions Section -->
-            <div id="transactionsSection" class="discover-card" style="display: none;">
-                <div class="discover-head">
-                    <div
-                        style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
-                        <i data-lucide="file-text"></i> Transactions
+            <div class="detail-right" style="margin-top: 1.5rem;">
+                <section class="buy-widget">
+                    <div class="input-group">
+                        <span class="input-label">Quantity</span>
+                        <div class="quantity-input-wrapper">
+                            <input type="number" class="q-input" value="0">
+                            <button class="max-btn">Max</button>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">Minimum investment
+                            required: ₹0.00</div>
                     </div>
-                    <div style="display: flex; align-items: center;">
-                        <div class="search-circle"><i data-lucide="search" size="18"></i></div>
+
+                    <div style="margin: 1rem 0;">
+                        <input type="range" style="width: 100%;" min="0" max="100" value="0">
+                        <div style="text-align: center; color: #94a3b8; font-size: 0.75rem;">No available funds</div>
+                    </div>
+
+                    <div style="font-weight: 700; margin-top: 2rem; margin-bottom: 1rem;">Trading Information</div>
+                    <table class="trading-info-table">
+                        <tr>
+                            <td>Buy Price</td>
+                            <td class="val" id="detBuyPrice">₹14.34</td>
+                        </tr>
+                        <tr>
+                            <td>Quantity</td>
+                            <td class="val">0</td>
+                        </tr>
+                        <tr>
+                            <td>Tax Fees</td>
+                            <td class="val">₹0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Txn Charge</td>
+                            <td class="val">₹0.00</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 700;">Total Est. Investment</td>
+                            <td class="val total">₹0.00</td>
+                        </tr>
+                    </table>
+
+                    <button class="buy-btn">Buy</button>
+                </section>
+
+                <section class="m-card" style="margin-top: 1.5rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="book-open" size="18"></i> Transactions
+                        </div>
+                        <i data-lucide="rotate-cw" size="18" color="#1e56a0" style="cursor: pointer;"></i>
+                    </div>
+                    <div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No data.</div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Discover View (Hidden by default) -->
+        <div id="discoverView">
+            <aside class="discover-sidebar">
+                <div class="discover-nav-item active" onclick="switchDiscoverTab('trades')">
+                    <i data-lucide="trending-up"></i> Trades
+                </div>
+                <div class="discover-nav-item" onclick="switchDiscoverTab('transactions')">
+                    <i data-lucide="file-text"></i> Transactions
+                </div>
+                <div class="discover-nav-item" onclick="switchDiscoverTab('upcoming')">
+                    <i data-lucide="calendar"></i> Upcoming
+                </div>
+            </aside>
+
+            <div class="discover-main">
+                <!-- Trades Section -->
+                <div id="tradesSection" class="discover-card">
+                    <div class="discover-head">
+                        <div
+                            style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+                            <i data-lucide="trending-up"></i> Trades
+                        </div>
                         <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
                     </div>
-                </div>
-                <div class="discover-tabs" id="transactionTabs">
-                    <div class="d-tab-pill active" onclick="switchTransactionTab(this, 'all')">All</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'holding')">Holding</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'sold')">Sold</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pending')">Pending</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'awaiting')">Awaiting</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'unsettled')">Unsettled</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pendingPayment')">Pending Payment
+                    <div class="discover-tabs">
+                        <div class="d-tab active"><i data-lucide="layout-grid" size="18"></i> All</div>
+                        <div class="d-tab"><i data-lucide="trending-up" size="18"></i> Ins. Stocks</div>
+                        <div class="d-tab"><i data-lucide="box" size="18"></i> OTC</div>
+                        <div class="d-tab"><i data-lucide="rocket" size="18"></i> IPO</div>
                     </div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'rejected')">Rejected</div>
-                    <div class="d-tab-pill" onclick="switchTransactionTab(this, 'settle')">Settle</div>
-                </div>
-                <div id="transList" class="trans-list-container">
-                    <!-- Dynamic content -->
                     <div style="color: #94a3b8; font-size: 0.9rem;">No data.</div>
                 </div>
-            </div>
 
-            <!-- Upcoming Section -->
-            <div id="upcomingSection" class="discover-card" style="display: none;">
-                <div class="discover-head">
-                    <div
-                        style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
-                        <i data-lucide="calendar" color="#10b981"></i> Upcoming
+                <!-- Transactions Section -->
+                <div id="transactionsSection" class="discover-card" style="display: none;">
+                    <div class="discover-head">
+                        <div
+                            style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+                            <i data-lucide="file-text"></i> Transactions
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <div class="search-circle"><i data-lucide="search" size="18"></i></div>
+                            <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
+                        </div>
                     </div>
-                    <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
+                    <div class="discover-tabs" id="transactionTabs">
+                        <div class="d-tab-pill active" onclick="switchTransactionTab(this, 'all')">All</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'holding')">Holding</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'sold')">Sold</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pending')">Pending</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'awaiting')">Awaiting</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'unsettled')">Unsettled</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pendingPayment')">Pending Payment
+                        </div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'rejected')">Rejected</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'settle')">Settle</div>
+                    </div>
+                    <div id="transList" class="trans-list-container">
+                        <!-- Dynamic content -->
+                        <div style="color: #94a3b8; font-size: 0.9rem;">No data.</div>
+                    </div>
                 </div>
-                <div style="padding-top: 1rem; color: #94a3b8; font-size: 0.9rem;">No data.</div>
+
+                <!-- Upcoming Section -->
+                <div id="upcomingSection" class="discover-card" style="display: none;">
+                    <div class="discover-head">
+                        <div
+                            style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+                            <i data-lucide="calendar" color="#10b981"></i> Upcoming
+                        </div>
+                        <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
+                    </div>
+                    <div style="padding-top: 1rem; color: #94a3b8; font-size: 0.9rem;">No data.</div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Portfolio View (Hidden by default) -->
-    <div id="portfolioView">
-        <div class="portfolio-left">
-            <!-- Assets Card -->
-            <div class="p-card">
-                <div class="p-card-title">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i data-lucide="credit-card" size="20"></i> Assets <i data-lucide="eye" size="16"
-                            color="#64748b" style="cursor: pointer;" id="assetToggleEye"
-                            onclick="toggleAssetsVisibility()"></i>
-                    </div>
-                    <i data-lucide="rotate-cw" size="18" style="cursor: pointer;"></i>
-                </div>
-                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">INR</div>
-                <div class="p-assets-grid">
-                    <div class="p-asset-item">
-                        <span class="p-asset-label">Available Balance</span>
-                        <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
-                        <span class="p-asset-sub">Cash</span>
-                    </div>
-                    <div class="p-asset-item">
-                        <span class="p-asset-label">Current Investments</span>
-                        <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
-                        <span class="p-asset-sub">Invested</span>
-                    </div>
-                    <div class="p-asset-item">
-                        <span class="p-asset-label">Promotional Credits</span>
-                        <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
-                        <span class="p-asset-sub">Bonus</span>
-                    </div>
-                    <div class="p-asset-item">
-                        <span class="p-asset-label">Pending Funds</span>
-                        <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
-                        <span class="p-asset-sub">Frozen</span>
-                    </div>
-                    <div class="p-asset-item">
-                        <span class="p-asset-label">Borrowed Funds</span>
-                        <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
-                        <span class="p-asset-sub">Loan</span>
-                    </div>
-                    <div class="p-asset-item">
-                        <span class="p-asset-label">Pending Settlement</span>
-                        <span class="p-asset-val" data-val="₹0.00" class="red">₹0.00</span>
-                        <span class="p-asset-sub red">Outstanding</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-btn-row">
-                <button class="p-btn deposit" onclick="window.location.href='deposit.html'"><i
-                        data-lucide="arrow-up-circle"></i> Deposit</button>
-                <button class="p-btn withdraw" onclick="window.location.href='withdraw.html'"><i
-                        data-lucide="arrow-down-circle"></i> Withdraw</button>
-            </div>
-
-            <!-- Statistics Section -->
-            <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
-                <!-- Invested Card -->
-                <div class="p-card" style="flex: 1; margin-bottom: 0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-                        <span style="font-weight: 700; color: #1e56a0;">Invested</span>
-                        <span style="font-size: 0.8rem; color: #3b82f6;">INR</span>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 1.2rem; font-weight: 700; color: #10b981;">₹0.00</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">Invested</div>
-                        <div class="donut-circle-box" style="margin-bottom: 1.5rem;">
-                            <svg viewBox="0 0 100 100" style="width: 100%; transform: rotate(-90deg);">
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" />
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" stroke-width="12"
-                                    stroke-dasharray="251.2" stroke-dashoffset="180" stroke-linecap="round" />
-                            </svg>
+        <!-- Portfolio View (Hidden by default) -->
+        <div id="portfolioView">
+            <div class="portfolio-left">
+                <!-- Assets Card -->
+                <div class="p-card">
+                    <div class="p-card-title">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="credit-card" size="20"></i> Assets <i data-lucide="eye" size="16"
+                                color="#64748b" style="cursor: pointer;" id="assetToggleEye"
+                                onclick="toggleAssetsVisibility()"></i>
                         </div>
-                        <div
-                            style="display: flex; justify-content: center; gap: 1rem; font-size: 0.8rem; margin-bottom: 1rem;">
-                            <span style="display: flex; align-items: center; gap: 4px;">
-                                <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;">
-                                </div> Invested
-                            </span>
-                            <span style="display: flex; align-items: center; gap: 4px;">
-                                <div style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;">
-                                </div> Profit
-                            </span>
+                        <i data-lucide="rotate-cw" size="18" style="cursor: pointer;"></i>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">INR</div>
+                    <div class="p-assets-grid">
+                        <div class="p-asset-item">
+                            <span class="p-asset-label">Available Balance</span>
+                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-sub">Cash</span>
                         </div>
-                        <div
-                            style="display: flex; justify-content: space-around; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
-                            <div style="text-align: left;">
-                                <div style="font-size: 0.7rem; color: #3b82f6; font-weight: 700;">PROFIT</div>
-                                <div style="font-weight: 700; font-size: 0.9rem; color: #10b981;">₹0.00
-                                </div>
+                        <div class="p-asset-item">
+                            <span class="p-asset-label">Current Investments</span>
+                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-sub">Invested</span>
+                        </div>
+                        <div class="p-asset-item">
+                            <span class="p-asset-label">Promotional Credits</span>
+                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-sub">Bonus</span>
+                        </div>
+                        <div class="p-asset-item">
+                            <span class="p-asset-label">Pending Funds</span>
+                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-sub">Frozen</span>
+                        </div>
+                        <div class="p-asset-item">
+                            <span class="p-asset-label">Borrowed Funds</span>
+                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-sub">Loan</span>
+                        </div>
+                        <div class="p-asset-item">
+                            <span class="p-asset-label">Pending Settlement</span>
+                            <span class="p-asset-val" data-val="₹0.00" class="red">₹0.00</span>
+                            <span class="p-asset-sub red">Outstanding</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-btn-row">
+                    <button class="p-btn deposit" onclick="window.location.href='deposit.html'"><i
+                            data-lucide="arrow-up-circle"></i> Deposit</button>
+                    <button class="p-btn withdraw" onclick="window.location.href='withdraw.html'"><i
+                            data-lucide="arrow-down-circle"></i> Withdraw</button>
+                </div>
+
+                <!-- Statistics Section -->
+                <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <!-- Invested Card -->
+                    <div class="p-card" style="flex: 1; margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                            <span style="font-weight: 700; color: #1e56a0;">Invested</span>
+                            <span style="font-size: 0.8rem; color: #3b82f6;">INR</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.2rem; font-weight: 700; color: #10b981;">₹0.00</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">Invested</div>
+                            <div class="donut-circle-box" style="margin-bottom: 1.5rem;">
+                                <svg viewBox="0 0 100 100" style="width: 100%; transform: rotate(-90deg);">
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" />
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" stroke-width="12"
+                                        stroke-dasharray="251.2" stroke-dashoffset="180" stroke-linecap="round" />
+                                </svg>
                             </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 0.7rem; color: #3b82f6; font-weight: 700;">ROI</div>
-                                <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">0.0%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Trades Card -->
-                <div class="p-card" style="flex: 1; margin-bottom: 0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-                        <span style="font-weight: 700; color: #1e56a0;">Trades</span>
-                        <span style="font-size: 0.8rem; color: #64748b;">ROI</span>
-                    </div>
-                    <div style="text-align: center; position: relative;">
-                        <svg viewBox="0 0 100 50" style="width: 100%; margin-top: 2rem;">
-                            <!-- Semi-circle gauge with parts -->
-                            <path d="M 10 50 A 40 40 0 0 1 35 15" fill="none" stroke="#f87171" stroke-width="12" />
-                            <path d="M 35 15 A 40 40 0 0 1 65 15" fill="none" stroke="#fbbf24" stroke-width="12" />
-                            <path d="M 65 15 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="12" />
-                        </svg>
-                        <!-- Needle -->
-                        <div
-                            style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) rotate(70deg); width: 2px; height: 35px; background: #1e293b; transform-origin: bottom center;">
                             <div
-                                style="width: 8px; height: 8px; border-radius: 50%; background: #1e293b; position: absolute; bottom: -4px; left: -3px;">
+                                style="display: flex; justify-content: center; gap: 1rem; font-size: 0.8rem; margin-bottom: 1rem;">
+                                <span style="display: flex; align-items: center; gap: 4px;">
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;">
+                                    </div> Invested
+                                </span>
+                                <span style="display: flex; align-items: center; gap: 4px;">
+                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;">
+                                    </div> Profit
+                                </span>
                             </div>
+                            <div
+                                style="display: flex; justify-content: space-around; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.7rem; color: #3b82f6; font-weight: 700;">PROFIT</div>
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: #10b981;">₹0.00
+                                    </div>
+                                </div>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.7rem; color: #3b82f6; font-weight: 700;">ROI</div>
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">0.0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Trades Card -->
+                    <div class="p-card" style="flex: 1; margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                            <span style="font-weight: 700; color: #1e56a0;">Trades</span>
+                            <span style="font-size: 0.8rem; color: #64748b;">ROI</span>
+                        </div>
+                        <div style="text-align: center; position: relative;">
+                            <svg viewBox="0 0 100 50" style="width: 100%; margin-top: 2rem;">
+                                <!-- Semi-circle gauge with parts -->
+                                <path d="M 10 50 A 40 40 0 0 1 35 15" fill="none" stroke="#f87171" stroke-width="12" />
+                                <path d="M 35 15 A 40 40 0 0 1 65 15" fill="none" stroke="#fbbf24" stroke-width="12" />
+                                <path d="M 65 15 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="12" />
+                            </svg>
+                            <!-- Needle -->
+                            <div
+                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) rotate(70deg); width: 2px; height: 35px; background: #1e293b; transform-origin: bottom center;">
+                                <div
+                                    style="width: 8px; height: 8px; border-radius: 50%; background: #1e293b; position: absolute; bottom: -4px; left: -3px;">
+                                </div>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-around; margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.7rem; color: #64748b;">Trades</div>
+                                    <div style="font-weight: 700; font-size: 1rem; color: #1e293b;">0</div>
+                                </div>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.7rem; color: #64748b;">Profit</div>
+                                    <div style="font-weight: 700; font-size: 1rem; color: #10b981;">₹0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-card">
+                    <div class="p-card-title">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="pie-chart"></i> Portfolio
+                        </div>
+                        <i data-lucide="rotate-cw" size="18"></i>
+                    </div>
+                    <div style="display: flex; gap: 2rem; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.75rem; color: #94a3b8;">PORTFOLIO</div>
+                            <div style="font-weight: 700; margin-bottom: 0.5rem;">IN • INR</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8;">Total Invested</div>
+                            <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">₹0.00</div>
+
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: #94a3b8;">STOCK (0%)</span><span
+                                        style="font-weight: 600;">₹0.00</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: #94a3b8;">IPO (0%)</span><span
+                                        style="font-weight: 600;">₹0.00</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: #94a3b8;">OTC (0%)</span><span
+                                        style="font-weight: 600;">₹0.00</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                    <span style="color: #94a3b8;">SPO (0%)</span><span
+                                        style="font-weight: 600;">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="width: 150px; height: 150px; position: relative;">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" />
+                            </svg>
+                            <div
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; text-align: center;">
+                                ₹0.00
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-card">
+                    <div class="p-card-title" style="color: #a855f7;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="activity"></i> Stocks Trading Stats
                         </div>
                         <div
-                            style="display: flex; justify-content: space-around; margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
-                            <div style="text-align: left;">
-                                <div style="font-size: 0.7rem; color: #64748b;">Trades</div>
-                                <div style="font-weight: 700; font-size: 1rem; color: #1e293b;">0</div>
-                            </div>
-                            <div style="text-align: left;">
-                                <div style="font-size: 0.7rem; color: #64748b;">Profit</div>
-                                <div style="font-weight: 700; font-size: 1rem; color: #10b981;">₹0.00</div>
-                            </div>
+                            style="background: #1e56a0; color: white; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; display: flex; align-items: center; gap: 4px;">
+                            <img src="https://flagcdn.com/w20/in.png" width="14"> IN
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="p-card">
-                <div class="p-card-title">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i data-lucide="pie-chart"></i> Portfolio
-                    </div>
-                    <i data-lucide="rotate-cw" size="18"></i>
-                </div>
-                <div style="display: flex; gap: 2rem; align-items: center;">
-                    <div style="flex: 1;">
-                        <div style="font-size: 0.75rem; color: #94a3b8;">PORTFOLIO</div>
-                        <div style="font-weight: 700; margin-bottom: 0.5rem;">IN • INR</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8;">Total Invested</div>
-                        <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">₹0.00</div>
-
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                <span style="color: #94a3b8;">STOCK (0%)</span><span
-                                    style="font-weight: 600;">₹0.00</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                <span style="color: #94a3b8;">IPO (0%)</span><span
-                                    style="font-weight: 600;">₹0.00</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                <span style="color: #94a3b8;">OTC (0%)</span><span
-                                    style="font-weight: 600;">₹0.00</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                <span style="color: #94a3b8;">SPO (0%)</span><span
-                                    style="font-weight: 600;">₹0.00</span>
-                            </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: 700;">₹0.00</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Invested</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.9rem; font-weight: 700; color: #10b981;">₹0.00</div>
+                            <div style="font-size: 0.8rem; color: #10b981;"><i data-lucide="arrow-up" size="12"></i>
+                                0.00%</div>
                         </div>
                     </div>
-                    <div style="width: 150px; height: 150px; position: relative;">
-                        <svg viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" />
-                        </svg>
-                        <div
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; text-align: center;">
-                            ₹0.00
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="p-card">
-                <div class="p-card-title" style="color: #a855f7;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i data-lucide="activity"></i> Stocks Trading Stats
-                    </div>
                     <div
-                        style="background: #1e56a0; color: white; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; display: flex; align-items: center; gap: 4px;">
-                        <img src="https://flagcdn.com/w20/in.png" width="14"> IN
+                        style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">
+                        <span style="color: #10b981;"><i data-lucide="arrow-up" size="14"></i> <span
+                                id="valAdvances">18</span> Advances</span>
+                        <span style="color: #ef4444;"><span id="valDeclines">4</span> Declines <i
+                                data-lucide="arrow-down" size="14"></i></span>
                     </div>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: 700;">₹0.00</div>
-                        <div style="font-size: 0.8rem; color: #94a3b8;">Invested</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 0.9rem; font-weight: 700; color: #10b981;">₹0.00</div>
-                        <div style="font-size: 0.8rem; color: #10b981;"><i data-lucide="arrow-up" size="12"></i>
-                            0.00%</div>
-                    </div>
-                </div>
-
-                <div
-                    style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem;">
-                    <span style="color: #10b981;"><i data-lucide="arrow-up" size="14"></i> <span
-                            id="valAdvances">18</span> Advances</span>
-                    <span style="color: #ef4444;"><span id="valDeclines">4</span> Declines <i data-lucide="arrow-down"
-                            size="14"></i></span>
-                </div>
-                <div class="advances-bar"
-                    style="display: flex; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-                    <div id="barAdvances" class="adv-green" style="background: #10b981; transition: flex 0.5s ease;">
-                    </div>
-                    <div id="barDeclines" class="adv-red" style="background: #ef4444; transition: flex 0.5s ease;">
-                    </div>
-                </div>
-
-                <div style="margin-top: 1.5rem;">
-                    <div style="font-weight: 700; font-size: 0.85rem; color: #10b981;">Top Gainer</div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
-                        <div style="font-size: 0.85rem;">-</div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                            <div style="font-size: 0.75rem; color: #94a3b8;"><i data-lucide="minus" size="12"></i>
-                                0.00%</div>
+                    <div class="advances-bar"
+                        style="display: flex; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
+                        <div id="barAdvances" class="adv-green"
+                            style="background: #10b981; transition: flex 0.5s ease;">
+                        </div>
+                        <div id="barDeclines" class="adv-red" style="background: #ef4444; transition: flex 0.5s ease;">
                         </div>
                     </div>
 
-                    <div style="font-weight: 700; font-size: 0.85rem; color: #ef4444; margin-top: 1.5rem;">Top Loser
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
-                        <div style="font-size: 0.85rem;">-</div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                            <div style="font-size: 0.75rem; color: #94a3b8;"><i data-lucide="minus" size="12"></i>
-                                0.00%</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 2rem;">
-                    <div style="font-weight: 700; color: #2dd4bf; margin-bottom: 1rem;">Equity Investment Allocation
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem;">
-                                <div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;">
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.85rem;">Inst. Stocks</div>
-                                    <div style="font-size: 0.7rem; color: #94a3b8;">0.00%</div>
-                                </div>
-                            </div>
+                    <div style="margin-top: 1.5rem;">
+                        <div style="font-weight: 700; font-size: 0.85rem; color: #10b981;">Top Gainer</div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                            <div style="font-size: 0.85rem;">-</div>
                             <div style="text-align: right;">
                                 <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;"><i data-lucide="minus" size="10"></i>
-                                    ₹0.00 (0.00%)</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;"><i data-lucide="minus" size="12"></i>
+                                    0.00%</div>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 0.8rem;">
-                                <div style="width: 10px; height: 10px; border-radius: 50%; background: #2dd4bf;">
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.85rem;">-</div>
-                                    <div style="font-size: 0.7rem; color: #94a3b8;">0.00%</div>
-                                </div>
-                            </div>
+
+                        <div style="font-weight: 700; font-size: 0.85rem; color: #ef4444; margin-top: 1.5rem;">Top Loser
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                            <div style="font-size: 0.85rem;">-</div>
                             <div style="text-align: right;">
                                 <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;"><i data-lucide="minus" size="10"></i>
-                                    ₹0.00 (0.00%)</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;"><i data-lucide="minus" size="12"></i>
+                                    0.00%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <div style="font-weight: 700; color: #2dd4bf; margin-bottom: 1rem;">Equity Investment Allocation
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;">
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.85rem;">Inst. Stocks</div>
+                                        <div style="font-size: 0.7rem; color: #94a3b8;">0.00%</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
+                                    <div style="font-size: 0.7rem; color: #94a3b8;"><i data-lucide="minus"
+                                            size="10"></i>
+                                        ₹0.00 (0.00%)</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #2dd4bf;">
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.85rem;">-</div>
+                                        <div style="font-size: 0.7rem; color: #94a3b8;">0.00%</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
+                                    <div style="font-size: 0.7rem; color: #94a3b8;"><i data-lucide="minus"
+                                            size="10"></i>
+                                        ₹0.00 (0.00%)</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="p-card">
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 2rem;">
-                    <button class="p-tab active" id="btnWeekly" onclick="switchChartData('weekly')">Weekly</button>
-                    <button class="p-tab" id="btnMonthly" onclick="switchChartData('monthly')">Monthly</button>
+                <div class="p-card">
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 2rem;">
+                        <button class="p-tab active" id="btnWeekly" onclick="switchChartData('weekly')">Weekly</button>
+                        <button class="p-tab" id="btnMonthly" onclick="switchChartData('monthly')">Monthly</button>
+                    </div>
+
+                    <div style="height: 200px; position: relative; border-bottom: 1px solid #fda4af; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 10px; margin-bottom: 1rem;"
+                        id="chartContainer">
+                        <!-- Bars will be rendered here dynamically -->
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #64748b; margin-top: 0.5rem; margin-bottom: 1.5rem;"
+                        id="chartLabels">
+                        <!-- Labels will be rendered here dynamically -->
+                    </div>
+                    <div style="display: flex; gap: 1.5rem; font-size: 0.8rem;">
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></div>
+                            Invested
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div>
+                            Profit
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div> ROI
+                            (%)
+                        </span>
+                    </div>
                 </div>
 
-                <div style="height: 200px; position: relative; border-bottom: 1px solid #fda4af; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 10px; margin-bottom: 1rem;"
-                    id="chartContainer">
-                    <!-- Bars will be rendered here dynamically -->
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #64748b; margin-top: 0.5rem; margin-bottom: 1.5rem;"
-                    id="chartLabels">
-                    <!-- Labels will be rendered here dynamically -->
-                </div>
-                <div style="display: flex; gap: 1.5rem; font-size: 0.8rem;">
-                    <span style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></div>
-                        Invested
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></div>
-                        Profit
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></div> ROI
-                        (%)
-                    </span>
-                </div>
-            </div>
+                <script>
+                    const chartData = {
+                        weekly: [
+                            { date: '2026-01-27', invested: 0, profit: 0 },
+                            { date: '2026-01-28', invested: 0, profit: 0 },
+                            { date: '2026-01-29', invested: 0, profit: 0 },
+                            { date: '2026-01-30', invested: 0, profit: 0 },
+                            { date: '2026-02-02', invested: 0, profit: 0 },
+                            { date: '2026-02-03', invested: 0, profit: 0 },
+                            { date: '2026-02-04', invested: 0, profit: 0 }
+                        ],
+                        monthly: [
+                            { date: 'Oct', invested: 0, profit: 0 },
+                            { date: 'Nov', invested: 0, profit: 0 },
+                            { date: 'Dec', invested: 0, profit: 0 },
+                            { date: 'Jan', invested: 0, profit: 0 }
+                        ]
+                    };
 
-            <script>
-                const chartData = {
-                    weekly: [
-                        { date: '2026-01-27', invested: 0, profit: 0 },
-                        { date: '2026-01-28', invested: 0, profit: 0 },
-                        { date: '2026-01-29', invested: 0, profit: 0 },
-                        { date: '2026-01-30', invested: 0, profit: 0 },
-                        { date: '2026-02-02', invested: 0, profit: 0 },
-                        { date: '2026-02-03', invested: 0, profit: 0 },
-                        { date: '2026-02-04', invested: 0, profit: 0 }
-                    ],
-                    monthly: [
-                        { date: 'Oct', invested: 0, profit: 0 },
-                        { date: 'Nov', invested: 0, profit: 0 },
-                        { date: 'Dec', invested: 0, profit: 0 },
-                        { date: 'Jan', invested: 0, profit: 0 }
-                    ]
-                };
+                    function switchChartData(type) {
+                        // Update buttons
+                        document.getElementById('btnWeekly').classList.toggle('active', type === 'weekly');
+                        document.getElementById('btnMonthly').classList.toggle('active', type === 'monthly');
 
-                function switchChartData(type) {
-                    // Update buttons
-                    document.getElementById('btnWeekly').classList.toggle('active', type === 'weekly');
-                    document.getElementById('btnMonthly').classList.toggle('active', type === 'monthly');
+                        const container = document.getElementById('chartContainer');
+                        const labels = document.getElementById('chartLabels');
+                        const data = chartData[type];
 
-                    const container = document.getElementById('chartContainer');
-                    const labels = document.getElementById('chartLabels');
-                    const data = chartData[type];
-
-                    // Render Bars
-                    container.innerHTML = data.map(d => `
+                        // Render Bars
+                        container.innerHTML = data.map(d => `
                             <div style="display: flex; gap: 4px; align-items: flex-end; height: 100%; flex: 1; justify-content: center;">
                                 <div style="width: 12px; height: ${d.invested}%; background: #3b82f6; border-radius: 2px 2px 0 0;" title="Invested: ${d.invested}%"></div>
                                 <div style="width: 12px; height: ${d.profit}%; background: #10b981; border-radius: 2px 2px 0 0;" title="Profit: ${d.profit}%"></div>
                             </div>
                         `).join('');
 
-                    // Render Labels
-                    labels.innerHTML = data.map(d => `<span style="flex: 1; text-align: center;">${d.date}</span>`).join('');
-                }
+                        // Render Labels
+                        labels.innerHTML = data.map(d => `<span style="flex: 1; text-align: center;">${d.date}</span>`).join('');
+                    }
 
-                // Initial chart load
-                document.addEventListener('DOMContentLoaded', () => {
-                    switchChartData('weekly');
-                });
-            </script>
-        </div>
-
-        <div class="portfolio-right">
-            <div class="p-card">
-                <div class="p-card-title">
-                    <div style="display: flex; align-items: center; gap: 1rem; color: #3b82f6;">
-                        <i data-lucide="landmark"></i> Fund Records
-                    </div>
-                    <i data-lucide="rotate-cw" size="18" style="cursor: pointer;"></i>
-                </div>
-
-                <div class="p-tab-bar" id="fundTabs">
-                    <span class="p-tab active" onclick="switchFundTab(this, 'all')">All</span>
-                    <span class="p-tab" onclick="switchFundTab(this, 'today')">Today</span>
-                    <span class="p-tab" onclick="switchFundTab(this, '7D')">7D</span>
-                    <span class="p-tab" onclick="switchFundTab(this, '30D')">30D</span>
-                    <span class="p-tab" onclick="switchFundTab(this, '90D')">90D</span>
-                </div>
-
-                <div class="date-filter-row">
-                    <div class="date-input-group">
-                        <input type="date" placeholder="dd/mm/yyyy" id="fundDateFrom"> <i data-lucide="calendar"
-                            size="16"></i>
-                    </div>
-                    <div class="date-input-group">
-                        <input type="date" placeholder="dd/mm/yyyy" id="fundDateTo"> <i data-lucide="calendar"
-                            size="16"></i>
-                    </div>
-                    <button class="clear-btn">Clear</button>
-                </div>
-
-                <div style="display: flex; gap: 1.5rem; font-size: 0.85rem; color: #64748b; margin-bottom: 2rem;">
-                    <span id="fundRecordCount">10 records</span>
-                    <span>•</span>
-                    <span style="color: #64748b;">Total: <span id="fundTotalAmount"
-                            style="color: #ef4444; font-weight: 700;">₹-6,38,64,170.43</span> INR</span>
-                </div>
-
-                <div id="fundRecordsList">
-                    <!-- Dynamic Records -->
-                </div>
+                    // Initial chart load
+                    document.addEventListener('DOMContentLoaded', () => {
+                        switchChartData('weekly');
+                    });
+                </script>
             </div>
-        </div>
-    </div>
 
-    <!-- Me View (Hidden by default) -->
-    <div id="meView" class="me-view-container" style="display: none;">
-        <!-- IVSL Header -->
-        <div class="ivsl-header">
-            <div class="ivsl-user-info">
-                <div class="ivsl-avatar-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=91811" alt="Avatar" class="ivsl-avatar">
-                </div>
-                <div class="ivsl-user-meta">
-                    <h2 class="ivsl-phone">918108038029</h2>
-                    <div class="ivsl-uid-row">
-                        <span class="ivsl-uid">UID: 583921</span>
-                        <span class="ivsl-vip-badge">VIP0</span>
+            <div class="portfolio-right">
+                <div class="p-card">
+                    <div class="p-card-title">
+                        <div style="display: flex; align-items: center; gap: 1rem; color: #3b82f6;">
+                            <i data-lucide="landmark"></i> Fund Records
+                        </div>
+                        <i data-lucide="rotate-cw" size="18" style="cursor: pointer;"></i>
+                    </div>
+
+                    <div class="p-tab-bar" id="fundTabs">
+                        <span class="p-tab active" onclick="switchFundTab(this, 'all')">All</span>
+                        <span class="p-tab" onclick="switchFundTab(this, 'today')">Today</span>
+                        <span class="p-tab" onclick="switchFundTab(this, '7D')">7D</span>
+                        <span class="p-tab" onclick="switchFundTab(this, '30D')">30D</span>
+                        <span class="p-tab" onclick="switchFundTab(this, '90D')">90D</span>
+                    </div>
+
+                    <div class="date-filter-row">
+                        <div class="date-input-group">
+                            <input type="date" placeholder="dd/mm/yyyy" id="fundDateFrom"> <i data-lucide="calendar"
+                                size="16"></i>
+                        </div>
+                        <div class="date-input-group">
+                            <input type="date" placeholder="dd/mm/yyyy" id="fundDateTo"> <i data-lucide="calendar"
+                                size="16"></i>
+                        </div>
+                        <button class="clear-btn">Clear</button>
+                    </div>
+
+                    <div style="display: flex; gap: 1.5rem; font-size: 0.85rem; color: #64748b; margin-bottom: 2rem;">
+                        <span id="fundRecordCount">10 records</span>
+                        <span>•</span>
+                        <span style="color: #64748b;">Total: <span id="fundTotalAmount"
+                                style="color: #ef4444; font-weight: 700;">₹-6,38,64,170.43</span> INR</span>
+                    </div>
+
+                    <div id="fundRecordsList">
+                        <!-- Dynamic Records -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Float Balance Card -->
-        <div class="ivsl-balance-card">
-            <div class="ivsl-balance-row">
-                <div class="ivsl-bal-item">
-                    <span class="ivsl-bal-label">Total Assets (INR) </span>
-                    <span class="ivsl-bal-val">₹0.00</span>
+        <!-- Me View (Redesigned) -->
+        <div id="meView" class="me-view-container" style="display: none;">
+            <div class="me-left-col">
+                <!-- Profile Card -->
+                <div class="me-card">
+                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18"></i></div>
+                    <div class="me-title-row">
+                        <i data-lucide="user-circle"></i> Your Profile
+                    </div>
+                    <div class="me-profile-main">
+                        <div class="me-p-avatar" id="meAvatarInitials">U</div>
+                        <div class="me-p-info">
+                            <h2 id="meUserDisplayName">User Name</h2>
+                            <p>Full Name: <span id="meFullName">-</span></p>
+                            <p>Username: <span id="meUsername">-</span></p>
+                            <p style="margin-top: 0.5rem;">KYC Status: <span id="meKycStatusBadge" class="kyc-approved"
+                                    style="background: #f1f5f9; color: #64748b;">Not Verified</span></p>
+                        </div>
+                    </div>
+                    <div class="me-vip-stats">
+                        <div class="me-stat-item blue">
+                            <span class="me-stat-label">Credit Score</span>
+                            <span class="me-stat-val blue" id="meCreditScore">0</span>
+                        </div>
+                        <div class="me-stat-item gold">
+                            <span class="me-stat-label">VIP</span>
+                            <span class="me-stat-val gold" id="meVipLevel">0</span>
+                        </div>
+                    </div>
+                    <div class="me-btn-row">
+                        <button class="me-btn deposit" onclick="window.location.href='deposit.html'">
+                            <i data-lucide="landmark"></i> Deposit
+                        </button>
+                        <button class="me-btn withdraw" onclick="window.location.href='withdraw.html'">
+                            <i data-lucide="wallet"></i> Withdraw
+                        </button>
+                    </div>
                 </div>
-                <div class="ivsl-bal-item">
-                    <span class="ivsl-bal-label">Available Balance</span>
-                    <span class="ivsl-bal-val">₹0.00</span>
+
+                <!-- Assets Card -->
+                <div class="me-card">
+                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18"></i></div>
+                    <div class="me-title-row">
+                        <i data-lucide="wallet"></i> Assets <i data-lucide="eye" size="14"
+                            style="margin-left: 5px;"></i>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">INR</div>
+                    <div class="me-asset-grid">
+                        <div class="me-as-card">
+                            <div class="me-as-lbl">Available Balance</div>
+                            <div class="me-as-val" id="meAvailableBalance">₹0.00</div>
+                            <div class="me-as-sub" style="color: #10b981;">Cash</div>
+                        </div>
+                        <div class="me-as-card">
+                            <div class="me-as-lbl">Current Investments</div>
+                            <div class="me-as-val" id="meCurrentInvestments">₹0.00</div>
+                            <div class="me-as-sub" style="color: #3b82f6;">Invested</div>
+                        </div>
+                        <div class="me-as-card">
+                            <div class="me-as-lbl">Promotional Credits</div>
+                            <div class="me-as-val" id="meBonusCredits">₹0.00</div>
+                            <div class="me-as-sub" style="color: #db2777;">Bonus</div>
+                        </div>
+                        <div class="me-as-card">
+                            <div class="me-as-lbl">Pending Funds</div>
+                            <div class="me-as-val" id="meFrozenFunds">₹0.00</div>
+                            <div class="me-as-sub" style="color: #ef4444;">Frozen</div>
+                        </div>
+                        <div class="me-as-card">
+                            <div class="me-as-lbl">Borrowed Funds</div>
+                            <div class="me-as-val" id="meBorrowedFunds">₹0.00</div>
+                            <div class="me-as-sub" style="color: #6366f1;">Loan</div>
+                        </div>
+                        <div class="me-as-card">
+                            <div class="me-as-lbl">Pending Settlement</div>
+                            <div class="me-as-val" id="mePendingSettlement">₹0.00</div>
+                            <div class="me-as-sub" style="color: #ef4444;">Outstanding</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scores Card -->
+                <div class="me-card">
+                    <div class="me-title-row">
+                        <i data-lucide="calculator"></i> Scores and Offers
+                    </div>
+                    <div class="gauge-wrap">
+                        <div class="gauge-score-text" style="color: #64748b;">N/A</div>
+                        <svg class="gauge-svg" viewBox="0 0 100 50">
+                            <!-- Gauge Background -->
+                            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#f1f5f9" stroke-width="8" />
+                            <!-- Colored segments -->
+                            <path d="M 10 50 A 40 40 0 0 1 25 20" fill="none" stroke="#ef4444" stroke-width="8" />
+                            <path d="M 25 20 A 40 40 0 0 1 50 10" fill="none" stroke="#f59e0b" stroke-width="8" />
+                            <path d="M 50 10 A 40 40 0 0 1 75 20" fill="none" stroke="#3b82f6" stroke-width="8" />
+                            <path d="M 75 20 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="8" />
+
+                            <!-- Needle at the beginning (Poor) -->
+                            <line x1="50" y1="50" x2="15" y2="45" stroke="#1e293b" stroke-width="2"
+                                stroke-linecap="round" />
+                            <circle cx="50" cy="50" r="3" fill="#1e293b" />
+                        </svg>
+                        <div
+                            style="font-size: 0.85rem; color: #64748b; margin-top: 1rem; text-align: center; max-width: 400px;">
+                            Based on the latest evaluation, your <b>Credit Score is 0</b>. Your credit profile falls
+                            under the <b style="color: #64748b;">New Account</b> category.
+                        </div>
+                        <div class="score-details" style="width: 100%; margin-top: 1.5rem;">
+                            <div class="score-row"><span>
+                                    <div class="score-dot" style="background:#ef4444"></div>Poor
+                                </span> <span>0 - 25</span></div>
+                            <div class="score-row"><span>
+                                    <div class="score-dot" style="background:#f59e0b"></div>Average
+                                </span> <span>26 - 50</span></div>
+                            <div class="score-row"><span>
+                                    <div class="score-dot" style="background:#fde047"></div>Fair
+                                </span> <span>51 - 73</span></div>
+                            <div class="score-row"><span>
+                                    <div class="score-dot" style="background:#3b82f6"></div>Good
+                                </span> <span>74 - 94</span></div>
+                            <div class="score-row"><span>
+                                    <div class="score-dot" style="background:#10b981"></div>Excellent
+                                </span> <span>95 - 100</span></div>
+                        </div>
+                    </div>
+                    <div class="score-info-box">
+                        "Your credit score is directly linked to the financial products and benefits you can access.
+                        Maintaining a strong score only increases eligibility for exclusive offers, but also helps
+                        secure better terms and rates."
+                    </div>
+                </div>
+
+                <!-- Offers Card -->
+                <div class="me-card">
+                    <div class="me-title-row">
+                        <i data-lucide="gift"></i> Offers
+                    </div>
+                    <div
+                        style="background: #f8fafc; border-radius: 12px; padding: 1.25rem; border: 1px solid #e2e8f0; display: flex; gap: 1rem; align-items: center;">
+                        <img src="https://flagcdn.com/w80/in.png" width="40" style="opacity: 0.2;">
+                        <div>
+                            <div style="font-weight: 700; color: #1e293b;">Tailored Personal Credit Loans</div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.3rem;">Enjoy a seamless,
+                                private borrowing experience designed to complement your lifestyle...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="ivsl-action-row">
-                <button onclick="window.location.href='deposit.html'" class="ivsl-btn deposit">
-                    <i data-lucide="landmark"></i> Deposit
-                </button>
-                <button onclick="window.location.href='withdraw.html'" class="ivsl-btn withdraw">
-                    <i data-lucide="wallet"></i> Withdraw
-                </button>
+
+            <div class="me-right-col">
+                <!-- Applications Card -->
+                <div class="me-card" style="height: 100%; display: flex; flex-direction: column;">
+                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18"></i></div>
+                    <div class="me-apps-header">
+                        <div class="me-title-row" style="margin-bottom: 0;">
+                            <i data-lucide="layout-list"></i> Applications
+                        </div>
+                    </div>
+                    <div class="app-pill-row">
+                        <div class="app-pill active">All</div>
+                        <div class="app-pill">Awaiting</div>
+                        <div class="app-pill">Approved</div>
+                        <div class="app-pill">Rejected</div>
+                        <div class="app-pill">Using</div>
+                        <div class="app-pill">Repayment</div>
+                        <div class="app-pill">Recycled</div>
+                    </div>
+                    <div class="no-data-wrap">
+                        <i data-lucide="inbox" size="48" stroke-width="1" style="margin-bottom: 1rem;"></i>
+                        No data.
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Menu Grid -->
-        <div class="ivsl-menu-grid">
-            <div class="ivsl-menu-item" onclick="window.location.href='bank_accounts.html'">
-                <div class="ivsl-icon-box blue"><i data-lucide="credit-card"></i></div>
-                <span>Bank Card</span>
-            </div>
-            <div class="ivsl-menu-item" onclick="showPortfolioView()">
-                <div class="ivsl-icon-box orange"><i data-lucide="scroll-text"></i></div>
-                <span>Fund Records</span>
-            </div>
-            <div class="ivsl-menu-item">
-                <div class="ivsl-icon-box green"><i data-lucide="trending-up"></i></div>
-                <span>Interest</span>
-            </div>
-            <div class="ivsl-menu-item" onclick="openKYCModal()">
-                <div class="ivsl-icon-box gold"><i data-lucide="user-check"></i></div>
-                <span>KYC Verification</span>
-            </div>
-            <div class="ivsl-menu-item" onclick="openSettings()">
-                <div class="ivsl-icon-box purple"><i data-lucide="shield-lock"></i></div>
-                <span>Security</span>
-            </div>
-            <div class="ivsl-menu-item" onclick="toggleMessageCenter()">
-                <div class="ivsl-icon-box red"><i data-lucide="bell"></i></div>
-                <span>System Message</span>
-            </div>
-            <div class="ivsl-menu-item" onclick="openCS()">
-                <div class="ivsl-icon-box cyan"><i data-lucide="headset"></i></div>
-                <span>Help Center</span>
-            </div>
-            <div class="ivsl-menu-item">
-                <div class="ivsl-icon-box indigo"><i data-lucide="download"></i></div>
-                <span>App Download</span>
-            </div>
-            <div class="ivsl-menu-item" onclick="DB.logout()">
-                <div class="ivsl-icon-box slate"><i data-lucide="log-out"></i></div>
-                <span>Sign Out</span>
-            </div>
-        </div>
-    </div>
 
 
-
-    <div>
-        <footer class="footer-market">
-            <div>© 2025. Reserved.</div>
-            <div class="footer-right">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <img src="https://flagcdn.com/w20/in.png" width="16"> <span id="realTimeClock">13:59:09
-                        GMT+5:30</span>
+        <div>
+            <footer class="footer-market">
+                <div>© 2025. Reserved.</div>
+                <div class="footer-right">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <img src="https://flagcdn.com/w20/in.png" width="16"> <span id="realTimeClock">13:59:09
+                            GMT+5:30</span>
+                    </div>
+                    <div>Cookie Preference</div>
                 </div>
-                <div>Cookie Preference</div>
-            </div>
-        </footer>
+            </footer>
+        </div>
     </div>
 
 
@@ -3566,8 +3952,22 @@
             document.querySelector('.header').style.display = 'flex';
 
             setActiveNav(document.getElementById('navMe'));
+
+            // Refresh user data (KYC status, balance, etc.) from backend
+            DB.refreshCurrentUser().then(fullUser => {
+                if (fullUser) syncUserData();
+            });
+
             lucide.createIcons();
         }
+
+        // Application Tabs Logic
+        document.querySelectorAll('.app-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.app-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
 
         let portfolioAssetsHidden = false;
         function toggleAssetsVisibility() {
@@ -3987,7 +4387,61 @@
                 btn.innerText = 'Submit';
                 btn.style.opacity = '1';
                 closeKYC();
+                syncUserData(); // Sync name change if any
             }, 1500);
+        }
+
+        // Edit Name Modal Logic
+        function openEditNameModal() {
+            const user = DB.getCurrentUser();
+            if (!user) return;
+            document.getElementById('editNameInput').value = user.name || '';
+            document.getElementById('editNameModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeEditNameModal() {
+            document.getElementById('editNameModal').style.display = 'none';
+        }
+
+        async function saveName() {
+            const newName = document.getElementById('editNameInput').value.trim();
+            if (!newName) {
+                alert('Please enter a name');
+                return;
+            }
+
+            const btn = document.getElementById('saveNameBtn');
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                const user = DB.getCurrentUser();
+                const result = await DB.updateUser(user.id, {
+                    full_name: newName,
+                    username: newName,
+                    name: newName
+                });
+                if (result.success) {
+                    // Update Local Storage immediately
+                    user.full_name = newName;
+                    user.username = newName;
+                    user.name = newName;
+                    localStorage.setItem(DB.CURRENT_USER_KEY, JSON.stringify(user));
+
+                    alert('Name updated successfully!');
+                    syncUserData(); // Update Me page immediately
+                    closeEditNameModal();
+                } else {
+                    alert('Error: ' + (result.error?.message || 'Failed to update name'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An error occurred.');
+            } finally {
+                btn.innerText = 'Save Name';
+                btn.disabled = false;
+            }
         }
 
         // Sync User Data to UI
@@ -3998,45 +4452,90 @@
             const lockedElements = document.querySelectorAll('.auth-locked-container');
             if (!user) {
                 lockedElements.forEach(el => el.classList.add('is-locked'));
-                // We can still finish basic UI setup but sensitive data remains blurred/hidden
                 return;
             } else {
                 lockedElements.forEach(el => el.classList.remove('is-locked'));
             }
 
-            // Update Profile Section (Me View) - IVSL Style
-            const mePhone = document.querySelector('.ivsl-phone');
-            if (mePhone) mePhone.textContent = user.mobile || user.id;
+            // Update Profile Section (Me View)
+            const meDisplayName = document.getElementById('meUserDisplayName');
+            const meFullName = document.getElementById('meFullName');
+            const meUsername = document.getElementById('meUsername');
+            const meAvatar = document.getElementById('meAvatarInitials');
+            const meCredit = document.getElementById('meCreditScore');
+            const meVip = document.getElementById('meVipLevel');
 
-            const meUid = document.querySelector('.ivsl-uid');
-            if (meUid) meUid.textContent = 'UID: ' + (user.id ? user.id.substring(0, 8) : '583921');
+            const displayName = user.full_name || user.name || user.mobile || 'User';
+            if (meDisplayName) meDisplayName.textContent = displayName;
+            if (meFullName) meFullName.textContent = user.full_name || user.name || '-';
+            if (meUsername) meUsername.textContent = user.username || user.mobile || '-';
 
-            const meVipBadge = document.querySelector('.ivsl-vip-badge');
-            if (meVipBadge) meVipBadge.textContent = 'VIP' + (user.vip || 0);
+            if (meAvatar) {
+                const firstChar = displayName.charAt(0).toUpperCase();
+                meAvatar.textContent = (isNaN(firstChar) ? firstChar : 'U');
+            }
+            if (meCredit) meCredit.textContent = user.creditScore || 0;
+            if (meVip) meVip.textContent = user.vip || 0;
 
-            const meBalances = document.querySelectorAll('.ivsl-bal-val');
-            if (meBalances.length >= 2) {
-                const totalAssets = (parseFloat(user.balance) || 0) + (parseFloat(user.invested) || 0);
-                meBalances[0].textContent = '₹' + totalAssets.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-                meBalances[1].textContent = '₹' + (parseFloat(user.balance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            // Update KYC Status Badge
+            const meKycBadge = document.getElementById('meKycStatusBadge');
+            if (meKycBadge) {
+                const status = user.kyc || 'Not Verified';
+                meKycBadge.textContent = status;
+
+                // Reset classes and set appropriate one
+                meKycBadge.className = '';
+                if (status === 'Approved') meKycBadge.className = 'kyc-approved';
+                else if (status === 'Pending') meKycBadge.className = 'kyc-pending';
+                else if (status === 'Rejected') meKycBadge.className = 'kyc-rejected';
+                else meKycBadge.className = 'kyc-not-verified';
+
+                // Remove inline style if present from earlier edits
+                meKycBadge.style.background = '';
+                meKycBadge.style.color = '';
             }
 
-            // Update sidebar assets and other areas
+            // Update Assets (Me View)
+            const formats = { minimumFractionDigits: 2 };
+            const bal = parseFloat(user.balance) || 0;
+            const inv = parseFloat(user.invested) || 0;
+            const frozen = parseFloat(user.frozen) || 0;
+            const loan = parseFloat(user.loan) || 0;
+            const bonus = parseFloat(user.bonus) || 0;
+            const outstanding = parseFloat(user.outstanding) || 0;
+
+            const updateVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '₹' + val.toLocaleString('en-IN', formats);
+            };
+
+            updateVal('meAvailableBalance', bal);
+            updateVal('meCurrentInvestments', inv);
+            updateVal('meFrozenFunds', frozen);
+            updateVal('meBorrowedFunds', loan);
+            updateVal('meBonusCredits', bonus);
+            updateVal('mePendingSettlement', outstanding);
+
+            // Update sidebar assets
             const assetAmounts = document.querySelectorAll('.asset-amount');
             if (assetAmounts.length >= 2) {
-                assetAmounts[0].textContent = '₹' + (parseFloat(user.balance) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-                assetAmounts[1].textContent = '₹' + (parseFloat(user.invested) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                assetAmounts[0].textContent = '₹' + bal.toLocaleString('en-IN', formats);
+                assetAmounts[1].textContent = '₹' + inv.toLocaleString('en-IN', formats);
             }
 
-            // Update Settings Modal Header
+            // Update Settings Modal Profile
             const setPhone = document.querySelector('.settings-phone');
             if (setPhone) setPhone.textContent = user.mobile || user.id;
 
-            const setCredit = document.querySelector('.s-badge.credit');
-            if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${user.creditScore || 100}`;
+            const setName = document.querySelector('.settings-name');
+            if (setName) setName.textContent = user.full_name || user.name || user.mobile || 'User';
 
-            const setVip = document.querySelector('.s-badge.vip');
-            if (setVip) setVip.innerHTML = `<i data-lucide="shield-check" size="18"></i> VIP: ${user.vip || 0}`;
+            // Update Settings Avatar Initials
+            const setAvatar = document.querySelector('.settings-header .avatar-circle');
+            if (setAvatar && !setAvatar.querySelector('img')) {
+                const firstChar = (user.full_name || user.name || user.mobile || 'U').charAt(0).toUpperCase();
+                setAvatar.textContent = (isNaN(firstChar) ? firstChar : 'U');
+            }
 
             lucide.createIcons();
         }
@@ -4047,8 +4546,8 @@
         DB.refreshCurrentUser().then(fullUser => {
             if (fullUser) syncUserData();
         });
-        renderStocks('gainers', 'NSE');
-        renderStocks('losers', 'NSE');
+        switchExchange('gainers', 'NSE');
+        switchExchange('losers', 'NSE');
         renderFundRecords('all');
 
         // Handle URL 'view' parameter for navigation from Home
@@ -4140,6 +4639,9 @@
                         style="transition: transform 0.2s;"></i>
                 </div>
                 <div id="userProfileSubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openEditNameModal()">
+                        <i data-lucide="edit-3" size="18"></i> Update Name
+                    </div>
                     <div class="submenu-item" onclick="openAvatarModal()">
                         <i data-lucide="image" size="18"></i> Update Avatar
                     </div>
@@ -4410,8 +4912,56 @@
         </div>
     </div>
 
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="center-popup-modal">
+        <div class="center-popup-content" style="max-width: 400px;">
+            <div class="popup-header">
+                <h2>Update Name</h2>
+                <button class="popup-close" onclick="closeEditNameModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body">
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                        Name</label>
+                    <input type="text" id="editNameInput" class="reg-input" placeholder="Enter your name"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="logout-btn" id="saveNameBtn" style="background: #3b82f6;" onclick="saveName()">Save
+                        Name</button>
+                    <button class="logout-btn" style="background: #f1f5f9; color: #64748b;"
+                        onclick="closeEditNameModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 
 </html>
-<style>.mini-tf-btn { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s; }.mini-tf-btn.active { background: #1e56a0; color: white; border-color: #1e56a0; }.range-dot, #rangeProgress { transition: all 0.5s ease; }</style>
+<style>
+    .mini-tf-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .mini-tf-btn.active {
+        background: #1e56a0;
+        color: white;
+        border-color: #1e56a0;
+    }
+
+    .range-dot,
+    #rangeProgress {
+        transition: all 0.5s ease;
+    }
+</style>
