@@ -1460,31 +1460,88 @@
         </div>
     </div>
 
-    <!-- MANUAL DEPOSIT MODAL -->
+    <!-- MANUAL BALANCE MODAL -->
     <div id="depositModal" class="kyc-modal-overlay">
         <div class="kyc-modal-card" style="height:auto; max-width: 400px;">
             <div class="kyc-modal-header">
-                <span>Manual Deposit</span>
+                <span>Manage Balance</span>
                 <i data-lucide="x" style="cursor:pointer" onclick="closeDepositModal()"></i>
             </div>
             <div class="kyc-modal-body">
                 <input type="hidden" id="dep_user_id">
+                <input type="hidden" id="dep_id">
                 <div class="kyc-form-group">
                     <label>User</label>
                     <input type="text" id="dep_username" class="kyc-input" readonly
                         style="background: #f1f5f9; color: #64748b;">
                 </div>
                 <div class="kyc-form-group">
+                    <label>Transaction Type</label>
+                    <select id="dep_type" class="kyc-input">
+                        <option value="deposit">Deposit (Add Money)</option>
+                        <option value="set">Set Balance (Edit/Correct)</option>
+                    </select>
+                </div>
+                <div class="kyc-form-group">
                     <label>Amount (₹) <span style="color:#ef4444">*</span></label>
                     <input type="number" id="dep_amount" class="kyc-input" placeholder="Enter amount">
                 </div>
+                <!-- Added Status Field -->
+                <div class="kyc-form-group">
+                    <label>Status <span style="color:#ef4444">*</span></label>
+                    <select id="dep_status" class="kyc-input">
+                        <option value="Approved">Approved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
                 <div class="kyc-form-group">
                     <label>Note (Optional)</label>
-                    <textarea id="dep_note" class="kyc-input" rows="2" placeholder="Reason for deposit"></textarea>
+                    <textarea id="dep_note" class="kyc-input" rows="2" placeholder="Reason for transaction"></textarea>
                 </div>
             </div>
             <div class="kyc-modal-footer">
-                <button class="vsl-btn submit" style="width: 100%;" onclick="submitDeposit()">Confirm Deposit</button>
+                <button class="vsl-btn submit" style="width: 100%;" onclick="submitDeposit()">Confirm
+                    Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANUAL WITHDRAWAL MODAL -->
+    <div id="withdrawalModal" class="kyc-modal-overlay">
+        <div class="kyc-modal-card" style="height:auto; max-width: 400px;">
+            <div class="kyc-modal-header">
+                <span>Manage Withdrawal</span>
+                <i data-lucide="x" style="cursor:pointer" onclick="closeWithdrawalModal()"></i>
+            </div>
+            <div class="kyc-modal-body">
+                <input type="hidden" id="wd_id">
+                <div class="kyc-form-group">
+                    <label>User</label>
+                    <input type="text" id="wd_username" class="kyc-input" readonly
+                        style="background: #f1f5f9; color: #64748b;">
+                </div>
+                <div class="kyc-form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="wd_amount" class="kyc-input" readonly
+                        style="background: #f1f5f9; color: #64748b;">
+                </div>
+                <div class="kyc-form-group">
+                    <label>Status <span style="color:#ef4444">*</span></label>
+                    <select id="wd_status" class="kyc-input">
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="kyc-form-group">
+                    <label>Note (Optional)</label>
+                    <textarea id="wd_note" class="kyc-input" rows="2" placeholder="Reason for decision"></textarea>
+                </div>
+            </div>
+            <div class="kyc-modal-footer">
+                <button class="vsl-btn submit" style="width: 100%;" onclick="submitWithdrawalEdit()">Update
+                    Status</button>
             </div>
         </div>
     </div>
@@ -1592,7 +1649,7 @@
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fee2e2; color:#991b1b;">${x.status}</span></td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
                              <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer"></i></div>
+                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openWithdrawalEdit(${x.id}, '${x.users?.mobile || 'User'}', ${x.amount}, '${x.status}', '${x.admin_note || ''}')"></i></div>
                             </td>
                         </tr>
                     `).join('') : '<tr><td colspan="9" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
@@ -1606,11 +1663,14 @@
                         <tr>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.amount).toFixed(2)}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                ₹${parseFloat(x.amount).toFixed(2)}
+                                ${x.image_url ? `<br><a href="${x.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">View Screenshot</a>` : ''}
+                            </td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fef3c7; color:#92400e;">${x.status}</span></td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer"></i></div>
+                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openDepositEdit(${x.id}, '${x.users?.mobile || 'User'}', ${x.amount}, '${x.status}', '${x.admin_note || ''}')"></i></div>
                             </td>
                         </tr>
                     `).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px;">No deposits found</td></tr>';
@@ -1647,6 +1707,7 @@
                                     </td>
                                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                         <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                        ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
                                     </td>
                                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                         ${t.status === 'Pending' ? `
@@ -1671,6 +1732,7 @@
                                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${t.users?.mobile || 'Unknown'}</td>
                                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                         <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                        ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
                                     </td>
                                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(t.created_at).toLocaleDateString()}</td>
                                     <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
@@ -2294,10 +2356,24 @@
         }
 
         function openDepositModal(uid, uname) {
+            document.getElementById('dep_id').value = ''; // Reset ID for new
             document.getElementById('dep_user_id').value = uid;
             document.getElementById('dep_username').value = uname || 'User #' + uid;
+            document.getElementById('dep_type').value = 'deposit'; // Default
             document.getElementById('dep_amount').value = '';
-            document.getElementById('dep_note').value = 'Manual Deposit by Admin';
+            document.getElementById('dep_status').value = 'Approved';
+            document.getElementById('dep_note').value = 'Manual Transaction by Admin';
+            document.getElementById('depositModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function openDepositEdit(id, uname, amount, status, note) {
+            document.getElementById('dep_id').value = id;
+            document.getElementById('dep_username').value = uname;
+            document.getElementById('dep_amount').value = amount;
+            document.getElementById('dep_status').value = status;
+            document.getElementById('dep_note').value = note || '';
+            document.getElementById('dep_type').value = 'deposit';
             document.getElementById('depositModal').style.display = 'flex';
             lucide.createIcons();
         }
@@ -2306,50 +2382,158 @@
             document.getElementById('depositModal').style.display = 'none';
         }
 
+        function openWithdrawalEdit(id, uname, amount, status, note) {
+            document.getElementById('wd_id').value = id;
+            document.getElementById('wd_username').value = uname;
+            document.getElementById('wd_amount').value = amount;
+            document.getElementById('wd_status').value = status;
+            document.getElementById('wd_note').value = note || '';
+            document.getElementById('withdrawalModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeWithdrawalModal() {
+            document.getElementById('withdrawalModal').style.display = 'none';
+        }
+
         async function submitDeposit() {
+            const depId = document.getElementById('dep_id').value;
             const uid = document.getElementById('dep_user_id').value;
             const amount = parseFloat(document.getElementById('dep_amount').value);
+            const type = document.getElementById('dep_type').value;
+            const status = document.getElementById('dep_status').value;
             const note = document.getElementById('dep_note').value;
 
-            if (!uid || isNaN(amount) || amount <= 0) {
-                alert("Please enter a valid positive amount.");
+            if (isNaN(amount) || amount < 0) {
+                alert("Please enter a valid amount (0 or more).");
                 return;
             }
 
-            if (!confirm(`Are you sure you want to deposit ₹${amount} to this user?`)) return;
+            if (!depId && !uid) {
+                alert("Missing user ID for new deposit.");
+                return;
+            }
+
+            const isEdit = !!depId;
+            const actionText = isEdit ? 'UPDATE' : (type === 'deposit' ? 'DEPOSIT (Add)' : 'SET BALANCE TO');
+
+            if (!confirm(`Are you sure you want to ${actionText} ₹${amount} with status ${status}?`)) return;
 
             showLoader(true);
             const client = DB.getClient();
 
             try {
-                // 1. Get current balance
-                const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', uid).single();
-                if (uErr) throw uErr;
+                let actualUid = uid;
+                let oldStatus = 'Pending';
+                let oldAmount = 0;
 
-                const newBalance = (parseFloat(user.balance) || 0) + amount;
+                if (isEdit) {
+                    const { data: existing, error: getErr } = await client.from('deposits').select('*').eq('id', depId).single();
+                    if (getErr) throw getErr;
+                    actualUid = existing.user_id;
+                    oldStatus = existing.status;
+                    oldAmount = parseFloat(existing.amount);
+                }
 
-                // 2. Update User Balance
-                const { error: upErr } = await client.from('users').update({ balance: newBalance }).eq('id', uid);
-                if (upErr) throw upErr;
+                // 1. Manage User Balance if status becomes APPROVED
+                if (status === 'Approved' && oldStatus !== 'Approved') {
+                    const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', actualUid).single();
+                    if (uErr) throw uErr;
 
-                // 3. Log into 'deposits' table
-                const { error: depErr } = await client.from('deposits').insert({
-                    user_id: uid,
-                    amount: amount,
-                    status: 'Approved',
-                    method: 'Manual/Admin',
-                    image_url: '', // No proof for manual
-                    created_at: new Date().toISOString()
-                });
+                    const currentBalance = parseFloat(user.balance) || 0;
+                    let newBalance = currentBalance;
 
-                if (depErr) console.warn("Could not create deposit log:", depErr);
+                    if (!isEdit || type === 'deposit') {
+                        newBalance = currentBalance + amount;
+                    } else {
+                        newBalance = amount;
+                    }
 
-                alert("Deposit successful!");
+                    const { error: upErr } = await client.from('users').update({ balance: newBalance }).eq('id', actualUid);
+                    if (upErr) throw upErr;
+                }
+                // Handle case where it was Approved but now changed to something else (e.g. error correction)
+                else if (status !== 'Approved' && oldStatus === 'Approved') {
+                    const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', actualUid).single();
+                    if (uErr) throw uErr;
+
+                    const currentBalance = parseFloat(user.balance) || 0;
+                    const newBalance = currentBalance - oldAmount; // Reverse previous add
+
+                    const { error: upErr } = await client.from('users').update({ balance: newBalance }).eq('id', actualUid);
+                    if (upErr) throw upErr;
+                }
+
+                // 2. Insert or Update 'deposits' record
+                if (isEdit) {
+                    const { error: upErr } = await client.from('deposits').update({
+                        amount: amount,
+                        status: status,
+                        admin_note: note,
+                        processed_at: new Date().toISOString()
+                    }).eq('id', depId);
+                    if (upErr) throw upErr;
+                } else {
+                    const { error: insErr } = await client.from('deposits').insert({
+                        user_id: parseInt(actualUid),
+                        amount: amount,
+                        status: status,
+                        admin_note: note,
+                        created_at: new Date().toISOString()
+                    });
+                    if (insErr) throw insErr;
+                }
+
+                alert("Transaction successful!");
                 closeDepositModal();
-                init(); // Refresh lists
+                init();
             } catch (e) {
                 console.error(e);
-                alert("Error processing deposit: " + e.message);
+                alert("Error processing transaction: " + e.message);
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        async function submitWithdrawalEdit() {
+            const wdId = document.getElementById('wd_id').value;
+            const status = document.getElementById('wd_status').value;
+            const note = document.getElementById('wd_note').value;
+
+            if (!wdId) return;
+            if (!confirm(`Update withdrawal status to ${status}?`)) return;
+
+            showLoader(true);
+            const client = DB.getClient();
+
+            try {
+                // 1. Get existing record
+                const { data: existing, error: getErr } = await client.from('withdrawals').select('*').eq('id', wdId).single();
+                if (getErr) throw getErr;
+
+                // 2. Handle balance reverson if Rejected (Assuming balance was deducted on request)
+                // Note: Balance deduction on request is a common pattern.
+                if (status === 'Rejected' && existing.status !== 'Rejected') {
+                    const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', existing.user_id).single();
+                    if (uErr) throw uErr;
+                    const newBalance = (parseFloat(user.balance) || 0) + parseFloat(existing.amount);
+                    await client.from('users').update({ balance: newBalance }).eq('id', existing.user_id);
+                }
+
+                // 3. Update withdrawal record
+                const { error: upErr } = await client.from('withdrawals').update({
+                    status: status,
+                    admin_note: note,
+                    processed_at: new Date().toISOString()
+                }).eq('id', wdId);
+                if (upErr) throw upErr;
+
+                alert("Withdrawal updated successfully!");
+                closeWithdrawalModal();
+                init();
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
             } finally {
                 showLoader(false);
             }
@@ -2426,6 +2610,15 @@
                 }).eq('id', id);
 
                 if (upTradeErr) throw new Error("Failed to update trade status: " + upTradeErr.message);
+
+                try {
+                    const noticePacket = JSON.stringify({
+                        title: newStatus === 'Settled' ? 'Trade Approved' : 'Trade Rejected',
+                        message: `Your trade request for ${trade.name} (${trade.symbol}) has been ${newStatus === 'Settled' ? 'approved' : 'rejected'}.`,
+                        is_notification: true
+                    });
+                    await DB.sendNotice(uid, "Trade Update", noticePacket);
+                } catch (ne) { console.error(ne); }
 
                 alert(`Trade #${id} successfully updated to ${newStatus}.`);
 

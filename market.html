@@ -3314,9 +3314,10 @@
                     </div>
                     <div class="discover-tabs" id="transactionTabs">
                         <div class="d-tab-pill active" onclick="switchTransactionTab(this, 'all')">All</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'holding')">Holding</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'sold')">Sold</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pending')">Pending</div>
-                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'awaiting')">Awaiting</div>
+                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'awaiting')">Confirmed</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'unsettled')">Unsettled</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pendingPayment')">Pending Payment
                         </div>
@@ -3360,32 +3361,32 @@
                     <div class="p-assets-grid">
                         <div class="p-asset-item">
                             <span class="p-asset-label">Available Balance</span>
-                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pAvailableBalance" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub">Cash</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Current Investments</span>
-                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pCurrentInvested" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub">Invested</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Promotional Credits</span>
-                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pPromoCredits" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub">Bonus</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Pending Funds</span>
-                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pPendingFunds" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub">Frozen</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Borrowed Funds</span>
-                            <span class="p-asset-val" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pBorrowedFunds" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub">Loan</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Pending Settlement</span>
-                            <span class="p-asset-val" data-val="₹0.00" class="red">₹0.00</span>
+                            <span class="p-asset-val red" id="pPendingSettlement" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub red">Outstanding</span>
                         </div>
                     </div>
@@ -4147,6 +4148,11 @@
 
             setActiveNav(document.getElementById('navPortfolio'));
             lucide.createIcons();
+
+            // Refresh user data (Assets, Balance, Invested)
+            DB.refreshCurrentUser().then(fullUser => {
+                if (fullUser) syncUserData();
+            });
         }
 
         function showMeView() {
@@ -4327,9 +4333,11 @@
             // we might use cached balance or just trigger setMax * percent. 
             // For simplicity, let's assume we want to call setMax then scale it?
             // Better: Get cached balance for speed, real check on buy.
-            const user = window.DB ? window.DB.getCurrentUser() : null;
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
             if (!user) return;
 
+            // Try to use fresher data if possible, or fallback to cached user
+            // Since this is UI interactive, maybe async is tricky, but let's trust cached user object has been refreshed on load
             const balance = parseFloat(user.balance) || 0;
             const priceText = document.getElementById('detBuyPrice').innerText.replace(/[^\d.]/g, '');
             const price = parseFloat(priceText) || 0;
@@ -4382,6 +4390,8 @@
                 }
 
                 // 3. Submit Trade
+                const isAutoApproved = (type.toLowerCase() === 'stock');
+
                 const tradeData = {
                     user_id: freshUser.id,
                     symbol: symbol,
@@ -4390,30 +4400,33 @@
                     quantity: calc.qty,
                     price: calc.price,
                     total_amount: calc.total,
-                    status: 'Pending'
+                    status: isAutoApproved ? 'Approved' : 'Pending'
                 };
 
                 const result = await window.DB.submitTrade(tradeData);
 
                 if (result.success) {
-                    // User Request: Do NOT deduct immediately. Wait for Admin approval.
-                    // Just submit the trade request.
+                    if (isAutoApproved) {
+                        // Deduct Balance Immediately for Stocks
+                        const newBalance = currentBalance - calc.total;
+                        const currentInvested = parseFloat(freshUser.invested) || 0;
+                        const newInvested = currentInvested + calc.total;
 
-                    // Refresh UI (to show pending trade in list if applicable)
-                    // await window.DB.refreshCurrentUser(); // No balance change to refresh
-                    if (typeof syncUserData === 'function') syncUserData();
-                    if (typeof fetchUserTransactions === 'function') await fetchUserTransactions();
+                        // Update Backend
+                        const finResult = await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested);
 
-                    if (type === 'OTC' || type === 'IPO') {
-                        alert(`Request for ${stockName} sent! Status: Pending Approval. No funds deducted yet.`);
+                        if (finResult.success) {
+                            alert(`Successfully purchased ${calc.qty} shares of ${stockName}. Amount deducted: ₹${calc.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
+                        } else {
+                            // If update fails, alert user.
+                            alert("Stock purchased, but failed to update balance. Please contact support. Error: " + (finResult.error?.message || "Unknown"));
+                        }
                     } else {
-                        alert(`Order for ${stockName} placed! Status: Pending Approval. No funds deducted yet.`);
+                        // OTC / IPO / SPO: Show Payment Confirmation Modal
+                        openPurchaseModal(type, symbol, stockName, calc.qty, calc.total);
                     }
-                    // Optional: Reset input
-                    document.getElementById('buyQuantityInput').value = 0;
-                    updateBuyCalculations();
                 } else {
-                    alert("Failed to submit trade: " + (result.error?.message || "Unknown error"));
+                    alert("Failed to pre-submit trade: " + (result.error?.message || "Unknown error"));
                 }
 
             } catch (e) {
@@ -4425,15 +4438,87 @@
             }
         }
 
+        let currentPurchaseData = null;
+
+        function openPurchaseModal(type, symbol, name, qty, total) {
+            currentPurchaseData = { type, symbol, name, qty, total };
+
+            document.getElementById('cpName').innerText = name;
+            document.getElementById('cpSymbol').innerText = symbol;
+            document.getElementById('cpQty').innerText = qty;
+            document.getElementById('cpTotal').innerText = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            document.getElementById('purchaseConfirmModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closePurchaseModal() {
+            document.getElementById('purchaseConfirmModal').style.display = 'none';
+            currentPurchaseData = null;
+        }
+
+        window.confirmPurchaseSubscription = async function () {
+            const btn = document.getElementById('cpSubmitBtn');
+            const originalText = btn.innerText;
+
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                alert(`Your subscription request for ${currentPurchaseData.name} has been received and is waiting for administrator approval.`);
+                closePurchaseModal();
+                if (typeof fetchUserTransactions === 'function') await fetchUserTransactions();
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+
+
+        // --- Helper: SYNC User Data to UI ---
+        // --- Helper: SYNC User Data to UI ---
+
+
         // Initialize Discover Trades and View Routing
         document.addEventListener('DOMContentLoaded', async () => {
             // Force refresh user data on load
             if (DB.getCurrentUser()) {
-                await DB.refreshUserData();
+                await DB.refreshCurrentUser(); // Use refreshCurrentUser instead of refreshUserData for consistency if needed, but DB.refreshUserData was used before. Let's stick to refreshUserData if it exists or refreshCurrentUser. 
+                // Checking DB.js: refreshUserData doesn't exist? refreshCurrentUser does.
+                // Wait, previous code used refreshUserData? Let's check. 
+                syncUserData();
             }
 
             const allTab = document.querySelector('.discover-tabs .d-tab.active');
             if (allTab) switchTradesTab(allTab, 'all');
+
+            // --- REALTIME LISTENER FOR BALANCE UPDATES ---
+            const user = DB.getCurrentUser();
+            const client = DB.getClient();
+            if (user && client) {
+                client.channel('public:users:' + user.id)
+                    .on('postgres_changes', {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'users',
+                        filter: `id=eq.${user.id}`
+                    }, async (payload) => {
+                        console.log('Realtime Update:', payload);
+                        await DB.refreshCurrentUser();
+                        syncUserData();
+                    })
+                    .subscribe();
+
+                // --- ROBUST POLLING AS FALLBACK ---
+                setInterval(async () => {
+                    const fresh = await DB.refreshCurrentUser();
+                    if (fresh) syncUserData();
+                }, 3000); // Check every 3 seconds
+            }
+
 
             // Handle URL View Parameter
             const urlParams = new URLSearchParams(window.location.search);
@@ -4476,18 +4561,15 @@
             // categorizing trades
             transactionData = {
                 all: trades,
-                holding: trades.filter(t => t.status === 'Approved' || t.status === 'Pending'),
-                sold: trades.filter(t => t.status === 'Sold' || t.status === 'Settled'),
+                holding: trades.filter(t => t.status === 'Approved' || t.status === 'Pending' || t.status === 'Settled'),
+                sold: trades.filter(t => t.status === 'Sold'),
                 pending: trades.filter(t => t.status === 'Pending'),
                 rejected: trades.filter(t => t.status === 'Rejected'),
-                unsettled: trades.filter(t => t.status !== 'Approved' && t.status !== 'Pending' && t.status !== 'Rejected' && t.status !== 'Sold' && t.status !== 'Settled')
-                // map other tabs if needed
+                unsettled: trades.filter(t => t.status !== 'Approved' && t.status !== 'Pending' && t.status !== 'Rejected' && t.status !== 'Sold' && t.status !== 'Settled' && t.status !== 'Awaiting'),
+                awaiting: trades.filter(t => t.status === 'Awaiting' || t.status === 'Settled'),
+                pendingPayment: trades.filter(t => (t.type === 'otc' || t.type === 'ipo') && t.status === 'Pending'),
+                settle: trades.filter(t => t.status === 'Settled')
             };
-
-            // Add other keys for specific tabs to avoid undefined
-            transactionData.awaiting = [];
-            transactionData.pendingPayment = [];
-            transactionData.settle = [];
         }
 
         function switchTransactionTab(el, tabName) {
@@ -4549,7 +4631,7 @@
                     const dateStr = new Date(item.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
                     let statusColor = '#f59e0b'; // pending yellow
-                    if (item.status === 'Approved') statusColor = '#10b981';
+                    if (item.status === 'Approved' || item.status === 'Settled') statusColor = '#10b981';
                     if (item.status === 'Rejected') statusColor = '#ef4444';
                     if (item.status === 'Sold') statusColor = '#3b82f6';
 
@@ -4941,6 +5023,16 @@
                 lockedElements.forEach(el => el.classList.remove('is-locked'));
             }
 
+            // Refresh transactions if on Transaction view or in background
+            if (typeof fetchUserTransactions === 'function') {
+                await fetchUserTransactions();
+                const activeTab = document.querySelector('#transactionTabs .d-tab-pill.active');
+                if (activeTab) {
+                    const tabName = activeTab.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                    if (tabName) switchTransactionTab(activeTab, tabName);
+                }
+            }
+
             // Remote DB sync for latest balance and pending items
             const client = DB.getClient();
             let dbUser = user;
@@ -5005,12 +5097,16 @@
             }
 
             const formats = { minimumFractionDigits: 2 };
+            // FIX: Use RAW DB Balance everywhere for "Available Balance" display
+            // ignoring pending items so user sees exactly what Admin set.
+            const rawBalance = parseFloat(dbUser.balance) || 0;
+
             const updateVal = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = '₹' + val.toLocaleString('en-IN', formats);
             };
 
-            updateVal('meAvailableBalance', effectiveBalance);
+            updateVal('meAvailableBalance', rawBalance);
 
             const inv = parseFloat(dbUser.invested) || 0;
             const frozen = parseFloat(dbUser.frozen) || 0;
@@ -5027,21 +5123,43 @@
             // Update sidebar assets
             const assetAmounts = document.querySelectorAll('.asset-amount');
             if (assetAmounts.length >= 2) {
-                assetAmounts[0].textContent = '₹' + effectiveBalance.toLocaleString('en-IN', formats);
+                assetAmounts[0].textContent = '₹' + rawBalance.toLocaleString('en-IN', formats);
                 assetAmounts[1].textContent = '₹' + inv.toLocaleString('en-IN', formats);
             }
 
             // Update Portfolio View Invested Amounts
-            const formattedBal = '₹' + effectiveBalance.toLocaleString('en-IN', formats);
+            const formattedRawBal = '₹' + rawBalance.toLocaleString('en-IN', formats);
             const formattedInv = '₹' + inv.toLocaleString('en-IN', formats);
 
             // Update p-asset-val elements in Portfolio view
+            // Use ID targeting for precision
+            const updatePortfolioVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const fmt = '₹' + val.toLocaleString('en-IN', formats);
+                    el.textContent = fmt;
+                    el.setAttribute('data-val', fmt);
+                }
+            };
+
+            updatePortfolioVal('pAvailableBalance', rawBalance);
+
+            updatePortfolioVal('pCurrentInvested', inv);
+            updatePortfolioVal('pPromoCredits', bonus);
+            updatePortfolioVal('pPendingFunds', frozen);
+            updatePortfolioVal('pBorrowedFunds', loan);
+            updatePortfolioVal('pPendingSettlement', outstanding);
+
+            // Legacy Loop for safety (if IDs missing on some copies)
+            // But skip elements that have IDs since we handled them above
             document.querySelectorAll('.p-asset-val').forEach(el => {
+                if (el.id) return; // Skip if ID exists (handled above)
+
                 const label = el.previousElementSibling?.textContent;
                 if (label === 'Available Balance') {
-                    el.textContent = formattedBal;
-                    el.setAttribute('data-val', formattedBal);
-                } else if (label === 'Invested Value') {
+                    el.textContent = formattedRawBal;
+                    el.setAttribute('data-val', formattedRawBal);
+                } else if (label === 'Current Investments') {
                     el.textContent = formattedInv;
                     el.setAttribute('data-val', formattedInv);
                 }
@@ -5065,8 +5183,8 @@
             // Update Buy Widget Balance Info
             const fundStatus = document.getElementById('fundStatus');
             if (fundStatus) {
-                fundStatus.textContent = `Available: ${formattedBal}`;
-                fundStatus.style.color = effectiveBalance > 0 ? '#10b981' : '#ef4444';
+                fundStatus.textContent = `Available: ${formattedRawBal}`;
+                fundStatus.style.color = rawBalance > 0 ? '#10b981' : '#ef4444';
             }
 
             // Update Settings Modal Profile
@@ -5460,6 +5578,46 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Purchase Modal (For OTC/IPO) -->
+    <div id="purchaseConfirmModal" class="center-popup-modal" onclick="if(event.target == this) closePurchaseModal()">
+        <div class="center-popup-content" style="max-width: 500px;">
+            <div class="popup-header">
+                <h2 style="font-weight: 700;">Confirm Purchase</h2>
+                <button class="popup-close" onclick="closePurchaseModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body">
+                <div style="background: #eff6ff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Product</span>
+                        <span id="cpName" style="font-weight: 700; color: #1e293b;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Symbol</span>
+                        <span id="cpSymbol" style="font-weight: 700; color: #1e293b;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Quantity</span>
+                        <span id="cpQty" style="font-weight: 700; color: #1e293b;">0</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #dbeafe;">
+                        <span style="color: #1e56a0; font-weight: 700;">Total Amount</span>
+                        <span id="cpTotal" style="font-weight: 800; color: #1e56a0; font-size: 1.1rem;">₹0.00</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem; text-align: center; color: #64748b; font-size: 0.9rem;">
+                    Your subscription request will be sent to our backend for review. Once approved, it will be
+                    reflected in your holdings.
+                </div>
+
+                <button class="logout-btn"
+                    style="background: #3b82f6; width: 100%; border-radius: 12px; height: 52px; font-weight: 700; border:none; color:white; cursor:pointer;"
+                    id="cpSubmitBtn" onclick="confirmPurchaseSubscription()">Confirm Subscription</button>
             </div>
         </div>
     </div>

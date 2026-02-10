@@ -427,5 +427,23 @@ window.DB = {
             .eq('id', id);
 
         return { success: !error, error };
+    },
+
+    async updateUserFinancials(userId, newBalance, newInvested) {
+        const client = this.getClient();
+        const updates = { balance: newBalance };
+        if (newInvested !== undefined) updates.invested = newInvested;
+
+        const { data, error } = await client
+            .from('users')
+            .update(updates)
+            .eq('id', userId)
+            .select();
+
+        if (!error && (!data || data.length === 0)) {
+            return { success: false, error: { message: "User not found or update failed (RLS?)" } };
+        }
+
+        return { success: !error, data, error };
     }
 };

@@ -478,6 +478,13 @@
             }
 
             loadHoldings();
+
+            setInterval(() => {
+                if (window.DB.getCurrentUser()) {
+                    syncBalance();
+                    loadHoldings();
+                }
+            }, 4000);
         };
 
         function initPage(sym, name, type = 'stock') {
@@ -591,7 +598,7 @@
 
             try {
                 // 1. Force Refresh User Data to get latest Balance
-                const freshUser = await window.DB.refreshUserData();
+                const freshUser = await window.DB.refreshCurrentUser();
                 if (!freshUser) {
                     alert("Session expired. Please login again.");
                     window.location.href = 'login.html';
@@ -623,11 +630,11 @@
 
                 if (result.success) {
                     if (isSubscription) {
-                        alert(`Subscription request for ${currentStockName} sent successfully. Please wait for backend approval.`);
+                        openPurchaseModal(currentProductType, currentActiveSymbol, currentStockName, qty, totalCost);
                     } else {
                         alert(`Trade request for ${currentActiveSymbol} submitted. Your order will be processed shortly.`);
+                        syncBalance();
                     }
-                    syncBalance();
                 } else {
                     console.error("Trade submission failed:", result.error);
                     alert("Failed to submit trade: " + (result.error?.message || JSON.stringify(result.error)));
@@ -718,7 +725,89 @@
             }, 3000); // Update every 3 seconds
         }
 
+        let currentPurchaseData = null;
+
+        function openPurchaseModal(type, symbol, name, qty, total) {
+            currentPurchaseData = { type, symbol, name, qty, total };
+
+            document.getElementById('cpName').innerText = name;
+            document.getElementById('cpSymbol').innerText = symbol;
+            document.getElementById('cpQty').innerText = qty;
+            document.getElementById('cpTotal').innerText = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            document.getElementById('purchaseConfirmModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closePurchaseModal() {
+            document.getElementById('purchaseConfirmModal').style.display = 'none';
+            currentPurchaseData = null;
+        }
+
+        window.confirmPurchaseSubscription = async function () {
+            const btn = document.getElementById('cpSubmitBtn');
+            const originalText = btn.innerText;
+
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                alert(`Your subscription request for ${currentPurchaseData.name} has been received and is waiting for administrator approval.`);
+                closePurchaseModal();
+                syncBalance();
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+
+
     </script>
+    <!-- Confirm Purchase Modal (For OTC/IPO) -->
+    <div id="purchaseConfirmModal" class="center-popup-modal" onclick="if(event.target == this) closePurchaseModal()"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div class="center-popup-content" style="max-width: 500px; background:white; border-radius:16px; width:90%;">
+            <div class="popup-header"
+                style="padding:1.5rem; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="font-weight: 700; margin:0;">Confirm Purchase</h2>
+                <button class="popup-close" onclick="closePurchaseModal()"
+                    style="background:none; border:none; cursor:pointer;"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body" style="padding:1.5rem;">
+                <div style="background: #eff6ff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Product</span>
+                        <span id="cpName" style="font-weight: 700; color: #1e293b;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Symbol</span>
+                        <span id="cpSymbol" style="font-weight: 700; color: #1e293b;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Quantity</span>
+                        <span id="cpQty" style="font-weight: 700; color: #1e293b;">0</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #dbeafe;">
+                        <span style="color: #1e56a0; font-weight: 700;">Total Amount</span>
+                        <span id="cpTotal" style="font-weight: 800; color: #1e56a0; font-size: 1.1rem;">₹0.00</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem; text-align: center; color: #64748b; font-size: 0.9rem;">
+                    Your subscription request will be sent to our backend for review. Once approved, it will be
+                    reflected in your holdings.
+                </div>
+
+                <button class="logout-btn"
+                    style="background: #3b82f6; width: 100%; border-radius: 12px; height: 48px; font-weight: 700; border:none; color:white; cursor:pointer;"
+                    id="cpSubmitBtn" onclick="confirmPurchaseSubscription()">Confirm Subscription</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

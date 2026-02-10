@@ -232,7 +232,7 @@
                     Before making a deposit, please book an appointment through the Custom Service section in the app or
                     contact your dedicated relationship manager for assistance.
                 </div>
-                <a href="#" class="support-btn">Contact support</a>
+                <a href="#" class="support-btn" onclick="openCS()">Contact support</a>
             </section>
 
             <section class="white-card">
@@ -292,43 +292,126 @@
         lucide.createIcons();
 
         async function initDeposits() {
+
+
+            // 1. Ensure User Data is Fresh
+            const user = await DB.refreshCurrentUser();
+            if (!user) {
+                console.warn("No user logged in, cannot fetch deposits");
+                return;
+            }
+
+            console.log(`[Deposit] Initializing for User ID: ${user.id}`);
+            const client = DB.getClient();
+            if (!client) {
+                console.warn("DB Client failed to initialize");
+                return;
+            }
+
+            // Fetch function wrapper
+            const fetchData = async () => {
+                const { data, error } = await client
+                    .from('deposits')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('[Deposit] Fetch Error:', error);
+                    return [];
+                }
+                console.log(`[Deposit] Fetched ${data ? data.length : 0} records.`);
+                return data || [];
+            };
+
+            // Initial Render
+            const initialData = await fetchData();
+            renderRecords(initialData);
+
+            // Realtime Listener for Deposits
+            client.channel('public:deposits:' + user.id)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'deposits',
+                    filter: `user_id=eq.${user.id}`
+                }, handleDepositUpdate)
+                .subscribe();
+
+            // Fallback Polling (Every 4s)
+            setInterval(async () => {
+                const pollData = await fetchData();
+                if (pollData) {
+                    const activePill = document.querySelector('.pill.active');
+                    const currentFilter = activePill ? activePill.textContent.trim() : 'All';
+                    renderRecords(pollData, currentFilter);
+                }
+            }, 4000);
+        }
+
+        async function handleDepositUpdate(payload) {
+            console.log('Deposit update received:', payload);
             const user = DB.getCurrentUser();
             if (!user) return;
 
             const client = DB.getClient();
-            if (!client) return;
-
-            const { data, error } = await client
+            const { data: newData } = await client
                 .from('deposits')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
 
-            if (!error && data) {
-                renderRecords(data);
+            if (newData) {
+                const activePill = document.querySelector('.pill.active');
+                const currentFilter = activePill ? activePill.textContent.trim() : 'All';
+                renderRecords(newData, currentFilter);
             }
         }
+
 
         function renderRecords(records, filter = 'All') {
             const list = document.getElementById('recordsList');
             if (!list) return;
             list.innerHTML = '';
 
+            if (!records || records.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8;">No deposit records found.</div>';
+                return;
+            }
+
             const filtered = filter === 'All'
                 ? records
-                : records.filter(r => (filter === 'Success' || filter === 'Approved') ? r.status === 'Approved' : r.status === filter);
+                : records.filter(r => {
+                    const status = (r.status || 'Pending');
+                    if (filter === 'Success' || filter === 'Approved') return status === 'Approved';
+                    return status === filter;
+                });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8;">No records match this filter.</div>';
+                return;
+            }
 
             filtered.forEach(record => {
                 const date = new Date(record.created_at).toLocaleString();
+                const status = record.status || 'Pending';
+
+                // Color mapping
+                let colorStyle = '';
+                if (status === 'Approved') colorStyle = 'background:#dcfce7; color:#166534;';
+                else if (status === 'Rejected') colorStyle = 'background:#fee2e2; color:#991b1b;';
+                else colorStyle = 'background:#fef3c7; color:#92400e;';
+
                 const item = document.createElement('div');
                 item.className = 'record-item';
                 item.innerHTML = `
                     <div class="record-meta">
                         <span class="record-date">${date}</span>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Ref: #${record.id}</div> 
                     </div>
                     <div class="record-amount-cell">
                         <span class="record-amount">₹${parseFloat(record.amount).toLocaleString()}</span>
-                        <span class="status-badge ${record.status.toLowerCase()}">${record.status}</span>
+                        <span style="padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; ${colorStyle}">${status}</span>
                     </div>
                 `;
                 list.appendChild(item);

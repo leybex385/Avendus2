@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS deposits (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     amount DECIMAL(20, 2) NOT NULL,
     status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
+    admin_note TEXT,
+    processed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -36,6 +38,8 @@ CREATE TABLE IF NOT EXISTS withdrawals (
     amount DECIMAL(20, 2) NOT NULL,
     bank_name TEXT,
     status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
+    admin_note TEXT,
+    processed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -51,7 +55,7 @@ CREATE TABLE IF NOT EXISTS messages (
 
 -- 5. Insert Default Demo User
 INSERT INTO users (mobile, password, username, kyc, credit_score, vip, balance, invested)
-VALUES ('918108038029', 'password123', 'Sharad Madhukar Mali', 'Approved', 100, 0, 0.00, 46410128.48)
+VALUES ('918108038029', 'password123', 'Sharad Madhukar Mali', '600pApproved', 100, 0, 0.00, 46410128.48)
 ON CONFLICT (mobile) DO NOTHING;
 
 -- 6. Insert Demo Data
@@ -78,3 +82,6 @@ CREATE TABLE IF NOT EXISTS trades (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     processed_at TIMESTAMP WITH TIME ZONE
 );
+
+-- 8. Disable RLS for Development (Fixes Update Issues)
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
