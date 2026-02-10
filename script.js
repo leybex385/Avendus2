@@ -18,6 +18,247 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     console.log('Premium Market Dashboard Initialized.');
+
+    // --- Brute force fix for browser autofill on search bar ---
+    const clearSearchAutofill = () => {
+        document.querySelectorAll('.search-input').forEach(input => {
+            const val = input.value;
+            // Only clear if not in focus and looks like an autofilled number
+            if (val && !input.matches(':focus')) {
+                if (/^\d{6,}$/.test(val) || val.length > 5) {
+                    input.value = '';
+                }
+            }
+        });
+    };
+    const autofillInterval = setInterval(clearSearchAutofill, 500);
+    setTimeout(() => clearInterval(autofillInterval), 5000);
+
+    document.querySelectorAll('.search-input').forEach(input => {
+        input.addEventListener('focus', function () {
+            if (this.value && this.value.length > 5 && !isNaN(this.value)) {
+                this.value = '';
+            }
+        });
+    });
+
+    // --- Universal Search Handler ---
+    const globalSearchInput = document.getElementById('globalSearchInput');
+    const globalSearchResults = document.getElementById('searchResults');
+    let searchTimeout = null;
+    const AV_API_KEY = '0AQTPTM1OF8VJQA1';
+
+    if (globalSearchInput && globalSearchResults) {
+        globalSearchInput.addEventListener('focus', () => {
+            if (globalSearchInput.value.trim() === '') {
+                renderIndicesGrid();
+            }
+        });
+
+        globalSearchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toUpperCase();
+            if (query.length < 1) {
+                renderIndicesGrid();
+                return;
+            }
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetchGlobalStockPrice(query);
+            }, 800);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!globalSearchInput.contains(e.target) && !globalSearchResults.contains(e.target)) {
+                globalSearchResults.style.display = 'none';
+            }
+        });
+    }
+
+    function renderIndicesGrid() {
+        if (!globalSearchResults) return;
+        const indices = window.MarketEngine ? window.MarketEngine.getIndices() : [];
+
+        // Exact card colors matching the screenshot
+        // Sensex, Nifty50, Nifty Bank, etc.
+        let html = `<div class="search-section-title">Market Overview</div>`;
+        html += `<div class="index-grid">`;
+
+        indices.forEach((idx, i) => {
+            const isUp = idx.change >= 0;
+            // VIX is usually green when it's up, but in the screenshot it's green? 
+            // Looking at the screenshot: VIX is +1.46 (+10.73%) and it's GREEN background.
+            // SENSEX is +0.48% -> Background is LIGHT RED/PINK.
+            // NIFTY 50 -0.61% -> Background is LIGHT YELLOW/CREAM.
+            // NIFTY BANK -0.09% -> Background is LIGHT RED/PINK.
+            // NIFTY SMLCAP -0.27% -> Background is LIGHT YELLOW/CREAM.
+            // NIFTY MIDCAP -0.02% -> Background is LIGHT RED/PINK.
+            // VIX +10.73% -> Background is LIGHT GREEN.
+
+            // It seems they are using alternating colors or specific ones. 
+            // I'll use subtle alternating backgrounds to match the "feel".
+            const bgClass = (i === 5) ? 'bg-green' : (i % 2 === 0 ? 'bg-red' : 'bg-neutral');
+            const colorClass = isUp ? 'up' : 'down';
+
+            html += `
+                <div class="index-card ${bgClass}">
+                    <div class="index-card-header">
+                        <img src="https://flagcdn.com/w20/in.png" class="index-flag" alt="IN">
+                        <span class="index-name">${idx.symbol}</span>
+                        <span class="index-region">ININ</span>
+                    </div>
+                    <div class="index-price">${idx.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    <div class="index-change ${colorClass}">
+                        <span>${isUp ? '+' : ''}${idx.change.toFixed(2)}</span>
+                        <span>(${isUp ? '+' : ''}${idx.changePercent.toFixed(2)}%)</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        globalSearchResults.innerHTML = html;
+        globalSearchResults.style.display = 'block';
+    }
+
+    async function fetchGlobalStockPrice(query) {
+        if (!globalSearchResults) return;
+
+        // 1. Instant local search (Indian Stocks)
+        let localResults = [];
+        if (window.MarketEngine) {
+            localResults = window.MarketEngine.search(query);
+        }
+
+        // Initial render with local results
+        renderGlobalSearchResults(localResults, true);
+
+        // 2. Fetch Alpha Vantage for global quote (throttled/debounced already)
+        try {
+            let symbolForApi = query;
+            if (!symbolForApi.includes('.')) symbolForApi += '.BSE';
+
+            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbolForApi}&apikey=${AV_API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data['Global Quote'] && data['Global Quote']['05. price']) {
+                const quote = data['Global Quote'];
+                const price = parseFloat(quote['05. price']);
+                const sym = quote['01. symbol'];
+
+                const globalItem = {
+                    symbol: sym,
+                    price: price,
+                    name: 'International Market Price',
+                    isGlobal: true
+                };
+
+                updateSearchResultsWithGlobal(localResults, globalItem);
+            }
+        } catch (e) {
+            console.error("Global Search Error", e);
+            renderGlobalSearchResults(localResults, false);
+        }
+    }
+
+    function renderGlobalSearchResults(localResults, isSearching = false) {
+        if (!globalSearchResults) return;
+
+        let html = '';
+
+        // Optional: Also show indices at top if query is short
+        if (globalSearchInput.value.length < 3) {
+            const indices = window.MarketEngine ? window.MarketEngine.getIndices() : [];
+            html += `<div class="search-section-title">Market Overview</div>`;
+            html += `<div class="index-grid" style="grid-template-columns: repeat(3, 1fr); padding:8px; gap:6px;">`;
+            indices.slice(0, 3).forEach(idx => {
+                const isUp = idx.change >= 0;
+                html += `
+                    <div class="index-card ${isUp ? 'bg-green' : 'bg-red'}" style="padding:8px;">
+                        <div class="index-name" style="font-size:0.6rem;">${idx.symbol}</div>
+                        <div class="index-price" style="font-size:0.85rem; margin:2px 0;">${idx.price.toLocaleString('en-IN', { maximumFractionDigits: 1 })}</div>
+                        <div class="index-change ${isUp ? 'up' : 'down'}" style="font-size:0.6rem;">${isUp ? '+' : ''}${idx.changePercent.toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        if (localResults.length > 0) {
+            html += `<div class="search-section-title">Indian Markets</div>`;
+            html += localResults.map(m => `
+                <div class="search-item" onclick="globalSelectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
+                    <div style="flex: 1;">
+                        <div class="search-symbol">${m.symbol}</div>
+                        <div class="search-name">${m.name}</div>
+                    </div>
+                    <div class="search-price-val">₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                </div>
+            `).join('');
+        }
+
+        if (isSearching) {
+            html += `<div class="search-item" style="color:#94a3b8; padding:1rem; text-align:center; font-size:0.85rem; border-top: 1px solid #f1f5f9;">
+                <i data-lucide="loader-2" class="spin" style="width:14px; height:14px; vertical-align:middle; margin-right:6px;"></i> Searching global markets...
+            </div>`;
+        } else if (localResults.length === 0) {
+            html += `<div class="search-item" style="color:#94a3b8; padding:1.5rem; text-align:center;">No stocks found</div>`;
+        }
+
+        globalSearchResults.innerHTML = html;
+        globalSearchResults.style.display = 'block';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function updateSearchResultsWithGlobal(localResults, globalItem) {
+        let html = '';
+
+        if (localResults.length > 0) {
+            html += `<div class="search-section-title">Indian Markets</div>`;
+            html += localResults.map(m => `
+                <div class="search-item" onclick="globalSelectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
+                    <div style="flex: 1;">
+                        <div class="search-symbol">${m.symbol}</div>
+                        <div class="search-name">${m.name}</div>
+                    </div>
+                    <div class="search-price-val">₹${m.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                </div>
+            `).join('');
+        }
+
+        html += `<div class="search-section-title">Global Markets</div>`;
+        html += `
+            <div class="search-item" onclick="globalSelectStock('${globalItem.symbol}', '${globalItem.symbol}', 'stock')">
+                <div style="flex: 1;">
+                    <div class="search-symbol">${globalItem.symbol}</div>
+                    <div class="search-name">${globalItem.name}</div>
+                </div>
+                <div class="search-price-val">₹${globalItem.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            </div>
+        `;
+
+        globalSearchResults.innerHTML = html;
+        globalSearchResults.style.display = 'block';
+    }
+
+    window.globalSelectStock = (symbol, name, type) => {
+        if (window.location.pathname.includes('market.html')) {
+            if (typeof openStockDetail === 'function') {
+                const s = (window.MarketEngine && window.MarketEngine.getProduct) ? window.MarketEngine.getProduct(symbol) : null;
+                if (s) {
+                    openStockDetail(s.symbol, s.name, 'NSE', '₹' + s.price.toLocaleString('en-IN', { minimumFractionDigits: 2 }), (s.change >= 0 ? '+' : '') + (s.change || 0).toFixed(2) + '%', (s.change >= 0 ? '#10b981' : '#ef4444'), s.type);
+                } else {
+                    // International/Global
+                    openStockDetail(symbol, name, 'NSE', '₹0', '0%', '#10b981', type);
+                }
+                globalSearchResults.style.display = 'none';
+                if (globalSearchInput) globalSearchInput.value = '';
+            }
+        } else {
+            window.location.href = `market.html?symbol=${symbol}`;
+        }
+    };
 });
 
 // --- UI / Login Logic ---
@@ -620,6 +861,20 @@ window.syncUserData = async function () {
         try {
             const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
             if (dbUser) {
+                // Fetch Pending items for Effective Balance
+                const [pD, pW, pT] = await Promise.all([
+                    client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                    client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                    client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
+                ]);
+
+                const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+                const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
+                const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+
+                let effectiveBalance = (parseFloat(dbUser.balance) || 0) + lockedDeposits - lockedWithdrawals - lockedTrades;
+                if (effectiveBalance < 0) effectiveBalance = 0;
+
                 let changed = false;
                 if (dbUser.avatar_url && dbUser.avatar_url !== user.avatar_url) { user.avatar_url = dbUser.avatar_url; changed = true; }
                 if (dbUser.full_name && dbUser.full_name !== user.full_name) { user.full_name = dbUser.full_name; changed = true; }
@@ -638,8 +893,13 @@ window.syncUserData = async function () {
                 if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
 
                 const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
-                const balanceEls = document.querySelectorAll('.stat-value.green');
-                if (balanceEls.length > 0) balanceEls[0].textContent = fmt((dbUser.balance || 0) + (dbUser.invested || 0));
+
+                // Update Balance Elements with Effective Balance
+                const balanceEls = document.querySelectorAll('.stat-value.green, .portfolio-balance');
+                balanceEls.forEach(el => {
+                    el.textContent = fmt(effectiveBalance);
+                });
+
                 const investedEls = document.querySelectorAll('.stat-value.blue');
                 if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
 

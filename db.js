@@ -379,5 +379,53 @@ window.DB = {
         const client = this.getClient();
         const { data, error } = await client.from('withdrawals').update({ status }).eq('id', id);
         return { success: !error, error };
+    },
+
+    // --- TRADING ---
+    async submitTrade(tradeData) {
+        const client = this.getClient();
+        const { data, error } = await client
+            .from('trades')
+            .insert([tradeData])
+            .select()
+            .single();
+
+        return { success: !error, data, error };
+    },
+
+    async getTradesByUserId(userId) {
+        const client = this.getClient();
+        const { data, error } = await client
+            .from('trades')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        return data || [];
+    },
+
+    async getAllTrades() {
+        const client = this.getClient();
+        const { data, error } = await client
+            .from('trades')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        return data || [];
+    },
+
+    async updateTradeStatus(id, status, adminNote = '') {
+        const client = this.getClient();
+        const updateData = {
+            status,
+            admin_note: adminNote,
+            processed_at: new Date().toISOString()
+        };
+        const { data, error } = await client
+            .from('trades')
+            .update(updateData)
+            .eq('id', id);
+
+        return { success: !error, error };
     }
 };

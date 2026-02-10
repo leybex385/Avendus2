@@ -657,6 +657,116 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = DB.getCurrentUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Sync User Data & Balance
+            await syncWithdrawalPage();
+
+            // Initial records load
+            loadWithdrawals();
+
+            // Refresh button
+            document.querySelector('.refresh-btn')?.addEventListener('click', loadWithdrawals);
+
+            // Filter pills
+            document.querySelectorAll('.pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    loadWithdrawals(pill.textContent);
+                });
+            });
+        });
+
+        async function syncWithdrawalPage() {
+            const user = DB.getCurrentUser();
+            const client = DB.getClient();
+            if (!client || !user) return;
+
+            try {
+                const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
+                if (dbUser) {
+                    // Calculate Effective Balance
+                    const [pD, pW, pT] = await Promise.all([
+                        client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                        client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                        client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
+                    ]);
+
+                    const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+                    const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
+                    const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+
+                    let effectiveBalance = (parseFloat(dbUser.balance) || 0) + lockedDeposits - lockedWithdrawals - lockedTrades;
+                    if (effectiveBalance < 0) effectiveBalance = 0;
+
+                    const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+
+                    // Update UI
+                    const balDisplay = document.querySelector('.account-info p');
+                    if (balDisplay) balDisplay.textContent = fmt(effectiveBalance);
+
+                    // Update the warning box balance tag if it exists
+                    const warningBal = document.querySelector('.balance-tag span:last-child');
+                    if (warningBal) warningBal.textContent = '• ' + fmt(effectiveBalance);
+
+                    // If balance is > 0 and no outstanding (mock condition for now), enable button?
+                    // Actually let's just keep it as per the mock for now but show correct balance.
+                }
+            } catch (e) {
+                console.error("Sync Withdrawal Page Error:", e);
+            }
+        }
+
+        async function loadWithdrawals(statusFilter = 'All') {
+            const user = DB.getCurrentUser();
+            const client = DB.getClient();
+            const list = document.getElementById('withdrawRecords');
+            if (!client || !user || !list) return;
+
+            list.innerHTML = '<div style="padding:20px; text-align:center;">Loading...</div>';
+
+            try {
+                let query = client.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+                if (statusFilter !== 'All') {
+                    query = query.eq('status', statusFilter);
+                }
+
+                const { data: withdrawals, error } = await query;
+
+                if (error) throw error;
+
+                if (!withdrawals || withdrawals.length === 0) {
+                    list.innerHTML = '<div style="padding:20px; text-align:center; color:#64748b;">No withdrawal records found.</div>';
+                    return;
+                }
+
+                list.innerHTML = withdrawals.map(w => `
+                    <div class="record-item">
+                        <div class="record-info">
+                            <div class="record-bank">${w.bank_name || 'Bank Withdrawal'}</div>
+                            <div class="record-date">${new Date(w.created_at).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div class="record-status">
+                            <div class="record-amount">₹${parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                            <span class="status-badge ${w.status.toLowerCase()}">${w.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error("Load Withdrawals Error:", e);
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error loading records.</div>';
+            }
+        }
+    </script>
 </body>
 
 </html>

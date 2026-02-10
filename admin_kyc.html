@@ -276,6 +276,7 @@
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -345,6 +346,7 @@
             color: #64748b;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             line-height: 1.5;
@@ -753,8 +755,11 @@
         <header>
             <div style="font-size: 0.85rem; display: flex; align-items: center; gap: 15px;">
                 Welcome, <b>admin</b>
+                <button onclick="init()"
+                    style="background:none; border:none; color:#f97316; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;"><i
+                        data-lucide="refresh-cw" size="14"></i> Refresh Data</button>
                 <button onclick="adminLogout()"
-                    style="background:none; border:none; color:#ef4444; font-weight:600; cursor:pointer;"><i
+                    style="background:none; border:none; color:#ef4444; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;"><i
                         data-lucide="power" size="14"></i> Logout</button>
             </div>
         </header>
@@ -1455,6 +1460,35 @@
         </div>
     </div>
 
+    <!-- MANUAL DEPOSIT MODAL -->
+    <div id="depositModal" class="kyc-modal-overlay">
+        <div class="kyc-modal-card" style="height:auto; max-width: 400px;">
+            <div class="kyc-modal-header">
+                <span>Manual Deposit</span>
+                <i data-lucide="x" style="cursor:pointer" onclick="closeDepositModal()"></i>
+            </div>
+            <div class="kyc-modal-body">
+                <input type="hidden" id="dep_user_id">
+                <div class="kyc-form-group">
+                    <label>User</label>
+                    <input type="text" id="dep_username" class="kyc-input" readonly
+                        style="background: #f1f5f9; color: #64748b;">
+                </div>
+                <div class="kyc-form-group">
+                    <label>Amount (₹) <span style="color:#ef4444">*</span></label>
+                    <input type="number" id="dep_amount" class="kyc-input" placeholder="Enter amount">
+                </div>
+                <div class="kyc-form-group">
+                    <label>Note (Optional)</label>
+                    <textarea id="dep_note" class="kyc-input" rows="2" placeholder="Reason for deposit"></textarea>
+                </div>
+            </div>
+            <div class="kyc-modal-footer">
+                <button class="vsl-btn submit" style="width: 100%;" onclick="submitDeposit()">Confirm Deposit</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         if (sessionStorage.getItem('admin_auth') !== 'true') window.location.href = 'admin_login.html';
         lucide.createIcons();
@@ -1472,89 +1506,103 @@
         let allSubmissions = [];
         let kycStatusFilter = 'all';
 
+
+
         async function init() {
             showLoader(true);
-            const client = DB.getClient();
-            if (!client) return;
+            try {
+                const client = DB.getClient();
+                if (!client) throw new Error("Database client not initialized");
 
-            // Fetch core data first
-            const [{ data: u }, { data: d }, { data: w }, { data: m }, { data: ks }] = await Promise.all([
-                client.from('users').select('*').order('created_at', { ascending: false }),
-                client.from('deposits').select('*, users(mobile,username)').order('created_at', { ascending: false }),
-                client.from('withdrawals').select('*, users(mobile,username)').order('created_at', { ascending: false }),
-                client.from('messages').select('*, users(mobile)').in('sender', ['Admin', 'System']).order('created_at', { ascending: false }),
-                client.from('kyc_submissions').select('*').order('submitted_at', { ascending: false })
-            ]);
+                // Helper for safe, limited fetching
+                const fetchSafe = async (table, select = '*', limit = 200) => {
+                    try {
+                        const { data, error } = await client.from(table)
+                            .select(select)
+                            .order('created_at', { ascending: false })
+                            .limit(limit);
+                        return error ? [] : data;
+                    } catch (e) { return []; }
+                };
 
-            // Attempt to fetch additional modules (Safe fetch to handle missing tables)
-            const fetchSafe = async (table) => {
-                try {
-                    const { data, error } = await client.from(table).select('*, users(mobile,username)').order('created_at', { ascending: false });
-                    return error ? null : data;
-                } catch (e) { return null; }
-            };
+                // 1. FAST TRACK: Fetch only what's needed for the dashboard stats first
+                // This allows the admin to see 'something' immediately.
+                const [userRes, tradeRes, kycRes] = await Promise.all([
+                    client.from('users').select('id, kyc', { count: 'exact', head: false }),
+                    client.from('trades').select('id, status', { count: 'exact', head: false }).eq('status', 'Pending'),
+                    client.from('kyc_submissions').select('id', { count: 'exact', head: false })
+                ]);
 
-            const [loans, rewards, stocks, ipos, funds, quants] = await Promise.all([
-                fetchSafe('loans'), fetchSafe('rewards'), fetchSafe('stock_trades'),
-                fetchSafe('ipo_subscriptions'), fetchSafe('fund_trades'), fetchSafe('quant_trades')
-            ]);
+                const allU = userRes.data || [];
+                const pendingTradesCount = tradeRes.data?.length || 0;
 
-            // Render Dashboard Stats
-            if (u) {
-                allUsers = u;
+                // Render Dashboard Stats Immediately
                 document.getElementById('stat_summary').innerHTML = `
                     <div class="section-card" style="background:#f0f9ff; margin:0; flex:1;">
                         <div style="font-size:0.75rem;">TOTAL USERS</div>
-                        <h2 style="margin:5px 0 0 0;">${u.length}</h2>
+                        <h2 style="margin:5px 0 0 0;">${allU.length}</h2>
                     </div>
                     <div class="section-card" style="background:#f0fdf4; margin:0; flex:1;">
                         <div style="font-size:0.75rem;">PENDING KYC</div>
-                        <h2 style="margin:5px 0 0 0;">${u.filter(x => x.kyc === 'Pending').length}</h2>
+                        <h2 style="margin:5px 0 0 0;">${allU.filter(x => x.kyc === 'Pending').length}</h2>
                     </div>
                     <div class="section-card" style="background:#fff7ed; margin:0; flex:1;">
-                        <div style="font-size:0.75rem;">PENDING DEPOSITS</div>
-                        <h2 style="margin:5px 0 0 0;">${d ? d.filter(x => x.status === 'Pending').length : 0}</h2>
+                        <div style="font-size:0.75rem;">PENDING TRADES</div>
+                        <h2 style="margin:5px 0 0 0;">${pendingTradesCount}</h2>
                     </div>
                 `;
 
-                // Background Listener for Chat (Initialize early)
-                initLiveChat();
+                // 2. PROGRESSIVE LOADING: Fetch the heavy lists individually or in smaller batches
+                // Use a smaller limit to prevent 10-minute hang. 200 is plenty for an admin overview.
 
-                // Render User List
-                document.getElementById('userList').innerHTML = u.map(x => `
-                    <tr>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.username}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance).toFixed(2)}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.vip}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.credit_score}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                            <div class="btn-edit-wrap">
-                                <i data-lucide="edit" size="16" style="cursor:pointer" onclick="openKycEdit('${x.id}')"></i>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+                // Load Users (Full details for list)
+                fetchSafe('users', '*', 500).then(data => {
+                    allUsers = data;
+                    document.getElementById('userList').innerHTML = data.length ? data.map(x => `
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.username || '-'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance || 0).toFixed(2)}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.vip || 0}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.credit_score || 100}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                <div class="btn-edit-wrap">
+                                    <i data-lucide="edit" size="16" style="cursor:pointer" onclick="openKycEdit('${x.id}')"></i>
+                                    <i data-lucide="indian-rupee" size="16" style="cursor:pointer; color:#10b981;" onclick="openDepositModal('${x.id}', '${x.username || 'User'}')"></i>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No users found</td></tr>';
+                    lucide.createIcons();
+                });
 
-                document.getElementById('withList').innerHTML = w.map(x => `
-                    <tr>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.amount).toFixed(2)}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.bank_name}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fee2e2; color:#991b1b;">${x.status}</span></td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                            <div class="btn-edit-wrap">
-                                <i data-lucide="edit" size="16" style="cursor:pointer"></i>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+                // Load Withdrawals/Deposits
+                fetchSafe('withdrawals', '*, users(mobile,username)', 100).then(data => {
+                    const list = document.getElementById('withList');
+                    if (!list) return;
+                    list.innerHTML = data.length ? data.map(x => `
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.username || '-'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.amount).toFixed(2)}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.bank_name || '-'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fee2e2; color:#991b1b;">${x.status}</span></td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
+                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer"></i></div>
+                            </td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="9" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
+                    lucide.createIcons();
+                });
 
-                if (d && document.getElementById('depList')) {
-                    document.getElementById('depList').innerHTML = d.map(x => `
+                fetchSafe('deposits', '*, users(mobile,username)', 100).then(data => {
+                    const list = document.getElementById('depList');
+                    if (!list) return;
+                    list.innerHTML = data.length ? data.map(x => `
                         <tr>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
@@ -1562,43 +1610,101 @@
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fef3c7; color:#92400e;">${x.status}</span></td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="btn-edit-wrap">
-                                    <i data-lucide="edit" size="16" style="cursor:pointer"></i>
-                                </div>
+                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer"></i></div>
                             </td>
                         </tr>
-                    `).join('');
-                }
+                    `).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px;">No deposits found</td></tr>';
+                    lucide.createIcons();
+                });
+
+                // Load Messages for Notification Center
+                fetchSafe('messages', '*, users(mobile)', 100).then(data => {
+                    // Filter internal messages like before
+                    const filtered = data.filter(x => x.sender === 'Admin' || x.sender === 'System');
+                    allMsgs = filtered;
+                    renderMessages(filtered);
+                });
+
+                // Load Trades
+                fetchSafe('trades', '*, users(mobile,username)', 300).then(data => {
+                    const stocks = data.filter(t => t.type === 'stock' || t.type === 'otc');
+                    const ipos = data.filter(t => t.type === 'ipo');
+
+                    if (stocks) {
+                        const stockTbody = document.getElementById('stockList');
+                        if (stockTbody) {
+                            stockTbody.innerHTML = stocks.length ? stocks.map(t => `
+                                <tr>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        <div style="font-weight:700;">${t.symbol}</div>
+                                        <div style="font-size:0.75rem; color:#64748b;">${t.name}</div>
+                                    </td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${t.users?.mobile || 'Unknown'}</td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9; text-transform:uppercase; font-size:0.75rem; font-weight:700; color:${t.type === 'stock' ? '#3b82f6' : '#8b5cf6'}">${t.type}</td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        <div>Qty: ${t.quantity}</div>
+                                        <div>Price: ₹${t.price}</div>
+                                    </td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                    </td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        ${t.status === 'Pending' ? `
+                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                        ` : '-'}
+                                    </td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="6" style="padding:20px; text-align:center; color:#94a3b8;">No stock/OTC trades found</td></tr>';
+                        }
+                    }
+
+                    if (ipos) {
+                        const ipoTbody = document.getElementById('ipoList');
+                        if (ipoTbody) {
+                            ipoTbody.innerHTML = ipos.length ? ipos.map(t => `
+                                <tr>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        <div style="font-weight:700;">${t.name}</div>
+                                        <div style="font-size:0.75rem; color:#64748b;">${t.symbol}</div>
+                                    </td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${t.users?.mobile || 'Unknown'}</td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                    </td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(t.created_at).toLocaleDateString()}</td>
+                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                        ${t.status === 'Pending' ? `
+                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                        ` : '-'}
+                                    </td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="5" style="padding:20px; text-align:center; color:#94a3b8;">No IPO requests found</td></tr>';
+                        }
+                    }
+                    lucide.createIcons();
+                });
+
+                // Load KYC Submissions
+                fetchSafe('kyc_submissions', '*', 100).then(data => {
+                    allSubmissions = data;
+                    renderKycList();
+                });
+
+                // Background Listener for Chat (Initialize early)
+                initLiveChat();
+
+            } catch (error) {
+                console.error("Dashboard Init Error:", error);
+                alert("Error loading dashboard data: " + error.message);
+            } finally {
+                // Done with main initialization, but promises might still be resolving
+                showLoader(false);
             }
-
-            if (ks) allSubmissions = ks;
-            renderKycList();
-
-            // Sync Advanced Tables (Handles placeholders if data is null)
-            const syncTable = (id, data, cols) => {
-                const tbody = document.getElementById(id);
-                if (!tbody) return;
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center; padding:20px; color:#94a3b8;">No records found.</td></tr>`;
-                    return;
-                }
-            };
-
-            syncTable('loanList', loans, 5);
-            syncTable('rewardList', rewards, 4);
-            syncTable('stockList', stocks, 5);
-            syncTable('bulkList', null, 4);
-            syncTable('ipoList', ipos, 4);
-            syncTable('fundList', funds, 4);
-            syncTable('quantList', quants, 4);
-
-            if (m) {
-                allMsgs = m;
-                renderMessages(m);
-            }
-            lucide.createIcons();
-            showLoader(false);
         }
+
+
 
 
         function setStatusFilter(s, el) {
@@ -2185,6 +2291,154 @@
             alert("Notification sent successfully to User(s)!");
             document.getElementById('msgModal').style.display = 'none';
             init();
+        }
+
+        function openDepositModal(uid, uname) {
+            document.getElementById('dep_user_id').value = uid;
+            document.getElementById('dep_username').value = uname || 'User #' + uid;
+            document.getElementById('dep_amount').value = '';
+            document.getElementById('dep_note').value = 'Manual Deposit by Admin';
+            document.getElementById('depositModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+
+        async function submitDeposit() {
+            const uid = document.getElementById('dep_user_id').value;
+            const amount = parseFloat(document.getElementById('dep_amount').value);
+            const note = document.getElementById('dep_note').value;
+
+            if (!uid || isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid positive amount.");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to deposit ₹${amount} to this user?`)) return;
+
+            showLoader(true);
+            const client = DB.getClient();
+
+            try {
+                // 1. Get current balance
+                const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', uid).single();
+                if (uErr) throw uErr;
+
+                const newBalance = (parseFloat(user.balance) || 0) + amount;
+
+                // 2. Update User Balance
+                const { error: upErr } = await client.from('users').update({ balance: newBalance }).eq('id', uid);
+                if (upErr) throw upErr;
+
+                // 3. Log into 'deposits' table
+                const { error: depErr } = await client.from('deposits').insert({
+                    user_id: uid,
+                    amount: amount,
+                    status: 'Approved',
+                    method: 'Manual/Admin',
+                    image_url: '', // No proof for manual
+                    created_at: new Date().toISOString()
+                });
+
+                if (depErr) console.warn("Could not create deposit log:", depErr);
+
+                alert("Deposit successful!");
+                closeDepositModal();
+                init(); // Refresh lists
+            } catch (e) {
+                console.error(e);
+                alert("Error processing deposit: " + e.message);
+            } finally {
+                showLoader(false);
+            }
+        }
+
+
+        async function updateTradeStatus(id, newStatus) {
+            const client = DB.getClient();
+            showLoader(true);
+            try {
+                // 1. Fetch current trade details
+                const { data: trade, error: tErr } = await client.from('trades').select('*').eq('id', id).single();
+                if (tErr || !trade) throw new Error("Trade not found");
+
+                const uid = trade.user_id;
+                const amount = parseFloat(trade.total_amount);
+
+                // 2. Fetch User
+                const { data: user, error: uErr } = await client.from('users').select('*').eq('id', uid).single();
+                if (uErr || !user) throw new Error("User not found: " + uid);
+
+                const currentBalance = parseFloat(user.balance) || 0;
+                const currentInvested = parseFloat(user.invested) || 0;
+
+                let newBalance = currentBalance;
+                let newInvested = currentInvested;
+                let shouldUpdateUser = false;
+
+                // Logic for State Transitions
+                if (trade.status === 'Pending' && newStatus === 'Settled') {
+                    // Approve: Deduct Balance, Add to Invested
+                    if (currentBalance < amount) {
+                        alert(`Cannot approve: User (ID: ${uid}) has insufficient balance (₹${currentBalance.toFixed(2)}) for this trade (₹${amount.toFixed(2)}).`);
+                        showLoader(false);
+                        return;
+                    }
+                    newBalance -= amount;
+                    newInvested += amount;
+                    shouldUpdateUser = true;
+
+                } else if (trade.status === 'Settled' && newStatus === 'Rejected') {
+                    // Reject previously settled: Refund Balance, Reduce Invested
+                    // (Assuming we want to reverse the trade completely)
+                    newBalance += amount;
+                    newInvested -= amount;
+                    shouldUpdateUser = true;
+
+                } else if (trade.status === 'Rejected' && newStatus === 'Settled') {
+                    // Re-approve: Deduct Balance, Add to Invested
+                    if (currentBalance < amount) {
+                        alert(`Cannot approve: User (ID: ${uid}) has insufficient balance (₹${currentBalance.toFixed(2)}) for this trade (₹${amount.toFixed(2)}).`);
+                        showLoader(false);
+                        return;
+                    }
+                    newBalance -= amount;
+                    newInvested += amount;
+                    shouldUpdateUser = true;
+                }
+                // (Pending -> Rejected: No balance change needed as it wasn't deducted yet)
+
+                // 3. Update User Balance if needed
+                if (shouldUpdateUser) {
+                    const { error: upUserErr } = await client.from('users').update({
+                        balance: newBalance,
+                        invested: newInvested
+                    }).eq('id', uid);
+                    if (upUserErr) throw new Error("Failed to update user balance: " + upUserErr.message);
+                }
+
+                // 4. Update Trade Status
+                const { error: upTradeErr } = await client.from('trades').update({
+                    status: newStatus,
+                    processed_at: new Date().toISOString()
+                }).eq('id', id);
+
+                if (upTradeErr) throw new Error("Failed to update trade status: " + upTradeErr.message);
+
+                alert(`Trade #${id} successfully updated to ${newStatus}.`);
+
+                // Refresh Dashboard
+                if (typeof init === 'function') init();
+                else window.location.reload();
+
+            } catch (e) {
+                console.error(e);
+                alert("Error updating trade: " + e.message);
+            } finally {
+                showLoader(false);
+            }
         }
 
         function adminLogout() { if (confirm("Logout from admin terminal?")) { sessionStorage.removeItem('admin_auth'); window.location.href = 'admin_login.html'; } }

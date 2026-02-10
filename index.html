@@ -14,6 +14,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="db.js"></script>
+    <script src="market_data.js"></script>
 </head>
 
 <body>
@@ -22,8 +23,16 @@
         <header class="header">
             <div class="header-left">
                 <div class="search-container">
+                    <!-- Improved trap for browser autofill -->
+                    <div style="position: absolute; left: -9999px; top: -9999px;">
+                        <input type="text" name="fake_user" autocomplete="username">
+                        <input type="password" name="fake_pass" autocomplete="current-password">
+                    </div>
+
                     <i data-lucide="search" class="search-icon"></i>
-                    <input type="text" placeholder="Ctrl K" class="search-input">
+                    <input type="text" placeholder="Search Stocks (e.g. RELIANCE, TCS)..." class="search-input"
+                        id="globalSearchInput" autocomplete="off">
+                    <div id="searchResults" class="search-results-dropdown"></div>
                 </div>
             </div>
             <nav class="nav">
@@ -87,31 +96,10 @@
                     <h3>Welcome User</h3>
                     <p>Start your investment journey.</p>
                 </div>
-                <button class="view-toggle"><i data-lucide="eye"></i></button>
             </div>
 
-            <div class="portfolio-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Current Portfolio Value</span>
-                    <span class="stat-value green">₹0.00</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Invested Value</span>
-                    <span class="stat-value blue">₹0.00</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Today</span>
-                    <span class="stat-value green-subtle">0.00%</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">This Week</span>
-                    <span class="stat-value green-subtle">0.00%</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">This Month</span>
-                    <span class="stat-value green-subtle">0.00%</span>
-                </div>
-            </div>
+            <!-- Removed portfolio stats per user request -->
+
 
             <div class="action-btns">
                 <a href="deposit.html" class="btn-deposit"><i data-lucide="plus-circle"></i> Deposit</a>
@@ -1112,6 +1100,18 @@
                 if (localStorage.getItem('avendus_cs_open') === 'true') {
                     window.openCS();
                 }
+
+                // Auto-refresh data when user switches back to this tab
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        console.log("Tab visible, syncing user data...");
+                        syncUserData();
+                    }
+                });
+                window.addEventListener('focus', () => {
+                    console.log("Window focused, syncing user data...");
+                    syncUserData();
+                });
             });
 
             function checkAuthState() {
@@ -1123,6 +1123,7 @@
                 if (promo) promo.style.display = loggedIn ? 'none' : 'flex';
 
                 if (loggedIn) {
+                    syncUserData(); // Initial sync on load
                     // Ensure interaction has happened for audio
                     setTimeout(() => {
                         startChatListener();
@@ -1199,14 +1200,56 @@
                             if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
 
                             const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
-                            const balanceEls = document.querySelectorAll('.stat-value.green');
-                            if (balanceEls.length > 0) balanceEls[0].textContent = fmt((dbUser.balance || 0) + (dbUser.invested || 0));
+
+                            // --- USER REQUEST: "Available Balance" must visually deduct PENDING transactions ---
+                            // We fetch pending withdrawals and pending trades to subtract them from the display.
+                            // We also ADD Pending deposits as "reflected" balance.
+                            let effectiveBalance = parseFloat(dbUser.balance || 0);
+
+                            // Fetch Pending Deposits
+                            const { data: pendingD } = await client.from('deposits')
+                                .select('amount')
+                                .eq('user_id', user.id)
+                                .eq('status', 'Pending');
+                            const lockedDeposits = (pendingD || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+
+                            // Fetch Pending Withdrawals
+                            const { data: pendingW } = await client.from('withdrawals')
+                                .select('amount')
+                                .eq('user_id', user.id)
+                                .eq('status', 'Pending');
+
+                            const lockedWithdrawals = (pendingW || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
+
+                            // Fetch Pending Trades (Buy/Subscription)
+                            const { data: pendingT } = await client.from('trades')
+                                .select('total_amount')
+                                .eq('user_id', user.id)
+                                .eq('status', 'Pending'); // Assuming 'Pending'
+
+                            const lockedTrades = (pendingT || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+
+                            effectiveBalance = effectiveBalance + lockedDeposits - lockedWithdrawals - lockedTrades;
+                            if (effectiveBalance < 0) effectiveBalance = 0; // Should not happen ideally but safe guard
+
+                            // Update UI
+                            const homePortfolioValue = document.getElementById('homePortfolioValue');
+                            if (homePortfolioValue) {
+                                homePortfolioValue.textContent = fmt(effectiveBalance);
+                            } else {
+                                const balanceEls = document.querySelectorAll('.stat-value.green');
+                                if (balanceEls.length > 0) balanceEls[0].textContent = fmt(effectiveBalance);
+                            }
                             const investedEls = document.querySelectorAll('.stat-value.blue');
+                            // For invested, we might want to include Pending Buys? 
+                            // User request only mentioned "Available Balance" deducting.
                             if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
 
                             lucide.createIcons();
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                        console.error("Sync Error:", e);
+                    }
                 }
             };
 

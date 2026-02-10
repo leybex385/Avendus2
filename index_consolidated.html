@@ -21,8 +21,12 @@
         <header class="header">
             <div class="header-left">
                 <div class="search-container">
+                    <!-- Hidden inputs to "trap" browser autofill -->
+                    <input type="text" name="fake_user" style="display:none" aria-hidden="true">
+                    <input type="password" name="fake_pass" style="display:none" aria-hidden="true">
+
                     <i data-lucide="search" class="search-icon"></i>
-                    <input type="text" placeholder="Ctrl K" class="search-input">
+                    <input type="text" placeholder="Ctrl K" class="search-input" autocomplete="off">
                 </div>
             </div>
             <nav class="nav">
@@ -83,8 +87,8 @@
 
             <div class="portfolio-stats">
                 <div class="stat-item">
-                    <span class="stat-label">Current Portfolio Value</span>
-                    <span class="stat-value green">₹0.00</span>
+                    <span class="stat-label">Available Balance</span>
+                    <span class="stat-value green" id="homePortfolioValue">₹0.00</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Invested Value</span>
@@ -340,8 +344,31 @@
                 const { data: dbUser } = await client.from('users').select('*').eq('id', currentUser.id).single();
                 if (dbUser) {
                     const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v || 0);
+
+                    // --- USER REQUEST: "Available Balance" must visually deduct PENDING transactions ---
+                    let effectiveBalance = parseFloat(dbUser.balance || 0);
+
+                    // Fetch Pending Deposits
+                    const { data: pendingD } = await client.from('deposits').select('amount').eq('user_id', currentUser.id).eq('status', 'Pending');
+                    const lockedDeposits = (pendingD || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+
+                    // Fetch Pending Withdrawals
+                    const { data: pendingW } = await client.from('withdrawals').select('amount').eq('user_id', currentUser.id).eq('status', 'Pending');
+                    const lockedWithdrawals = (pendingW || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
+
+                    // Fetch Pending Trades
+                    const { data: pendingT } = await client.from('trades').select('total_amount').eq('user_id', currentUser.id).eq('status', 'Pending');
+                    const lockedTrades = (pendingT || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+
+                    effectiveBalance = effectiveBalance + lockedDeposits - lockedWithdrawals - lockedTrades;
+                    if (effectiveBalance < 0) effectiveBalance = 0;
+
                     const bEls = document.querySelectorAll('.stat-value.green');
-                    if (bEls.length) bEls[0].textContent = fmt(dbUser.balance + dbUser.invested);
+                    if (bEls.length) bEls[0].textContent = fmt(effectiveBalance);
+                    const homePortfolioValue = document.getElementById('homePortfolioValue');
+                    if (homePortfolioValue) {
+                        homePortfolioValue.textContent = fmt(effectiveBalance);
+                    }
                     const iEls = document.querySelectorAll('.stat-value.blue');
                     if (iEls.length) iEls[0].textContent = fmt(dbUser.invested);
                 }

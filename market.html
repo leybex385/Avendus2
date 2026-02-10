@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="db.js"></script>
+    <script src="market_data.js"></script>
     <style>
         /* Using global styles from styles.css */
 
@@ -490,6 +491,228 @@
             color: white;
             border-color: #1e56a0;
             box-shadow: 0 4px 12px rgba(30, 86, 160, 0.2);
+        }
+
+        /* Holding Card Designs (User Request) */
+        .holding-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem 0;
+        }
+
+        .h-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .h-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border-color: #3b82f6;
+        }
+
+        .h-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+
+        .h-stock-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .h-stock-meta {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .h-status-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #10b981;
+            background: #ecfdf5;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .h-stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding: 1rem 0;
+            border-top: 1px solid #f1f5f9;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .h-stat-item {
+            text-align: center;
+        }
+
+        .h-stat-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 0.4rem;
+        }
+
+        .h-stat-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .h-stat-val.red {
+            color: #ef4444;
+        }
+
+        .h-stat-val.green {
+            color: #10b981;
+        }
+
+        .h-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .h-btn {
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .h-btn.view {
+            background: #10b981;
+            color: white;
+        }
+
+        .h-btn.view:hover {
+            background: #059669;
+        }
+
+        .h-btn.close {
+            background: #fb923c;
+            color: white;
+        }
+
+        .h-btn.close:hover {
+            background: #f97316;
+        }
+
+        /* Detail Modal Table */
+        .detail-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        .detail-info-table tr td {
+            padding: 0.8rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .detail-info-table tr td:first-child {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .detail-info-table tr td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .detail-info-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .detail-total-val {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #1e293b;
+            text-align: center;
+            margin: 0.5rem 0;
+        }
+
+        .detail-total-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 20px;
+            bottom: 0;
+            width: 2px;
+            background: #f1f5f9;
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #3b82f6;
+            margin-top: 5px;
+            z-index: 1;
+        }
+
+        .timeline-content h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .timeline-content p {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        /* Close Order Modal Bar */
+        .quotation-timer {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            margin-top: 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .quotation-progress {
+            height: 100%;
+            background: #10b981;
+            width: 100%;
         }
 
         /* Exchange Tabs */
@@ -1631,57 +1854,7 @@
             margin-top: 0.2rem;
         }
 
-        .search-results-dropdown {
-            position: absolute;
-            top: 110%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            z-index: 50;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .search-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s;
-        }
-
-        .search-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-item:hover {
-            background-color: #f8fafc;
-        }
-
-        .search-symbol {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #1e293b;
-        }
-
-        .search-name {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-
-        .search-price-val {
-            font-weight: 600;
-            color: #10b981;
-            font-size: 0.85rem;
-        }
-
-        /* Redesigned Me View Styles - Fit to Screen */
+        /* Me View Styles - Consolidation point */
         .me-view-container {
             display: none;
             grid-template-columns: 500px 1fr;
@@ -1987,6 +2160,12 @@
         <header class="header" style="padding: 1rem 2rem;">
             <div class="header-left">
                 <div class="search-container" style="position: relative;">
+                    <!-- Improved trap for browser autofill -->
+                    <div style="position: absolute; left: -9999px; top: -9999px;">
+                        <input type="text" name="fake_user" autocomplete="username">
+                        <input type="password" name="fake_pass" autocomplete="current-password">
+                    </div>
+
                     <i data-lucide="search" class="search-icon"></i>
                     <input type="text" placeholder="Search Stocks (e.g. RELIANCE, TCS)..." class="search-input"
                         id="globalSearchInput" autocomplete="off">
@@ -2747,7 +2926,7 @@
 
                         // Show API Result
                         sResults.innerHTML = `
-                                        <div class="search-item" onclick="selectStock('${sym}', '${sym}')">
+                                        <div class="search-item" onclick="selectStock('${sym}', '${sym}', 'stock')">
                                             <div>
                                                 <div class="search-symbol">${sym}</div>
                                                 <div class="search-name">Live from Alpha Vantage</div>
@@ -2767,28 +2946,28 @@
             }
 
             function showFallbackResults(q) {
-                const matches = INDIAN_STOCKS.filter(x => x.s.includes(q) || x.n.toUpperCase().includes(q));
-                if (matches.length > 0) {
-                    sResults.innerHTML = matches.map(m => `
-                                        <div class="search-item" onclick="selectStock('${m.s}', '${m.n}')">
-                                            <div>
-                                                <div class="search-symbol">${m.s}</div>
-                                                <div class="search-name">${m.n}</div>
-                                            </div>
-                                            <div class="search-price-val">₹${m.p.toLocaleString('en-IN')}</div>
-                                        </div>
-                                    `).join('');
+                const results = MarketEngine.search(q);
+                if (results.length > 0) {
+                    sResults.innerHTML = results.map(m => `
+                        <div class="search-item" onclick="selectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
+                            <div>
+                                <div class="search-symbol">${m.symbol}</div>
+                                <div class="search-name">${m.name}</div>
+                            </div>
+                            <div class="search-price-val">₹${m.price.toLocaleString('en-IN')}</div>
+                        </div>
+                    `).join('');
                 } else {
                     sResults.innerHTML = '<div class="search-item" style="cursor:default; color:#94a3b8;">No results found</div>';
                 }
                 sResults.style.display = 'block';
             }
 
-            function selectStock(sym, name) {
+            function selectStock(sym, name, type = 'stock') {
                 sInput.value = '';
                 sResults.style.display = 'none';
-                // Redirect to Stock Detail Page
-                window.location.href = `stock_detail.html?symbol=${encodeURIComponent(sym)}&name=${encodeURIComponent(name)}`;
+                // Redirect to Stock Detail Page with type info
+                window.location.href = `stock_detail.html?symbol=${encodeURIComponent(sym)}&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
             }
 
             window.onload = function () {
@@ -3026,16 +3205,19 @@
                     <div class="input-group">
                         <span class="input-label">Quantity</span>
                         <div class="quantity-input-wrapper">
-                            <input type="number" class="q-input" value="0">
-                            <button class="max-btn">Max</button>
+                            <input type="number" id="buyQuantityInput" class="q-input" value="0" min="1">
+                            <button class="max-btn" onclick="setMaxQuantity()">Max</button>
                         </div>
-                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">Minimum investment
+                        <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;" id="minInvReq">Minimum
+                            investment
                             required: ₹0.00</div>
                     </div>
 
                     <div style="margin: 1rem 0;">
-                        <input type="range" style="width: 100%;" min="0" max="100" value="0">
-                        <div style="text-align: center; color: #94a3b8; font-size: 0.75rem;">No available funds</div>
+                        <input type="range" id="buyRangeSlider" style="width: 100%;" min="0" max="100" value="0"
+                            oninput="updateBuyFromSlider(this.value)">
+                        <div style="text-align: center; color: #94a3b8; font-size: 0.75rem;" id="fundStatus">No
+                            available funds</div>
                     </div>
 
                     <div style="font-weight: 700; margin-top: 2rem; margin-bottom: 1rem;">Trading Information</div>
@@ -3046,7 +3228,7 @@
                         </tr>
                         <tr>
                             <td>Quantity</td>
-                            <td class="val">0</td>
+                            <td class="val" id="displayQuantity">0</td>
                         </tr>
                         <tr>
                             <td>Tax Fees</td>
@@ -3058,11 +3240,11 @@
                         </tr>
                         <tr>
                             <td style="font-weight: 700;">Total Est. Investment</td>
-                            <td class="val total">₹0.00</td>
+                            <td class="val total" id="buyTotalCost">₹0.00</td>
                         </tr>
                     </table>
 
-                    <button class="buy-btn">Buy</button>
+                    <button class="buy-btn" id="buyBtn" onclick="handleTradeAction()">Buy</button>
                 </section>
 
                 <section class="m-card" style="margin-top: 1.5rem;">
@@ -3103,12 +3285,19 @@
                         <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
                     </div>
                     <div class="discover-tabs">
-                        <div class="d-tab active"><i data-lucide="layout-grid" size="18"></i> All</div>
-                        <div class="d-tab"><i data-lucide="trending-up" size="18"></i> Ins. Stocks</div>
-                        <div class="d-tab"><i data-lucide="box" size="18"></i> OTC</div>
-                        <div class="d-tab"><i data-lucide="rocket" size="18"></i> IPO</div>
+                        <div class="d-tab active" onclick="switchTradesTab(this, 'all')"><i data-lucide="layout-grid"
+                                size="18"></i> All</div>
+                        <div class="d-tab" onclick="switchTradesTab(this, 'stocks')"><i data-lucide="trending-up"
+                                size="18"></i> Ins. Stocks</div>
+                        <div class="d-tab" onclick="switchTradesTab(this, 'otc')"><i data-lucide="box" size="18"></i>
+                            OTC</div>
+                        <div class="d-tab" onclick="switchTradesTab(this, 'ipo')"><i data-lucide="rocket" size="18"></i>
+                            IPO</div>
                     </div>
-                    <div style="color: #94a3b8; font-size: 0.9rem;">No data.</div>
+                    <div id="tradesList" style="margin-top: 1rem;">
+                        <!-- List of trades will appear here -->
+                        <div style="color: #94a3b8; font-size: 0.9rem;">No data.</div>
+                    </div>
                 </div>
 
                 <!-- Transactions Section -->
@@ -3125,7 +3314,6 @@
                     </div>
                     <div class="discover-tabs" id="transactionTabs">
                         <div class="d-tab-pill active" onclick="switchTransactionTab(this, 'all')">All</div>
-                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'holding')">Holding</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'sold')">Sold</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pending')">Pending</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'awaiting')">Awaiting</div>
@@ -3219,7 +3407,8 @@
                             <span style="font-size: 0.8rem; color: #3b82f6;">INR</span>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: 700; color: #10b981;">₹0.00</div>
+                            <div id="pInvestedMain" style="font-size: 1.2rem; font-weight: 700; color: #10b981;">₹0.00
+                            </div>
                             <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">Invested</div>
                             <div class="donut-circle-box" style="margin-bottom: 1.5rem;">
                                 <svg viewBox="0 0 100 100" style="width: 100%; transform: rotate(-90deg);">
@@ -3300,7 +3489,8 @@
                             <div style="font-size: 0.75rem; color: #94a3b8;">PORTFOLIO</div>
                             <div style="font-weight: 700; margin-bottom: 0.5rem;">IN • INR</div>
                             <div style="font-size: 0.75rem; color: #94a3b8;">Total Invested</div>
-                            <div style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">₹0.00</div>
+                            <div id="pPortfolioTotal" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">
+                                ₹0.00</div>
 
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
@@ -3325,7 +3515,7 @@
                             <svg viewBox="0 0 100 100">
                                 <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" />
                             </svg>
-                            <div
+                            <div id="pCircleText"
                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; text-align: center;">
                                 ₹0.00
                             </div>
@@ -3345,11 +3535,12 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                         <div>
-                            <div style="font-size: 1.5rem; font-weight: 700;">₹0.00</div>
+                            <div id="pStatsInvested" style="font-size: 1.5rem; font-weight: 700;">₹0.00</div>
                             <div style="font-size: 0.8rem; color: #94a3b8;">Invested</div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 0.9rem; font-weight: 700; color: #10b981;">₹0.00</div>
+                            <div id="pStatsCurrentValue" style="font-size: 0.9rem; font-weight: 700; color: #10b981;">
+                                ₹0.00</div>
                             <div style="font-size: 0.8rem; color: #10b981;"><i data-lucide="arrow-up" size="12"></i>
                                 0.00%</div>
                         </div>
@@ -3859,8 +4050,9 @@
             if (modal) modal.style.display = 'none';
         }
 
-        function openStockDetail(symbol, name, exchange, price, change, color) {
+        function openStockDetail(symbol, name, exchange, price, change, color, type = 'stock') {
             document.getElementById('mainDashboard').style.display = 'none';
+            document.getElementById('discoverView').style.display = 'none'; // Hide discover if open
             document.querySelector('.header').style.display = 'none';
             document.getElementById('stockDetailHeader').style.display = 'flex';
             document.getElementById('stockDetailView').style.display = 'grid';
@@ -3875,7 +4067,19 @@
             document.getElementById('detBuyPrice').innerText = price;
             document.getElementById('detSymbol').innerText = symbol;
 
-            // Load Chart for stock
+            // Handle Buy/Subscribe button text
+            const buyBtn = document.getElementById('buyBtn');
+            if (buyBtn) {
+                if (type === 'OTC' || type === 'IPO') {
+                    buyBtn.innerText = 'Subscribe';
+                    buyBtn.dataset.type = type;
+                } else {
+                    buyBtn.innerText = 'Buy';
+                    buyBtn.dataset.type = 'stock';
+                }
+            }
+
+            // Load Chart
             new TradingView.widget({
                 "autosize": true,
                 "symbol": exchange + ":" + symbol,
@@ -3927,6 +4131,9 @@
 
             setActiveNav(document.getElementById('navDiscover'));
             lucide.createIcons();
+
+            // Refresh transactions data when entering discover
+            if (typeof fetchUserTransactions === 'function') fetchUserTransactions();
         }
 
         function showPortfolioView() {
@@ -3992,7 +4199,7 @@
         function switchDiscoverTab(tab) {
             // Sidebar active state
             document.querySelectorAll('.discover-nav-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
             // Section visibility
             document.getElementById('tradesSection').style.display = 'none';
@@ -4002,123 +4209,405 @@
             if (tab === 'trades') document.getElementById('tradesSection').style.display = 'block';
             if (tab === 'transactions') {
                 document.getElementById('transactionsSection').style.display = 'block';
-                // Re-render "All" by default when switching to transactions
-                const allTab = document.querySelector('#transactionTabs .d-tab-pill');
-                if (allTab) {
-                    switchTransactionTab(allTab, 'all');
-                }
+                fetchUserTransactions().then(() => {
+                    const activeTab = document.querySelector('#transactionTabs .d-tab-pill.active');
+                    if (activeTab) {
+                        // Trigger click to refresh view with data
+                        activeTab.click();
+                    } else {
+                        // Default to All
+                        const allTab = document.querySelector('#transactionTabs .d-tab-pill');
+                        if (allTab) { allTab.classList.add('active'); switchTransactionTab(allTab, 'all'); }
+                    }
+                });
             }
             if (tab === 'upcoming') document.getElementById('upcomingSection').style.display = 'block';
 
             lucide.createIcons();
         }
 
-        const transactionData = {
-            all: [
-                { name: 'Modern Diagnostic & Research Centre IPO (QIB)', sym: 'MDRC', ex: 'BSE • IN', status: 'Rejected', qty: '0', type: 'ipo' },
-                { name: 'Modern Diagnostic & Research Centre IPO (QIB)', sym: 'MDRC', ex: 'BSE • IN', status: 'Rejected', qty: '0', type: 'ipo' },
-                { name: 'E to E Transportation Infrastructure IPO (QIB)', sym: 'E2ERAIL', ex: 'NSE • IN', status: 'Rejected', qty: '0', type: 'ipo' },
-                { name: 'E to E Transportation Infrastructure IPO (QIB)', sym: 'E2ERAIL', ex: 'NSE • IN', status: 'Rejected', qty: '0', type: 'ipo' }
-            ],
-            sold: [
-                { name: 'NAGPUR POWER & INDUSTRIES LTD', sym: 'NAGPI', ex: 'BSE • IN', status: 'Sold', pnl: '₹-914.72 (-0.09%)', isUp: false, type: 'stock' },
-                { name: 'NAGPUR POWER & INDUSTRIES LTD', sym: 'NAGPI', ex: 'BSE • IN', status: 'Sold', pnl: '₹4,53,654.57 (+19.90%)', isUp: true, type: 'stock' },
-                { name: 'SHREE CEMENT LTD', sym: 'SHREECEM', ex: 'BSE • IN', status: 'Sold', pnl: '₹-3,272.47 (-0.56%)', isUp: false, type: 'stock' },
-                { name: 'SHREE CEMENT LTD', sym: 'SHREECEM', ex: 'BSE • IN', status: 'Sold', pnl: '₹13,83,416.46 (+73.36%)', isUp: true, type: 'stock' },
-                { name: 'Rexpro Enterprises Limited', sym: 'REXPRO', ex: 'NSE • IN', status: 'Sold', pnl: '₹1,05,766.91 (+10.58%)', isUp: true, type: 'stock' },
-                { name: 'Nanta Tech IPO (QIB)', sym: 'NANTA', ex: 'BSE • IN', status: 'Sold', pnl: '₹3,83,06,461.05 (+472.92%)', isUp: true, type: 'stock' }
-            ],
-            unsettled: [
-                { name: 'E to E Transportation Infrastructure IPO (QIB)', sym: 'E2ERAIL', ex: 'NSE • IN', status: 'Unsettled', price: '₹210.40', pnl: '₹20,11,26,400.00 (+367.56%)', isUp: true, type: 'order' }
-            ],
-            rejected: [
-                { name: 'Modern Diagnostic & Research Centre IPO (QIB)', sym: 'MDRC', ex: 'BSE • IN', status: 'Rejected', qty: '0', type: 'ipo' },
-                { name: 'Modern Diagnostic & Research Centre IPO (QIB)', sym: 'MDRC', ex: 'BSE • IN', status: 'Rejected', qty: '0', type: 'ipo' },
-                { name: 'E to E Transportation Infrastructure IPO (QIB)', sym: 'E2ERAIL', ex: 'NSE • IN', status: 'Rejected', qty: '0', type: 'ipo' },
-                { name: 'E to E Transportation Infrastructure IPO (QIB)', sym: 'E2ERAIL', ex: 'NSE • IN', status: 'Rejected', qty: '0', type: 'ipo' }
-            ]
-        };
-
-        function switchTransactionTab(el, tabName) {
-            // Update active pill
-            document.querySelectorAll('#transactionTabs .d-tab-pill').forEach(pill => pill.classList.remove('active'));
+        function switchTradesTab(el, type) {
+            // Update active state
+            document.querySelectorAll('.discover-tabs .d-tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
 
-            const list = document.getElementById('transList');
-            const data = transactionData[tabName] || [];
+            const listContainer = document.getElementById('tradesList');
+            let data = [];
+
+            if (type === 'all') {
+                data = [
+                    ...MarketEngine.getAllStocks().map(s => ({ ...s, type: 'stock' })),
+                    ...MarketEngine.getOTC().map(s => ({ ...s, type: 'OTC' })),
+                    ...MarketEngine.getIPO().map(s => ({ ...s, type: 'IPO' }))
+                ];
+            } else if (type === 'stocks') {
+                data = MarketEngine.getAllStocks().map(s => ({ ...s, type: 'stock' }));
+            } else if (type === 'otc') {
+                data = MarketEngine.getOTC().map(s => ({ ...s, type: 'OTC' }));
+            } else if (type === 'ipo') {
+                data = MarketEngine.getIPO().map(s => ({ ...s, type: 'IPO' }));
+            }
 
             if (data.length === 0) {
-                list.innerHTML = `<div style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem;">No data.</div>`;
+                listContainer.innerHTML = `<div style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem;">No data.</div>`;
                 return;
             }
 
-            let html = `<div class="trans-grid">`;
-            data.forEach(item => {
-                html += `
+            if (type === 'stocks') {
+                listContainer.style.display = 'grid';
+                listContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+                listContainer.style.gap = '1rem';
+                listContainer.style.padding = '1rem 0';
+
+                listContainer.innerHTML = data.map(s => `
+                    <div class="sector-card" style="width: 100%; height: auto; padding: 1.5rem; text-align: left; align-items: flex-start; cursor: default;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 0.5rem;">
+                            <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}; width: 40px; height: 40px;">${s.symbol[0]}</div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Est. Return</div>
+                                <div style="font-size: 1.1rem; font-weight: 800; color: #10b981;">10% - 20%</div>
+                            </div>
+                        </div>
+                        <div class="stock-ticker" style="font-size: 1.1rem; margin-top: 0.5rem;">${s.symbol}</div>
+                        <div class="stock-full-name" style="margin-bottom: 1.5rem;">${s.name}</div>
+                        
+                        <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 44px; background: #1e56a0; font-weight: 700;"
+                            onclick="openStockDetail('${s.symbol}', '${s.name}', 'NSE', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', '${s.type}')">
+                            Trade
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                listContainer.style.display = 'block';
+                listContainer.innerHTML = data.map(s => `
+                    <div class="stock-row" style="cursor: pointer; padding: 1rem; border-bottom: 1px solid #f1f5f9;" 
+                        onclick="openStockDetail('${s.symbol}', '${s.name}', 'NSE', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', '${s.type}')">
+                        <div class="stock-ident">
+                            <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}">${s.symbol[0]}</div>
+                            <div>
+                                <div class="stock-ticker">${s.symbol}</div>
+                                <div class="stock-full-name">${s.name} • NSE</div>
+                                ${s.type !== 'stock' ? `<span style="font-size:0.65rem; background:#eff6ff; color:#3b82f6; padding:2px 6px; border-radius:4px; font-weight:700;">${s.type}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="stock-price-col">
+                            <div class="stock-ticker">₹${s.price.toLocaleString('en-IN')}</div>
+                            <div class="index-chg ${s.change >= 0 ? 'green' : 'red'}" style="font-size: 0.75rem">${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        // --- Trade & Calculation Logic ---
+
+        function updateBuyCalculations() {
+            const qtyInput = document.getElementById('buyQuantityInput');
+            const priceEl = document.getElementById('detBuyPrice');
+            const totalEl = document.getElementById('buyTotalCost');
+            const displayQty = document.getElementById('displayQuantity'); // Optional display
+
+            if (!qtyInput || !priceEl || !totalEl) return;
+
+            const qty = parseInt(qtyInput.value) || 0;
+            // Parse price string like "₹1,234.56" -> 1234.56
+            const priceText = priceEl.innerText.replace(/[^\d.]/g, '');
+            const price = parseFloat(priceText) || 0;
+
+            const total = qty * price;
+            totalEl.innerText = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
+            if (displayQty) displayQty.innerText = qty;
+
+            return { qty, price, total };
+        }
+
+        async function setMaxQuantity() {
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+            if (!user) { alert("Please login first."); return; }
+
+            // Fetch latest balance for accurate max calculation
+            const freshUser = await window.DB.refreshCurrentUser();
+            const balance = parseFloat(freshUser ? freshUser.balance : user.balance) || 0;
+
+            const priceText = document.getElementById('detBuyPrice').innerText.replace(/[^\d.]/g, '');
+            const price = parseFloat(priceText) || 0;
+
+            if (price <= 0) return;
+
+            const maxQty = Math.floor(balance / price);
+            document.getElementById('buyQuantityInput').value = maxQty;
+            updateBuyCalculations();
+        }
+
+        function updateBuyFromSlider(percent) {
+            // This requires async balance check ideally, but for slider UI responsiveness, 
+            // we might use cached balance or just trigger setMax * percent. 
+            // For simplicity, let's assume we want to call setMax then scale it?
+            // Better: Get cached balance for speed, real check on buy.
+            const user = window.DB ? window.DB.getCurrentUser() : null;
+            if (!user) return;
+
+            const balance = parseFloat(user.balance) || 0;
+            const priceText = document.getElementById('detBuyPrice').innerText.replace(/[^\d.]/g, '');
+            const price = parseFloat(priceText) || 0;
+
+            if (price <= 0) return;
+
+            const maxQty = Math.floor(balance / price);
+            const qty = Math.floor(maxQty * (percent / 100));
+
+            document.getElementById('buyQuantityInput').value = qty;
+            updateBuyCalculations();
+        }
+
+        // Attach listener for manual input
+        document.addEventListener('DOMContentLoaded', () => {
+            const qInput = document.getElementById('buyQuantityInput');
+            if (qInput) qInput.addEventListener('input', updateBuyCalculations);
+        });
+
+        async function handleTradeAction() {
+            const btn = document.getElementById('buyBtn');
+            const type = btn.dataset.type || 'stock';
+            const stockName = document.getElementById('detName').innerText;
+            const symbol = document.getElementById('detSymbol').innerText; // Assuming this exists from openStockDetail
+
+            const calc = updateBuyCalculations();
+            if (!calc || calc.qty <= 0) {
+                alert("Please enter a valid quantity.");
+                return;
+            }
+
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                // 1. Force Refresh User Data to get latest Balance
+                const freshUser = await window.DB.refreshCurrentUser();
+                if (!freshUser) {
+                    alert("Session expired. Please login again.");
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // 2. Validate Balance
+                const currentBalance = parseFloat(freshUser.balance || 0);
+                if (calc.total > currentBalance) {
+                    alert(`Insufficient balance! Your available balance is ₹${currentBalance.toFixed(2)}, but total cost is ₹${calc.total.toFixed(2)}.`);
+                    return;
+                }
+
+                // 3. Submit Trade
+                const tradeData = {
+                    user_id: freshUser.id,
+                    symbol: symbol,
+                    name: stockName,
+                    type: type.toLowerCase(),
+                    quantity: calc.qty,
+                    price: calc.price,
+                    total_amount: calc.total,
+                    status: 'Pending'
+                };
+
+                const result = await window.DB.submitTrade(tradeData);
+
+                if (result.success) {
+                    // User Request: Do NOT deduct immediately. Wait for Admin approval.
+                    // Just submit the trade request.
+
+                    // Refresh UI (to show pending trade in list if applicable)
+                    // await window.DB.refreshCurrentUser(); // No balance change to refresh
+                    if (typeof syncUserData === 'function') syncUserData();
+                    if (typeof fetchUserTransactions === 'function') await fetchUserTransactions();
+
+                    if (type === 'OTC' || type === 'IPO') {
+                        alert(`Request for ${stockName} sent! Status: Pending Approval. No funds deducted yet.`);
+                    } else {
+                        alert(`Order for ${stockName} placed! Status: Pending Approval. No funds deducted yet.`);
+                    }
+                    // Optional: Reset input
+                    document.getElementById('buyQuantityInput').value = 0;
+                    updateBuyCalculations();
+                } else {
+                    alert("Failed to submit trade: " + (result.error?.message || "Unknown error"));
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert("An error occurred: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize Discover Trades and View Routing
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Force refresh user data on load
+            if (DB.getCurrentUser()) {
+                await DB.refreshUserData();
+            }
+
+            const allTab = document.querySelector('.discover-tabs .d-tab.active');
+            if (allTab) switchTradesTab(allTab, 'all');
+
+            // Handle URL View Parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const view = urlParams.get('view');
+            if (view === 'discover') {
+                showDiscoverView();
+                fetchUserTransactions(); // Fetch trades when entering discover
+            } else if (view === 'portfolio') {
+                showPortfolioView();
+            } else if (view === 'me') {
+                showMeView();
+            } else {
+                showMarketView();
+                const symbol = urlParams.get('symbol');
+                if (symbol && typeof window.MarketEngine !== 'undefined') {
+                    const s = window.MarketEngine.getProduct(symbol);
+                    if (s) {
+                        openStockDetail(s.symbol, s.name, 'NSE', '₹' + s.price.toLocaleString('en-IN', { minimumFractionDigits: 2 }), (s.change >= 0 ? '+' : '') + (s.change || 0).toFixed(2) + '%', (s.change >= 0 ? '#10b981' : '#ef4444'), s.type);
+                    }
+                }
+            }
+        });
+
+        let transactionData = {
+            all: [],
+            holding: [],
+            sold: [],
+            pending: [],
+            rejected: [],
+            unsettled: []
+        };
+
+        async function fetchUserTransactions() {
+            const user = window.DB ? window.DB.getCurrentUser() : null;
+            if (!user) return;
+
+            // Fetch latest trades
+            const trades = await window.DB.getTradesByUserId(user.id);
+
+            // categorizing trades
+            transactionData = {
+                all: trades,
+                holding: trades.filter(t => t.status === 'Approved' || t.status === 'Pending'),
+                sold: trades.filter(t => t.status === 'Sold' || t.status === 'Settled'),
+                pending: trades.filter(t => t.status === 'Pending'),
+                rejected: trades.filter(t => t.status === 'Rejected'),
+                unsettled: trades.filter(t => t.status !== 'Approved' && t.status !== 'Pending' && t.status !== 'Rejected' && t.status !== 'Sold' && t.status !== 'Settled')
+                // map other tabs if needed
+            };
+
+            // Add other keys for specific tabs to avoid undefined
+            transactionData.awaiting = [];
+            transactionData.pendingPayment = [];
+            transactionData.settle = [];
+        }
+
+        function switchTransactionTab(el, tabName) {
+            document.querySelectorAll('#transactionTabs .d-tab-pill').forEach(pill => pill.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            const list = document.getElementById('transList');
+            // If tabName is not in keys, default to empty array
+            const data = transactionData[tabName] || [];
+
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem; text-align:center; padding: 2rem;">No data found.</div>`;
+                return;
+            }
+
+            if (tabName === 'holding') {
+                let html = `<div class="holding-grid">`;
+                data.forEach(item => {
+                    const mockCurrPrice = parseFloat(item.price) * (1 + (Math.random() * 0.1 - 0.04)); // Subtle random drift
+                    const profit = (mockCurrPrice * item.quantity) - parseFloat(item.total_amount);
+                    const profitPct = (profit / parseFloat(item.total_amount)) * 100;
+
+                    html += `
+                        <div class="h-card">
+                            <div class="h-head">
+                                <div class="h-stock-info">
+                                    <h3>${item.name} <span style="color:#94a3b8; font-size:0.8rem;">(${item.symbol})</span></h3>
+                                    <div class="h-stock-meta">BSE • IN</div>
+                                </div>
+                                <div class="h-status-badge" style="${item.status === 'Pending' ? 'background:#fef3c7; color:#d97706;' : ''}">
+                                    ${item.status === 'Pending' ? 'Processing' : 'Holding'}
+                                </div>
+                            </div>
+                            <div class="h-stats-row">
+                                <div class="h-stat-item">
+                                    <span class="h-stat-label">Current Price</span>
+                                    <span class="h-stat-val ${profit >= 0 ? 'green' : 'red'}">₹${mockCurrPrice.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div class="h-stat-item">
+                                    <span class="h-stat-label">Unrealized P&L</span>
+                                    <span class="h-stat-val ${profit >= 0 ? 'green' : 'red'}">
+                                        ₹${profit.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                        <span style="font-size:0.75rem;">(${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="h-actions">
+                                <button class="h-btn view" onclick="openHoldingDetail('${item.id}')">View</button>
+                                <button class="h-btn close" onclick="openSellingModal('${item.id}')">Close Order</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                list.innerHTML = html;
+            } else {
+                let html = `<div class="trans-grid">`;
+                data.forEach(item => {
+                    const dateStr = new Date(item.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+                    let statusColor = '#f59e0b'; // pending yellow
+                    if (item.status === 'Approved') statusColor = '#10b981';
+                    if (item.status === 'Rejected') statusColor = '#ef4444';
+                    if (item.status === 'Sold') statusColor = '#3b82f6';
+
+                    html += `
                         <div class="t-card">
                             <div class="t-card-head">
                                 <div>
-                                    <div class="t-stock-name">${item.name} <span style="color:#64748b">(${item.sym})</span></div>
-                                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top:0.2rem;">${item.ex}</div>
+                                    <div class="t-stock-name">${item.name} <span style="color:#64748b; font-size:0.8rem;">(${item.symbol})</span></div>
+                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top:0.2rem;">${item.type.toUpperCase()} • ${dateStr}</div>
                                 </div>
-                                <div class="t-status ${item.status.toLowerCase()}">${item.status}</div>
+                                <div style="font-size:0.75rem; font-weight:700; color:${statusColor}; padding:2px 8px; border-radius:4px; background:${statusColor}15;">
+                                    ${item.status}
+                                </div>
                             </div>
                             <div class="t-card-body">
-                                ${renderCardBody(item)}
+                                <div class="t-info-col">
+                                    <div class="t-info-label">Quantity</div>
+                                    <div class="t-info-val">${item.quantity}</div>
+                                </div>
+                                <div class="t-info-col">
+                                    <div class="t-info-label">Price</div>
+                                    <div class="t-info-val">₹${parseFloat(item.price).toLocaleString('en-IN')}</div>
+                                </div>
+                                <div class="t-info-col">
+                                    <div class="t-info-label">Total</div>
+                                    <div class="t-info-val">₹${parseFloat(item.total_amount).toLocaleString('en-IN')}</div>
+                                </div>
                             </div>
-                            <div class="t-card-footer">
-                                <button class="t-btn-view">View</button>
-                                ${item.type === 'order' ? '<button class="t-btn-close">Close Order</button>' : ''}
-                            </div>
+                            ${item.admin_note ? `<div style="font-size: 0.75rem; color: #ef4444; margin-top: 0.5rem; padding: 0.5rem; background: #fff1f2; border-radius: 4px;">Note: ${item.admin_note}</div>` : ''}
                         </div>
                     `;
-            });
-            html += `</div>`;
-            list.innerHTML = html;
-        }
-
-        function renderCardBody(item) {
-            if (item.type === 'ipo') {
-                return `
-                        <div class="t-info-col">
-                            <div class="t-info-label">Quantity</div>
-                            <div class="t-info-val">${item.qty}</div>
-                        </div>
-                    `;
-            } else if (item.type === 'stock') {
-                return `
-                        <div class="t-info-col">
-                            <div class="t-pnl ${item.isUp ? 'green' : 'red'}">${item.pnl}</div>
-                            <div class="t-info-label">Realised P&L</div>
-                        </div>
-                    `;
-            } else if (item.type === 'order') {
-                return `
-                        <div style="display:flex; justify-content:space-between; width:100%">
-                            <div class="t-info-col" style="text-align:left">
-                                <div class="t-info-label">Current Price</div>
-                                <div class="t-info-val" style="color:#10b981">${item.price}</div>
-                            </div>
-                            <div class="t-info-col">
-                                <div class="t-info-label">Unrealized P&L</div>
-                                <div class="t-pnl green">${item.pnl}</div>
-                            </div>
-                        </div>
-                    `;
+                });
+                html += `</div>`;
+                list.innerHTML = html;
             }
-            return '';
         }
 
         const fundRecordsData = {
-            all: [
-                { type: 'IPO • Repay', date: '02 Jan 2026 13:02', ex: 'IN • Completed', id: 'F9c6e2b47b6645a0bf2a926c5006b682', amount: '-50,00,000.00', isNegative: true },
-                { type: 'IPO • Repay', date: '01 Jan 2026 13:49', ex: 'IN • Completed', id: 'F9c6e2b47b6645a0bf2a926c5006b682', amount: '-4,14,10,128.48', isNegative: true },
-                { type: 'IPO • Buy', date: '01 Jan 2026 13:48', ex: 'IN • Completed', id: 'F9c6e2b47b6645a0bf2a926c5006b682', amount: '-5,47,44,624.00', isNegative: true },
-                { type: 'IPO • Sell', date: '01 Jan 2026 10:39', ex: 'IN • Completed', id: '5e19826750fe4298a9b4a11f68437bd5', amount: '4,64,10,106.05', isNegative: false },
-                { type: 'IPO • Repay', date: '01 Jan 2026 10:39', ex: 'IN • Completed', id: '5e19826750fe4298a9b4a11f68437bd5', amount: '-37,74,227.57', isNegative: true },
-                { type: 'Deposit • Bank', date: '01 Jan 2026 10:23', ex: 'IN • Completed', id: '006252b78c7740cc90541cb1b9900013', amount: '37,74,250.00', isNegative: false },
-                { type: 'IPO • Repay', date: '29 Dec 2025 09:25', ex: 'IN • Completed', id: 'F9c6e2b47b6645a0bf2a926c5006b682', amount: '-43,29,417.43', isNegative: true }
-            ]
+            all: []
         };
 
         function switchFundTab(el, tab) {
@@ -4129,42 +4618,52 @@
 
         function renderFundRecords(tab) {
             const list = document.getElementById('fundRecordsList');
-            const data = fundRecordsData[tab] || fundRecordsData['all']; // Fallback to 'all' for demo
+            const data = fundRecordsData[tab] || fundRecordsData['all'] || [];
+
+            if (data.length === 0) {
+                list.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No data.</div>`;
+                return;
+            }
 
             list.innerHTML = data.map(item => `
-                    <div class="fund-item-card">
-                        <div class="f-item-main">
-                            <div class="f-item-type">${item.type}</div>
-                            <div class="f-item-sub">${item.date} • ${item.ex}</div>
-                            <div class="f-item-id">ID: ${item.id}</div>
-                        </div>
-                        <div class="f-item-price-col">
-                            <div class="f-item-amount ${item.isNegative ? 'red' : 'green'}">₹${item.amount}</div>
-                            <div class="f-item-curr">INR</div>
-                        </div>
+                <div class="fund-item-card">
+                    <div class="f-item-main">
+                        <div class="f-item-type">${item.type}</div>
+                        <div class="f-item-sub">${item.date} • ${item.ex}</div>
+                        <div class="f-item-id">ID: ${item.id}</div>
                     </div>
-                `).join('');
+                    <div class="f-item-price-col">
+                        <div class="f-item-amount ${item.isNegative ? 'red' : 'green'}">₹${item.amount}</div>
+                        <div class="f-item-curr">INR</div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-IN', { hour12: false });
-            document.getElementById('realTimeClock').innerText = `${timeString} GMT+5:30`;
+            const clockEl = document.getElementById('realTimeClock');
+            if (clockEl) clockEl.innerText = `${timeString} GMT+5:30`;
         }
         setInterval(updateClock, 1000);
         updateClock();
 
         // Date filtering simulation
-        document.getElementById('fundDateFrom').addEventListener('change', (e) => {
-            console.log('Filtering from:', e.target.value);
-        });
-        document.getElementById('fundDateTo').addEventListener('change', (e) => {
-            console.log('Filtering to:', e.target.value);
-        });
+        const fundDateFrom = document.getElementById('fundDateFrom');
+        if (fundDateFrom) {
+            fundDateFrom.addEventListener('change', (e) => {
+                console.log('Filtering from:', e.target.value);
+            });
+        }
+        const fundDateTo = document.getElementById('fundDateTo');
+        if (fundDateTo) {
+            fundDateTo.addEventListener('change', (e) => {
+                console.log('Filtering to:', e.target.value);
+            });
+        }
 
         // Settings Modal Logic
-        // toggleMessageCenter is now handled by script.js
-
         function deleteAllMessages() {
             const mcList = document.getElementById('mcList');
             const msgCount = document.getElementById('msgCount');
@@ -4187,11 +4686,11 @@
         function updateMessageCount() {
             const mcList = document.getElementById('mcList');
             const msgCount = document.getElementById('msgCount');
-            const items = mcList.querySelectorAll('.mc-item');
+            const items = mcList ? mcList.querySelectorAll('.mc-item') : [];
             if (msgCount) {
                 msgCount.innerText = `${items.length} Messages`;
             }
-            if (items.length === 0) {
+            if (mcList && items.length === 0) {
                 mcList.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No messages</div>';
             }
         }
@@ -4202,12 +4701,16 @@
         }
 
         function openSettings() {
-            document.getElementById('settingsModal').style.display = 'flex';
-            lucide.createIcons();
+            const modal = document.getElementById('settingsModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                lucide.createIcons();
+            }
         }
 
         function closeSettings() {
-            document.getElementById('settingsModal').style.display = 'none';
+            const modal = document.getElementById('settingsModal');
+            if (modal) modal.style.display = 'none';
         }
 
         function toggleSettingsAccordion(element, id) {
@@ -4254,7 +4757,7 @@
 
                 reader.onload = function (e) {
                     currentAvatarData = e.target.result;
-                    previewCircle.innerHTML = `<img src="${e.target.result}" alt="Avatar Preview">`;
+                    previewCircle.innerHTML = `< img src = "${e.target.result}" alt = "Avatar Preview" > `;
                     uploadBtn.classList.add('active');
                     uploadBtn.removeAttribute('disabled');
                     uploadBtn.style.backgroundColor = '#6366f1';
@@ -4275,13 +4778,13 @@
                 // Update avatar in settings modal
                 const settingsAvatars = document.querySelectorAll('.avatar-circle');
                 settingsAvatars.forEach(av => {
-                    av.innerHTML = `<img src="${currentAvatarData}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                    av.innerHTML = `< img src = "${currentAvatarData}" style = "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" > `;
                 });
 
                 // Also update any other user-avatar elements if present (e.g. Me view or Header if implemented)
                 const otherAvatars = document.querySelectorAll('.user-avatar');
                 otherAvatars.forEach(av => {
-                    av.innerHTML = `<img src="${currentAvatarData}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                    av.innerHTML = `< img src = "${currentAvatarData}" style = "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" >`;
                 });
 
                 alert('Avatar updated successfully!');
@@ -4445,7 +4948,7 @@
         }
 
         // Sync User Data to UI
-        function syncUserData() {
+        async function syncUserData() {
             const user = DB.getCurrentUser();
 
             // Toggle auth lock overlays instead of redirecting
@@ -4457,6 +4960,37 @@
                 lockedElements.forEach(el => el.classList.remove('is-locked'));
             }
 
+            // Remote DB sync for latest balance and pending items
+            const client = DB.getClient();
+            let dbUser = user;
+            let effectiveBalance = parseFloat(user.balance) || 0;
+
+            if (client) {
+                try {
+                    const { data: remoteUser } = await client.from('users').select('*').eq('id', user.id).single();
+                    if (remoteUser) {
+                        dbUser = remoteUser;
+                        effectiveBalance = parseFloat(remoteUser.balance) || 0;
+
+                        // Calculate Effective Balance
+                        const [pD, pW, pT] = await Promise.all([
+                            client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                            client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                            client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
+                        ]);
+
+                        const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+                        const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
+                        const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+
+                        effectiveBalance = effectiveBalance + lockedDeposits - lockedWithdrawals - lockedTrades;
+                        if (effectiveBalance < 0) effectiveBalance = 0;
+                    }
+                } catch (e) {
+                    console.error("Market Sync Error:", e);
+                }
+            }
+
             // Update Profile Section (Me View)
             const meDisplayName = document.getElementById('meUserDisplayName');
             const meFullName = document.getElementById('meFullName');
@@ -4465,51 +4999,44 @@
             const meCredit = document.getElementById('meCreditScore');
             const meVip = document.getElementById('meVipLevel');
 
-            const displayName = user.full_name || user.name || user.mobile || 'User';
+            const displayName = dbUser.full_name || dbUser.name || dbUser.mobile || 'User';
             if (meDisplayName) meDisplayName.textContent = displayName;
-            if (meFullName) meFullName.textContent = user.full_name || user.name || '-';
-            if (meUsername) meUsername.textContent = user.username || user.mobile || '-';
+            if (meFullName) meFullName.textContent = dbUser.full_name || dbUser.name || '-';
+            if (meUsername) meUsername.textContent = dbUser.username || dbUser.mobile || '-';
 
             if (meAvatar) {
                 const firstChar = displayName.charAt(0).toUpperCase();
                 meAvatar.textContent = (isNaN(firstChar) ? firstChar : 'U');
             }
-            if (meCredit) meCredit.textContent = user.creditScore || 0;
-            if (meVip) meVip.textContent = user.vip || 0;
+            if (meCredit) meCredit.textContent = dbUser.credit_score || 0;
+            if (meVip) meVip.textContent = dbUser.vip || 0;
 
             // Update KYC Status Badge
             const meKycBadge = document.getElementById('meKycStatusBadge');
             if (meKycBadge) {
-                const status = user.kyc || 'Not Verified';
+                const status = dbUser.kyc || 'Not Verified';
                 meKycBadge.textContent = status;
-
-                // Reset classes and set appropriate one
                 meKycBadge.className = '';
                 if (status === 'Approved') meKycBadge.className = 'kyc-approved';
                 else if (status === 'Pending') meKycBadge.className = 'kyc-pending';
                 else if (status === 'Rejected') meKycBadge.className = 'kyc-rejected';
                 else meKycBadge.className = 'kyc-not-verified';
-
-                // Remove inline style if present from earlier edits
-                meKycBadge.style.background = '';
-                meKycBadge.style.color = '';
             }
 
-            // Update Assets (Me View)
             const formats = { minimumFractionDigits: 2 };
-            const bal = parseFloat(user.balance) || 0;
-            const inv = parseFloat(user.invested) || 0;
-            const frozen = parseFloat(user.frozen) || 0;
-            const loan = parseFloat(user.loan) || 0;
-            const bonus = parseFloat(user.bonus) || 0;
-            const outstanding = parseFloat(user.outstanding) || 0;
-
             const updateVal = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = '₹' + val.toLocaleString('en-IN', formats);
             };
 
-            updateVal('meAvailableBalance', bal);
+            updateVal('meAvailableBalance', effectiveBalance);
+
+            const inv = parseFloat(dbUser.invested) || 0;
+            const frozen = parseFloat(dbUser.frozen) || 0;
+            const loan = parseFloat(dbUser.loan) || 0;
+            const bonus = parseFloat(dbUser.bonus) || 0;
+            const outstanding = parseFloat(dbUser.outstanding) || 0;
+
             updateVal('meCurrentInvestments', inv);
             updateVal('meFrozenFunds', frozen);
             updateVal('meBorrowedFunds', loan);
@@ -4519,8 +5046,46 @@
             // Update sidebar assets
             const assetAmounts = document.querySelectorAll('.asset-amount');
             if (assetAmounts.length >= 2) {
-                assetAmounts[0].textContent = '₹' + bal.toLocaleString('en-IN', formats);
+                assetAmounts[0].textContent = '₹' + effectiveBalance.toLocaleString('en-IN', formats);
                 assetAmounts[1].textContent = '₹' + inv.toLocaleString('en-IN', formats);
+            }
+
+            // Update Portfolio View Invested Amounts
+            const formattedBal = '₹' + effectiveBalance.toLocaleString('en-IN', formats);
+            const formattedInv = '₹' + inv.toLocaleString('en-IN', formats);
+
+            // Update p-asset-val elements in Portfolio view
+            document.querySelectorAll('.p-asset-val').forEach(el => {
+                const label = el.previousElementSibling?.textContent;
+                if (label === 'Available Balance') {
+                    el.textContent = formattedBal;
+                    el.setAttribute('data-val', formattedBal);
+                } else if (label === 'Invested Value') {
+                    el.textContent = formattedInv;
+                    el.setAttribute('data-val', formattedInv);
+                }
+            });
+
+            const pInvestedMain = document.getElementById('pInvestedMain');
+            if (pInvestedMain) pInvestedMain.textContent = formattedInv;
+
+            const pPortfolioTotal = document.getElementById('pPortfolioTotal');
+            if (pPortfolioTotal) pPortfolioTotal.textContent = formattedInv;
+
+            const pCircleText = document.getElementById('pCircleText');
+            if (pCircleText) pCircleText.innerText = formattedInv;
+
+            const pStatsInvested = document.getElementById('pStatsInvested');
+            if (pStatsInvested) pStatsInvested.textContent = formattedInv;
+
+            const pStatsCurrentValue = document.getElementById('pStatsCurrentValue');
+            if (pStatsCurrentValue) pStatsCurrentValue.textContent = formattedInv;
+
+            // Update Buy Widget Balance Info
+            const fundStatus = document.getElementById('fundStatus');
+            if (fundStatus) {
+                fundStatus.textContent = `Available: ${formattedBal}`;
+                fundStatus.style.color = effectiveBalance > 0 ? '#10b981' : '#ef4444';
             }
 
             // Update Settings Modal Profile
@@ -4531,7 +5096,6 @@
             if (setName) setName.textContent = user.full_name || user.name || user.mobile || 'User';
 
             // Update Settings Avatar Initials
-            const setAvatar = document.querySelector('.settings-header .avatar-circle');
             if (setAvatar && !setAvatar.querySelector('img')) {
                 const firstChar = (user.full_name || user.name || user.mobile || 'U').charAt(0).toUpperCase();
                 setAvatar.textContent = (isNaN(firstChar) ? firstChar : 'U');
@@ -4561,6 +5125,137 @@
         });
 
         // Customer Service Logic handled by script.js
+
+        /* Holding & Selling Modal Controls */
+        function openHoldingDetail(tradeId) {
+            const trade = transactionData.all.find(t => t.id === tradeId);
+            if (!trade) return;
+
+            document.getElementById('hdStockTitle').innerText = trade.name;
+            document.getElementById('hdTotalVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('hdTradeId').innerText = trade.id.substring(0, 15) + '...';
+            document.getElementById('hdAssetName').innerText = trade.name;
+            document.getElementById('hdSymbol').innerText = trade.symbol;
+            document.getElementById('hdQty').innerText = trade.quantity;
+            document.getElementById('hdBuyPrice').innerText = '₹' + parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('hdOrderVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            // Mock current values for details
+            const mockCurrPrice = parseFloat(trade.price) * (1 + (Math.random() * 0.15 - 0.05));
+            const mockSaleVal = mockCurrPrice * trade.quantity;
+            const profit = mockSaleVal - parseFloat(trade.total_amount);
+            const profitPct = (profit / parseFloat(trade.total_amount)) * 100;
+
+            document.getElementById('hdSaleVal').innerText = '₹' + mockSaleVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('hdCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('hdProfit').innerText = `₹${profit.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)`;
+            document.getElementById('hdProfit').style.color = profit >= 0 ? '#10b981' : '#ef4444';
+            document.getElementById('hdCurrPrice').style.color = profit >= 0 ? '#10b981' : '#ef4444';
+
+            const dateStr = new Date(trade.created_at).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('hdBuyTimeline').innerText = `${dateStr.replace(/\//g, '-')} — Buy @ ₹${parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })} • Total ₹${parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            document.getElementById('holdingDetailModal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeHoldingDetail() {
+            document.getElementById('holdingDetailModal').style.display = 'none';
+        }
+
+        let sellingTimer = null;
+        function openSellingModal(tradeId) {
+            const trade = transactionData.all.find(t => t.id === tradeId);
+            if (!trade) return;
+
+            document.getElementById('coStockTitle').innerText = trade.name;
+            document.getElementById('coSymbol').innerText = trade.symbol;
+            document.getElementById('coBuyPrice').innerText = '₹' + parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('coQty').innerText = trade.quantity;
+            document.getElementById('coOrderVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            const mockCurrPrice = parseFloat(trade.price) * (1 + (Math.random() * 0.1 - 0.05));
+            const profit = (mockCurrPrice * trade.quantity) - parseFloat(trade.total_amount);
+
+            document.getElementById('coCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('coProfit').innerText = '₹' + profit.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('coProfit').style.color = profit >= 0 ? '#10b981' : '#ef4444';
+
+            document.getElementById('closeOrderModal').style.display = 'flex';
+
+            // Timer logic
+            let seconds = 20;
+            const bar = document.getElementById('coProgressBar');
+            const txt = document.getElementById('coTimerText');
+            bar.style.width = '100%';
+            bar.style.transition = 'width 1s linear';
+
+            if (sellingTimer) clearInterval(sellingTimer);
+            sellingTimer = setInterval(() => {
+                seconds--;
+                txt.innerText = `Quotation expires in ${seconds}s`;
+                bar.style.width = (seconds / 20 * 100) + '%';
+                if (seconds <= 0) {
+                    clearInterval(sellingTimer);
+                    closeSellingModal();
+                }
+            }, 1000);
+
+            document.getElementById('coConfirmBtn').onclick = () => {
+                handleSellTrade(tradeId, mockCurrPrice);
+            };
+            lucide.createIcons();
+        }
+
+        function closeSellingModal() {
+            document.getElementById('closeOrderModal').style.display = 'none';
+            if (sellingTimer) clearInterval(sellingTimer);
+        }
+
+        async function handleSellTrade(tradeId, sellPrice) {
+            if (!confirm("Are you sure you want to close this order?")) return;
+
+            const user = DB.getCurrentUser();
+            const client = DB.getClient();
+            if (!client || !user) return;
+
+            try {
+                // 1. Update trade status
+                const { error: tradeErr } = await client.from('trades').update({
+                    status: 'Sold',
+                    sell_price: sellPrice,
+                    sold_at: new Date().toISOString()
+                }).eq('id', tradeId);
+
+                if (tradeErr) throw tradeErr;
+
+                // 2. Fetch trade info to calculate return to balance
+                const { data: tradeData } = await client.from('trades').select('*').eq('id', tradeId).single();
+                const returnAmount = parseFloat(tradeData.quantity) * sellPrice;
+
+                // 3. Update user balance
+                const { data: userDb } = await client.from('users').select('balance').eq('id', user.id).single();
+                const newBalance = (parseFloat(userDb.balance) || 0) + returnAmount;
+
+                const { error: balErr } = await client.from('users').update({ balance: newBalance }).eq('id', user.id);
+                if (balErr) throw balErr;
+
+                alert(`Order closed successfully! ₹${returnAmount.toLocaleString('en-IN')} added to your balance.`);
+                closeSellingModal();
+
+                // Refresh data
+                await fetchUserTransactions();
+                const activePill = document.querySelector('#transactionTabs .d-tab-pill.active');
+                if (activePill) {
+                    const tabName = activePill.innerText.toLowerCase() === 'ins. stocks' ? 'stocks' : activePill.innerText.toLowerCase();
+                    switchTransactionTab(activePill, tabName);
+                }
+                if (typeof syncUserData === 'function') syncUserData(); // Update balance in UI
+            } catch (e) {
+                console.error(e);
+                alert("Error closing order: " + e.message);
+            }
+        }
     </script>
 
 
@@ -4689,7 +5384,178 @@
         </div>
     </div>
 
+    <!-- Holding Details Modal -->
+    <div id="holdingDetailModal" class="center-popup-modal" onclick="if(event.target == this) closeHoldingDetail()">
+        <div class="center-popup-content" style="max-width: 500px; padding: 0;">
+            <div class="popup-header"
+                style="background: #f8fafc; border-bottom: 1px solid #f1f5f9; padding: 1rem 1.5rem;">
+                <h3 id="hdStockTitle" style="font-weight: 700; color: #1e293b;">Stock Name</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="popup-close" style="background:none; border:none; color:#10b981;"><i
+                            data-lucide="share-2" size="20"></i></button>
+                    <button class="popup-close" onclick="closeHoldingDetail()"><i data-lucide="x"
+                            size="24"></i></button>
+                </div>
+            </div>
+            <div class="popup-body" style="padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
+                <div class="detail-total-label">Total Value</div>
+                <div class="detail-total-val" id="hdTotalVal">₹0.00</div>
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <span
+                        style="font-size: 0.8rem; color: #94a3b8; background: #f8fafc; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i data-lucide="copy" size="14"></i> <span id="hdTradeId">dca300...</span>
+                    </span>
+                </div>
+
+                <div style="font-weight: 800; color: #1e293b; margin-bottom: 0.5rem; font-size: 1rem;">Trading
+                    Infomation</div>
+                <table class="detail-info-table">
+                    <tr>
+                        <td>Asset Name</td>
+                        <td id="hdAssetName">-</td>
+                    </tr>
+                    <tr>
+                        <td>Asset Type</td>
+                        <td id="hdAssetType" style="color: #6366f1;">Ins. Stocks</td>
+                    </tr>
+                    <tr>
+                        <td>Country</td>
+                        <td id="hdCountry">IN</td>
+                    </tr>
+                    <tr>
+                        <td>Market</td>
+                        <td id="hdMarket">BSE</td>
+                    </tr>
+                    <tr>
+                        <td>Symbol</td>
+                        <td id="hdSymbol">-</td>
+                    </tr>
+                    <tr>
+                        <td>Quantity</td>
+                        <td id="hdQty">0</td>
+                    </tr>
+                    <tr>
+                        <td>Buy Price</td>
+                        <td id="hdBuyPrice">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Total Order Value</td>
+                        <td id="hdOrderVal">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Total Sale Value</td>
+                        <td id="hdSaleVal">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Current Price</td>
+                        <td id="hdCurrPrice" style="color: #10b981;">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Profit</td>
+                        <td id="hdProfit" style="color: #10b981;">₹0.00 (+0.00%)</td>
+                    </tr>
+                </table>
+
+                <!-- Expandable Sections -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
+                    <span style="font-weight: 700; color: #1e293b;">Fees</span>
+                    <i data-lucide="chevron-right" size="20" color="#94a3b8"></i>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; border-bottom: 1px solid #f1f5f9; cursor: pointer;">
+                    <span style="font-weight: 700; color: #1e293b;">Fund Txn.</span>
+                    <i data-lucide="chevron-right" size="20" color="#94a3b8"></i>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <div style="font-weight: 700; color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.9rem;">Timeline
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4>Buy Time</h4>
+                            <p id="hdBuyTimeline">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Order Modal -->
+    <div id="closeOrderModal" class="center-popup-modal" onclick="if(event.target == this) closeSellingModal()">
+        <div class="center-popup-content" style="max-width: 500px;">
+            <div class="popup-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                <h2 style="font-weight: 700;">Close Order</h2>
+                <button class="popup-close" onclick="closeSellingModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body" style="padding-top: 1.5rem;">
+                <h3 id="coStockTitle" style="text-align: center; font-weight: 700; margin-bottom: 1.5rem;">Stock Name
+                </h3>
+
+                <div
+                    style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                    <span style="color: #64748b; font-weight: 500;">Current Price</span>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span id="coCurrPrice" style="font-weight: 800; color: #10b981; font-size: 1.2rem;">₹0.00</span>
+                        <button
+                            style="background: #86efac; border: none; padding: 4px 10px; border-radius: 6px; color: #065f46; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Refresh</button>
+                    </div>
+                </div>
+
+                <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; font-size: 0.95rem;">Order
+                    Infomation</div>
+                <table class="detail-info-table" style="margin-top: 0;">
+                    <tr>
+                        <td>Market</td>
+                        <td id="coMarket">BSE</td>
+                    </tr>
+                    <tr>
+                        <td>Symbol</td>
+                        <td id="coSymbol">-</td>
+                    </tr>
+                    <tr>
+                        <td>Buy Price</td>
+                        <td id="coBuyPrice">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Quantity</td>
+                        <td id="coQty">0</td>
+                    </tr>
+                    <tr>
+                        <td>Total Order Value</td>
+                        <td id="coOrderVal">₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Estimated Selling Tax</td>
+                        <td>₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Estimated Selling Fees</td>
+                        <td>₹0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Estimated P&L</td>
+                        <td id="coProfit" style="color: #ef4444;">₹0.00</td>
+                    </tr>
+                </table>
+
+                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;" id="coTimerText">Quotation
+                    expires in 20s</div>
+                <div class="quotation-timer">
+                    <div class="quotation-progress" id="coProgressBar"></div>
+                </div>
+
+                <button class="logout-btn"
+                    style="background: #3b82f6; margin-top: 1.5rem; width: 100%; border-radius: 12px; height: 50px;"
+                    id="coConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Customer Service Modal -->
+
     <div id="csModal" class="settings-modal" onclick="if(event.target == this) closeCS()">
         <div class="settings-content" style="max-width: 500px; height: 600px; display: flex; flex-direction: column;">
             <button class="settings-close" onclick="closeCS()"><i data-lucide="x" size="24"></i></button>

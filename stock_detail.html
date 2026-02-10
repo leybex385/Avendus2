@@ -302,7 +302,7 @@
                 <div class="market-right-col">
                     <div class="buy-panel">
                         <div class="bp-header">
-                            <span style="color:#1e56a0;">Buy Stock</span>
+                            <span id="bpHeaderTitle" style="color:#1e56a0;">Buy Stock</span>
                             <span id="bpStockSymbol" style="font-size:0.9rem; color:#64748b;">...</span>
                         </div>
 
@@ -421,6 +421,36 @@
         let currentStockName = '';
         let currentPrice = 0;
         let currentInterval = 'D';
+        let currentProductType = 'stock';
+
+        async function syncBalance() {
+            const user = window.DB.getCurrentUser();
+            if (!user) return;
+            const client = window.DB.getClient();
+            if (!client) return;
+            try {
+                const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
+                if (dbUser) {
+                    const [pD, pW, pT] = await Promise.all([
+                        client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                        client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
+                        client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
+                    ]);
+                    const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+                    const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
+                    const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+                    let effectiveBalance = (parseFloat(dbUser.balance) || 0) + lockedDeposits - lockedWithdrawals - lockedTrades;
+                    if (effectiveBalance < 0) effectiveBalance = 0;
+                    const balanceEl = document.getElementById('bpUserBalance');
+                    if (balanceEl) {
+                        balanceEl.innerText = '₹' + effectiveBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                        balanceEl.dataset.effective = effectiveBalance;
+                    }
+                }
+            } catch (e) {
+                console.error("Sync Balance Error:", e);
+            }
+        }
 
         window.onload = function () {
             // Check Auth
@@ -431,16 +461,17 @@
                 return;
             } else {
                 document.getElementById('stockContent').style.display = 'flex';
-                document.getElementById('bpUserBalance').innerText = '₹' + parseFloat(user.balance || 0).toLocaleString('en-IN');
+                syncBalance();
             }
 
             // Parse URL
             const urlParams = new URLSearchParams(window.location.search);
             const sym = urlParams.get('symbol');
             const name = urlParams.get('name') || sym;
+            const type = urlParams.get('type') || 'stock';
 
             if (sym) {
-                initPage(sym, name);
+                initPage(sym, name, type);
             } else {
                 alert("No stock specified.");
                 window.location.href = 'market.html';
@@ -449,9 +480,10 @@
             loadHoldings();
         };
 
-        function initPage(sym, name) {
+        function initPage(sym, name, type = 'stock') {
             currentActiveSymbol = sym;
             currentStockName = name;
+            currentProductType = type;
 
             // Set Titles
             document.getElementById('bpStockSymbol').innerText = sym;
@@ -467,6 +499,14 @@
                 currentPrice = 1000.00; // Default fallback
             }
             document.getElementById('bpCurrentPrice').innerText = '₹' + currentPrice.toLocaleString('en-IN');
+
+            // Set Action Text
+            const buyBtn = document.querySelector('.bp-btn');
+            const headerTitle = document.getElementById('bpHeaderTitle');
+            if (currentProductType === 'OTC' || currentProductType === 'IPO') {
+                if (buyBtn) buyBtn.innerText = 'SUBSCRIBE NOW';
+                if (headerTitle) headerTitle.innerText = `Subscribe to ${currentProductType}`;
+            }
 
             updateBuyTotal();
             startSimulation(); // Start the ticker
@@ -521,66 +561,83 @@
 
         async function executeBuyOrder() {
             const user = window.DB.getCurrentUser();
-            if (!user) return; // Should be handled on load
+            if (!user) return;
 
             const qty = parseInt(document.getElementById('bpQuantity').value) || 0;
             if (qty <= 0) { alert("Invalid quantity"); return; }
 
-            // Re-fetch price just in case (mock here)
             const tradePrice = currentPrice;
             const totalCost = qty * tradePrice;
 
-            if (totalCost > parseFloat(user.balance || 0)) {
-                alert("Insufficient balance!");
+            const balanceEl = document.getElementById('bpUserBalance');
+            const currentEffective = parseFloat(balanceEl.dataset.effective || user.balance || 0);
+
+            if (totalCost > currentEffective) {
+                alert(`Insufficient balance! Your available balance is ₹${currentEffective.toFixed(2)}, but the total cost is ₹${totalCost.toFixed(2)}.`);
                 return;
             }
 
-            if (!confirm(`Confirm buy: ${qty} shares of ${currentActiveSymbol} @ ₹${tradePrice}?`)) return;
+            const isSubscription = (currentProductType === 'OTC' || currentProductType === 'IPO');
+            const confirmMsg = isSubscription
+                ? `Confirm subscription request for ${currentStockName} (${qty} units @ ₹${tradePrice})?`
+                : `Confirm buy: ${qty} shares of ${currentActiveSymbol} @ ₹${tradePrice}?`;
+
+            if (!confirm(confirmMsg)) return;
 
             const btn = document.querySelector('.bp-btn');
+            const originalText = btn.innerText;
             btn.innerText = "Processing...";
+            btn.disabled = true;
 
             try {
-                // Update Balance
-                let newBalance = parseFloat(user.balance) - totalCost;
-                let holdings = user.holdings || [];
-
-                const existing = holdings.find(h => h.s === currentActiveSymbol);
-                if (existing) {
-                    const oldVal = existing.q * existing.avg;
-                    existing.avg = (oldVal + totalCost) / (existing.q + qty);
-                    existing.q += qty;
-                } else {
-                    holdings.push({
-                        s: currentActiveSymbol,
-                        n: currentStockName,
-                        q: qty,
-                        avg: tradePrice,
-                        t: Date.now()
-                    });
+                // 1. Force Refresh User Data to get latest Balance
+                const freshUser = await window.DB.refreshUserData();
+                if (!freshUser) {
+                    alert("Session expired. Please login again.");
+                    window.location.href = 'login.html';
+                    return;
                 }
 
-                const { success, error } = await window.DB.updateUser(user.id, {
-                    balance: newBalance,
-                    holdings: holdings
-                });
+                // 2. Validate Balance with Fresh Data
+                const currentBalance = parseFloat(freshUser.balance || 0);
+                if (totalCost > currentBalance) {
+                    alert(`Insufficient balance! Your available balance is ₹${currentBalance.toFixed(2)}, but the total cost is ₹${totalCost.toFixed(2)}.`);
+                    return;
+                }
 
-                if (success) {
-                    alert("Purchase Successful!");
-                    user.balance = newBalance;
-                    user.holdings = holdings;
-                    localStorage.setItem('avendus_current_user', JSON.stringify(user));
+                // Submit Trade Request to Backend
+                const tradeData = {
+                    user_id: freshUser.id,
+                    symbol: currentActiveSymbol,
+                    name: currentStockName,
+                    type: (currentProductType || 'stock').toLowerCase(), // Ensure lowercase and default
+                    quantity: qty,
+                    price: tradePrice,
+                    total_amount: totalCost
+                };
 
-                    document.getElementById('bpUserBalance').innerText = '₹' + newBalance.toLocaleString('en-IN');
-                    loadHoldings();
+                console.log("Submitting trade:", tradeData); // Debug log
+
+                const result = await window.DB.submitTrade(tradeData);
+                console.log("Trade submission result:", result); // Debug log
+
+                if (result.success) {
+                    if (isSubscription) {
+                        alert(`Subscription request for ${currentStockName} sent successfully. Please wait for backend approval.`);
+                    } else {
+                        alert(`Trade request for ${currentActiveSymbol} submitted. Your order will be processed shortly.`);
+                    }
+                    syncBalance();
                 } else {
-                    alert("Failed: " + error.message);
+                    console.error("Trade submission failed:", result.error);
+                    alert("Failed to submit trade: " + (result.error?.message || JSON.stringify(result.error)));
                 }
             } catch (e) {
-                console.error(e);
-                alert("Error during purchase.");
+                console.error("Trade Error Exception:", e);
+                alert("Error during trade submission: " + e.message);
             } finally {
-                btn.innerText = "BUY NOW";
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
 
@@ -665,4 +722,36 @@
 </body>
 
 </html>
-<style>.mini-tf-btn { background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s; }.mini-tf-btn.active { background: #1e56a0; color: white; border-color: #1e56a0; }.range-dot, #rangeProgress { transition: all 0.5s ease; }.styled-chart-box { background: white; border-radius: 16px; padding: 1.5rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }</style>
+<style>
+    .mini-tf-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .mini-tf-btn.active {
+        background: #1e56a0;
+        color: white;
+        border-color: #1e56a0;
+    }
+
+    .range-dot,
+    #rangeProgress {
+        transition: all 0.5s ease;
+    }
+
+    .styled-chart-box {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+</style>

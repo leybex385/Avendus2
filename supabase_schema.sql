@@ -62,3 +62,19 @@ FROM users u WHERE u.mobile = '918108038029';
 INSERT INTO withdrawals (user_id, amount, bank_name, status, created_at)
 SELECT u.id, 50000.00, 'SBI', 'Approved', '2025-12-19 14:56:00+00'
 FROM users u WHERE u.mobile = '918108038029';
+
+-- 7. Create Trades Table
+CREATE TABLE IF NOT EXISTS trades (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    symbol TEXT NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT CHECK (type IN ('stock', 'OTC', 'IPO')),
+    quantity DECIMAL(20, 2) NOT NULL,
+    price DECIMAL(20, 2) NOT NULL,
+    total_amount DECIMAL(20, 2) NOT NULL,
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Settled')),
+    admin_note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP WITH TIME ZONE
+);
