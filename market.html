@@ -3441,11 +3441,11 @@
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'sold')">Sold</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pending')">Pending</div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'awaiting')">Confirmed</div>
-                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'unsettled')">Unsettled</div>
+
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'pendingPayment')">Pending Payment
                         </div>
                         <div class="d-tab-pill" onclick="switchTransactionTab(this, 'rejected')">Rejected</div>
-                        <div class="d-tab-pill" onclick="switchTransactionTab(this, 'settle')">Settle</div>
+
                     </div>
                     <div id="transList" class="trans-list-container">
                         <!-- Dynamic content -->
@@ -4578,13 +4578,20 @@
 
                 // 2. Validate Balance
                 const currentBalance = parseFloat(freshUser.balance || 0);
-                if (calc.total > currentBalance) {
+                const isInsufficient = calc.total > currentBalance;
+
+                // For stocks, we still require full balance. For OTC/IPO, we allow subscription with whatever balance is left (Outstanding Balance).
+                if (type.toLowerCase() === 'stock' && isInsufficient) {
                     alert(`Insufficient balance! Your available balance is ₹${currentBalance.toFixed(2)}, but total cost is ₹${calc.total.toFixed(2)}.`);
                     return;
                 }
 
                 // 3. Submit Trade
-                const isAutoApproved = (type.toLowerCase() === 'stock');
+                // If it's a stock, it's Approved immediately.
+                // Otherwise it's Pending. 
+                // We use admin_note to flag Outstanding Balance if insufficient funds.
+                let tradeStatus = 'Pending';
+                if (type.toLowerCase() === 'stock') tradeStatus = 'Approved';
 
                 const tradeData = {
                     user_id: freshUser.id,
@@ -4594,29 +4601,32 @@
                     quantity: calc.qty,
                     price: calc.price,
                     total_amount: calc.total,
-                    status: isAutoApproved ? 'Approved' : 'Pending'
+                    admin_note: isInsufficient ? 'OUTSTANDING:' + currentBalance : '',
+                    status: tradeStatus
                 };
 
                 const result = await window.DB.submitTrade(tradeData);
 
                 if (result.success) {
-                    if (isAutoApproved) {
-                        // Deduct Balance Immediately for Stocks
-                        const newBalance = currentBalance - calc.total;
+                    if (tradeStatus === 'Approved' || (isInsufficient && currentBalance > 0)) {
+                        // Deduct Balance for Stocks or Outstanding Subscriptions
+                        const deduction = isInsufficient ? currentBalance : calc.total;
+                        const newBalance = currentBalance - deduction;
                         const currentInvested = parseFloat(freshUser.invested) || 0;
-                        const newInvested = currentInvested + calc.total;
+                        const newInvested = currentInvested + deduction;
 
                         // Update Backend
-                        const finResult = await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested);
+                        await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested);
+                    }
 
-                        if (finResult.success) {
-                            alert(`Successfully purchased ${calc.qty} shares of ${stockName}. Amount deducted: ₹${calc.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
-                        } else {
-                            // If update fails, alert user.
-                            alert("Stock purchased, but failed to update balance. Please contact support. Error: " + (finResult.error?.message || "Unknown"));
-                        }
+                    if (tradeStatus === 'Approved') {
+                        alert(`Successfully purchased ${calc.qty} shares of ${stockName}.`);
+                    } else if (isInsufficient) {
+                        alert(`Order queued! Your balance of ₹${currentBalance.toLocaleString('en-IN')} has been applied. Please settle the remaining ₹${(calc.total - currentBalance).toLocaleString('en-IN')} to finalize your subscription.`);
+                        showDiscoverView('transactions');
+                        switchTransactionTab(null, 'pendingPayment');
                     } else {
-                        // OTC / IPO / SPO: Show Payment Confirmation Modal
+                        // Regular Pending (OTC/IPO with enough balance)
                         openPurchaseModal(type, symbol, stockName, calc.qty, calc.total);
                     }
                 } else {
@@ -4755,14 +4765,14 @@
             // categorizing trades
             transactionData = {
                 all: trades,
-                holding: trades.filter(t => (t.status === 'Approved' || t.status === 'Pending') && t.type === 'stock'),
-                sold: trades.filter(t => t.status === 'Sold' || t.status === 'Settled'),
-                pending: trades.filter(t => t.status === 'Pending'),
+                holding: trades.filter(t => t.status === 'Approved'),
+                sold: trades.filter(t => t.status === 'Sold'),
+                pending: trades.filter(t => t.status === 'Pending' && !(t.admin_note || "").startsWith('OUTSTANDING')),
                 rejected: trades.filter(t => t.status === 'Rejected'),
-                unsettled: trades.filter(t => t.status !== 'Approved' && t.status !== 'Pending' && t.status !== 'Rejected' && t.status !== 'Sold' && t.status !== 'Settled' && t.status !== 'Awaiting'),
-                awaiting: trades.filter(t => t.status === 'Awaiting' || t.status === 'Settled'),
-                pendingPayment: trades.filter(t => (t.type === 'otc' || t.type === 'ipo') && t.status === 'Pending'),
-                settle: trades.filter(t => t.status === 'Settle') // Kept for any specific 'Settle' logic if any
+                unsettled: trades.filter(t => !['Approved', 'Pending', 'Rejected', 'Sold', 'Settled'].includes(t.status)),
+                awaiting: trades.filter(t => t.status === 'Settled'),
+                pendingPayment: trades.filter(t => (t.status === 'Pending' && (t.admin_note || "").startsWith('OUTSTANDING')) || t.status === 'Awaiting'),
+                settle: trades.filter(t => t.status === 'Settle')
             };
         }
 
@@ -4811,8 +4821,8 @@
                                 </div>
                             </div>
                             <div class="h-actions">
-                                <button class="h-btn view" onclick="openHoldingDetail('${item.id}')">View</button>
-                                <button class="h-btn close" onclick="openSellingModal('${item.id}')">Close Order</button>
+                                <button class="h-btn view" onclick="openHoldingDetail('${item.id}')">View Details</button>
+                                ${item.status === 'Pending' || item.status === 'Awaiting' ? '' : `<button class="h-btn close" onclick="openSellingModal('${item.id}')">Close Order</button>`}
                             </div>
                         </div>
                     `;
@@ -4826,7 +4836,7 @@
 
                     let statusColor = '#f59e0b'; // pending yellow
                     if (item.status === 'Approved' || item.status === 'Settled') statusColor = '#10b981';
-                    if (item.status === 'Rejected') statusColor = '#ef4444';
+                    if (item.status === 'Rejected' || item.admin_note === 'OUTSTANDING_BALANCE') statusColor = '#ef4444';
                     if (item.status === 'Sold') statusColor = '#3b82f6';
 
                     html += `
@@ -4855,7 +4865,7 @@
                                 </div>
                             </div>
                             ${item.admin_note ? `<div style="font-size: 0.75rem; color: #ef4444; margin-top: 0.5rem; padding: 0.5rem; background: #fff1f2; border-radius: 4px;">Note: ${item.admin_note}</div>` : ''}
-                            ${(item.type.toLowerCase() === 'otc' || item.type.toLowerCase() === 'ipo') ? `
+                            ${(item.type.toLowerCase() === 'otc' || item.type.toLowerCase() === 'ipo' || item.admin_note === 'OUTSTANDING_BALANCE') ? `
                                 <div style="margin-top: 1rem; border-top: 1px solid #f1f5f9; padding-top: 0.75rem;">
                                     <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 38px; font-size: 0.85rem;" onclick="openHoldingDetail('${item.id}')">View Details</button>
                                 </div>
@@ -5451,16 +5461,142 @@
             const profitValue = mockSaleVal - parseFloat(trade.total_amount);
             const profitPct = (profitValue / parseFloat(trade.total_amount)) * 100;
 
-            document.getElementById('hdCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('hdProfit').innerText = `₹${profitValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${profitValue >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)`;
-            document.getElementById('hdProfit').style.color = profitValue >= 0 ? '#10b981' : '#ef4444';
-            document.getElementById('hdCurrPrice').style.color = profitValue >= 0 ? '#10b981' : '#ef4444';
-
             const dateStr = new Date(trade.created_at).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('hdBuyTimeline').innerText = `${dateStr.replace(/\//g, '-')} — Buy @ ₹${parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })} • Total ₹${parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            // Pending vs Approved vs Outstanding Logic
+            const note = trade.admin_note || "";
+            const isOutstanding = trade.status === 'Pending' && (note === 'OUTSTANDING_BALANCE' || note.startsWith('OUTSTANDING:'));
+            const isPending = trade.status === 'Pending' && !isOutstanding;
+
+            const queuedNotice = document.getElementById('hdQueuedNotice');
+            const outstandingNotice = document.getElementById('hdOutstandingNotice');
+            const settleBtn = document.getElementById('settleBtnContainer');
+            const saleValueRow = document.getElementById('hdSaleValueRow');
+            const timelineTitle = document.getElementById('hdTimelineTitle');
+
+            if (queuedNotice) queuedNotice.style.display = 'none';
+            if (outstandingNotice) outstandingNotice.style.display = 'none';
+            if (settleBtn) settleBtn.style.display = 'none';
+
+            if (isPending) {
+                document.getElementById('hdCurrPrice').innerText = '-';
+                document.getElementById('hdProfit').innerText = '-';
+                document.getElementById('hdProfit').style.color = '#94a3b8';
+                document.getElementById('hdCurrPrice').style.color = '#1e293b';
+                if (queuedNotice) queuedNotice.style.display = 'block';
+                if (saleValueRow) saleValueRow.style.display = 'none';
+                if (timelineTitle) timelineTitle.innerText = 'Subscribe';
+                document.getElementById('hdBuyTimeline').innerText = `Subscribe @ ${dateStr.replace(/\//g, '-')}`;
+            } else {
+                document.getElementById('hdCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('hdProfit').innerText = `₹${profitValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${profitValue >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)`;
+                document.getElementById('hdProfit').style.color = profitValue >= 0 ? '#10b981' : '#ef4444';
+                document.getElementById('hdCurrPrice').style.color = profitValue >= 0 ? '#10b981' : '#ef4444';
+
+                if (isOutstanding) {
+                    if (outstandingNotice) {
+                        const total = parseFloat(trade.total_amount);
+                        let paid = 0;
+                        if (note.startsWith('OUTSTANDING:')) {
+                            paid = parseFloat(note.split(':')[1]) || 0;
+                        } else {
+                            // Mocking for old data
+                            paid = total * 0.85;
+                        }
+
+                        const outstanding = total - paid;
+                        document.getElementById('hdPaidAmt').innerText = '₹' + paid.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                        document.getElementById('hdOutstandingAmt').innerText = '-₹' + outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                        outstandingNotice.style.display = 'block';
+                        if (settleBtn) {
+                            settleBtn.style.display = 'block';
+                            settleBtn.innerHTML = `<button onclick="settleOutstanding('${trade.id}', this)" style="width: 100%; background: #dc2626; color: white; border: none; padding: 0.85rem; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; margin-top: 0.5rem; transition: background 0.2s;">Settle Now</button>`;
+                        }
+                    }
+                    if (saleValueRow) saleValueRow.style.display = 'none';
+                } else {
+                    if (saleValueRow) {
+                        saleValueRow.style.display = 'table-row';
+                        document.getElementById('hdTotalSaleVal').innerText = '₹' + mockSaleVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                    }
+                }
+
+                if (timelineTitle) timelineTitle.innerText = 'Buy Time';
+                document.getElementById('hdBuyTimeline').innerText = `${dateStr.replace(/\//g, '-')} — Buy @ ₹${parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })} • Total ₹${parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            }
+
+            // Set Market based on symbol if possible, else default BSE
+            document.getElementById('hdMarket').innerText = trade.symbol.includes('NSE') ? 'NSE' : 'BSE';
 
             document.getElementById('holdingDetailModal').style.display = 'flex';
             lucide.createIcons();
+        }
+
+        async function settleOutstanding(tradeId, btnEl) {
+            const trade = transactionData.all.find(t => t.id == tradeId);
+            if (!trade) return;
+
+            const user = window.DB ? await window.DB.refreshCurrentUser() : null;
+            if (!user) return;
+
+            const total = parseFloat(trade.total_amount);
+            const note = trade.admin_note || "";
+            let paid = 0;
+            if (note.startsWith('OUTSTANDING:')) {
+                paid = parseFloat(note.split(':')[1]) || 0;
+            } else {
+                paid = total * 0.85;
+            }
+
+            const outstanding = total - paid;
+            const currentBalance = parseFloat(user.balance || 0);
+
+            if (currentBalance < outstanding) {
+                alert(`Insufficient balance to settle this order. You need ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} more. Please deposit funds first.`);
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to settle the outstanding balance of ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} for ${trade.name}?`)) {
+                return;
+            }
+
+            const btn = btnEl || event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Settling...";
+            btn.disabled = true;
+
+            try {
+                const newBalance = currentBalance - outstanding;
+                const currentInvested = parseFloat(user.invested) || 0;
+                const newInvested = currentInvested + outstanding;
+
+                // 1. Update User Financials
+                const finResult = await window.DB.updateUserFinancials(user.id, newBalance, newInvested);
+
+                if (finResult.success) {
+                    // 2. Update Trade Status (Set to Pending for Admin Approval)
+                    const tradeResult = await window.DB.updateTradeStatus(trade.id, 'Pending', 'Subscribed Fully');
+
+                    if (tradeResult.success) {
+                        alert("Successfully settled! Your subscription is now fully paid and has been moved to Pending transactions for admin approval.");
+                        document.getElementById('holdingDetailModal').style.display = 'none';
+                        await fetchUserTransactions();
+                        // Switch to Pending tab
+                        const pendingTab = document.querySelector('.d-tab-pill[onclick*="pending"]');
+                        switchTransactionTab(pendingTab, 'pending');
+                    } else {
+                        alert("Balance deducted but failed to update trade status. Please contact support.");
+                    }
+                } else {
+                    alert("Failed to update financials: " + (finResult.error?.message || "Unknown error"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("An error occurred: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
         function closeHoldingDetail() {
@@ -5808,6 +5944,10 @@
                         <td>Total Order Value</td>
                         <td id="hdOrderVal">₹0.00</td>
                     </tr>
+                    <tr id="hdSaleValueRow" style="display: none;">
+                        <td>Total Sale Value</td>
+                        <td id="hdTotalSaleVal">₹0.00</td>
+                    </tr>
                     <tr>
                         <td>Current Price</td>
                         <td id="hdCurrPrice" style="color: #10b981 !important;">₹0.00</td>
@@ -5817,6 +5957,32 @@
                         <td id="hdProfit" style="color: #10b981 !important;">₹0.00 (0.00%)</td>
                     </tr>
                 </table>
+
+                <div id="hdOutstandingNotice"
+                    style="display: none; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 1.25rem; margin: 1.5rem 0; color: #991b1b; font-size: 0.9rem; line-height: 1.6;">
+                    <div
+                        style="font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        Outstanding Balance Detected
+                    </div>
+                    <div style="font-size: 0.85rem; margin-bottom: 1rem;">
+                        You have an unpaid order. <br>
+                        You have paid <span id="hdPaidAmt" style="color:#059669; font-weight:700;">₹0.00</span> already
+                        and the outstanding balance is <span id="hdOutstandingAmt"
+                            style="color:#dc2626; font-weight:700;">-₹0.00</span>. Please settle immediately to avoid
+                        impacts.
+                    </div>
+                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; color: #7f1d1d;">
+                        <li>Suspension of future trading activity</li>
+                        <li>Reduced Trust Score</li>
+                        <li>Delays in execution/settlement</li>
+                    </ul>
+                    <div id="settleBtnContainer" style="display: none; margin-top: 1rem;"></div>
+                </div>
+
+                <div id="hdQueuedNotice"
+                    style="display: none; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 1rem; margin: 1.5rem 0; color: #92400e; font-size: 0.9rem; line-height: 1.5;">
+                    Your order is queued and awaiting allocation/authorization.
+                </div>
 
                 <!-- Expandable Sections -->
                 <div
@@ -5831,7 +5997,7 @@
                 </div>
 
                 <div style="margin-top: 2rem;">
-                    <div
+                    <div id="hdTimelineTitle"
                         style="font-weight: 700; color: #64748b; margin-bottom: 1.25rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
                         Timeline
                     </div>
