@@ -3072,8 +3072,8 @@
                 const results = MarketEngine.search(q);
                 if (results.length > 0) {
                     sResults.innerHTML = results.map(m => `
-                        <div class="search-item" onclick="selectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
-                            <div>
+                        <div class="search-item" style="display: flex; gap: 12px; align-items: center;" onclick="selectStock('${m.symbol}', '${m.name}', '${m.type || 'stock'}')">
+                            <div style="flex: 1;">
                                 <div class="search-symbol">${m.symbol}</div>
                                 <div class="search-name">${m.name}</div>
                             </div>
@@ -3156,10 +3156,13 @@
                 <section class="main-index-view" style="margin-top: 1.5rem;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                        <div>
-                            <h2 id="detName" style="margin: 0; font-size: 1.5rem;">Bartronics India Limited</h2>
-                            <div id="detExchange" style="font-size: 0.8rem; color: #64748b; margin-top: 0.3rem;">NSE •
-                                IN</div>
+                        <div style="display: flex; gap: 16px; align-items: center;">
+                            <div id="detLogoWrap"></div>
+                            <div>
+                                <h2 id="detName" style="margin: 0; font-size: 1.5rem;">Bartronics India Limited</h2>
+                                <div id="detExchange" style="font-size: 0.8rem; color: #64748b; margin-top: 0.3rem;">NSE
+                                    • IN</div>
+                            </div>
                         </div>
                         <i data-lucide="heart" class="heart-icon" size="24"></i>
                     </div>
@@ -3508,7 +3511,6 @@
                             <span class="p-asset-sub">Loan</span>
                         </div>
                         <div class="p-asset-item">
-                            <span class="p-asset-label">Pending Settlement</span>
                             <span class="p-asset-val red" id="pPendingSettlement" data-val="₹0.00">₹0.00</span>
                             <span class="p-asset-sub red">Outstanding</span>
                         </div>
@@ -4056,6 +4058,25 @@
             element.classList.add('active');
         }
 
+        // Global Helper for Stock Icons
+        window.getIconHtml = function (symbol, name, size = 40, color = "#10b981") {
+            const sym = symbol.replace('-IPO', '').toUpperCase();
+            const cleanName = name.replace(/ (Ltd|Limited|Corporation|Industries|Services|Bank|India|Ltd\.|Limited\.|and)\.?/ig, '').trim().toLowerCase().replace(/\s+/g, '-');
+
+            // Primary sources for Indian stocks (Groww is very reliable)
+            const src1 = `https://assets-netstorage.groww.in/stock-logos/${sym}.png`;
+            const src2 = `https://assets.upstox.com/content/assets/images/logos/${sym}.png`;
+            const src3 = `https://s3-symbol-logo.tradingview.com/${cleanName}--all-around.svg`;
+
+            return `
+                <div class="stock-logo-wrap" style="width: ${size}px; height: ${size}px; border-radius: 50%; overflow: hidden; background: #ffffff; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: ${size > 32 ? '4' : '2'}px;">
+                    <img src="${src1}" alt="${sym}" style="width: 100%; height: 100%; object-fit: contain;" 
+                        onerror="this.src='${src2}'; this.onerror=() => { this.src='${src3}'; this.onerror=() => { this.style.display='none'; this.nextElementSibling.style.display='flex'; }; };">
+                    <div class="stock-circle" style="background:${color}; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: ${size * 0.4}px;">${sym[0]}</div>
+                </div>
+            `;
+        };
+
         lucide.createIcons();
 
         // Assets Toggle Logic (Main Sidebar)
@@ -4133,7 +4154,6 @@
             listContainer.innerHTML = data.map(s => `
                 <div class="stock-row" style="cursor: pointer" onclick="openStockDetail('${s.t}', '${s.n}', '${exchange}', '${s.p}', '${s.c}', '${type === 'gainers' ? '#10b981' : '#ef4444'}')">
                     <div class="stock-ident">
-                        <div class="stock-circle" style="background:${s.color}">${s.t[0]}</div>
                         <div>
                             <div class="stock-ticker">${s.t}</div>
                             <div class="stock-full-name">${s.n} • ${exchange}</div>
@@ -4189,6 +4209,12 @@
                     buyBtn.innerText = 'Buy';
                     buyBtn.dataset.type = 'stock';
                 }
+            }
+
+            // Handle Logo
+            const detLogoWrap = document.getElementById('detLogoWrap');
+            if (detLogoWrap) {
+                detLogoWrap.innerHTML = '';
             }
 
             // Load Chart
@@ -4385,7 +4411,7 @@
             }
 
             // Decide layout based on type
-            const isPremium = (type === 'otc' || type === 'ipo' || (type === 'all' && data.some(d => d.type !== 'stock')));
+            const isPremium = (type === 'stocks' || type === 'otc' || type === 'ipo' || (type === 'all' && data.some(d => d.type !== 'stock')));
 
             if (isPremium) {
                 listContainer.style.display = 'grid';
@@ -4403,7 +4429,7 @@
                     const isLocked = false; // Allow all IPOs to be viewable for now as requested
                     const exchange = s.symbol.includes('NSE') ? 'NSE' : 'BSE';
 
-                    if (s.type === 'stock') {
+                    if (s.type === 'stock' && type === 'all') {
                         // Regular stocks in "All" view still look premium but slightly different if mixed
                         return `
                             <div class="premium-trade-card">
@@ -4439,8 +4465,10 @@
                         <div class="premium-trade-card">
                             <div class="premium-card-head">
                                 <div class="premium-asset-info">
-                                    <div class="premium-asset-name">${s.name}</div>
-                                    <div class="premium-asset-meta">${exchange} • ${s.type} Asset</div>
+                                    <div>
+                                        <div class="premium-asset-name">${s.name}</div>
+                                        <div class="premium-asset-meta">${exchange} • ${s.type} Asset</div>
+                                    </div>
                                 </div>
                                 <div class="premium-return-rate">
                                     <span class="premium-return-label">${isIPO ? 'Yield' : 'Est. Profit'}</span>
@@ -4474,8 +4502,7 @@
                 listContainer.innerHTML = data.map(s => `
                     <div class="sector-card" style="width: 100%; height: auto; padding: 1.5rem; text-align: left; align-items: flex-start; cursor: default;">
                         <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 0.5rem;">
-                            <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}; width: 40px; height: 40px;">${s.symbol[0]}</div>
-                            <div style="text-align: right;">
+                            <div style="text-align: right; width: 100%;">
                                 <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Change</div>
                                 <div style="font-size: 1.1rem; font-weight: 800; color: ${s.change >= 0 ? '#10b981' : '#ef4444'};">${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%</div>
                             </div>
@@ -4827,9 +4854,9 @@
 
                     html += `
                         <div class="h-card">
-                            <div class="h-head">
+                            <div class="h-head" style="margin-bottom: 1.5rem;">
                                 <div class="h-stock-info">
-                                    <h3>${item.name} <span style="color:#94a3b8; font-size:0.8rem;">(${item.symbol})</span></h3>
+                                    <h3 style="margin:0; font-size:1rem;">${item.name} <span style="color:#94a3b8; font-size:0.7rem;">(${item.symbol})</span></h3>
                                     <div class="h-stock-meta">BSE • IN</div>
                                 </div>
                                 <div class="h-status-badge" style="${item.status === 'Pending' ? 'background:#fef3c7; color:#d97706;' : ''}">
@@ -4871,11 +4898,11 @@
                     html += `
                         <div class="t-card">
                             <div class="t-card-head">
-                                <div>
-                                    <div class="t-stock-name">${item.name} <span style="color:#64748b; font-size:0.8rem;">(${item.symbol})</span></div>
-                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top:0.2rem;">${item.type.toUpperCase()} • ${dateStr}</div>
+                                <div style="flex: 1;">
+                                    <div class="t-stock-name">${item.name} <span style="color:#64748b; font-size:0.75rem;">(${item.symbol})</span></div>
+                                    <div style="font-size: 0.65rem; color: #94a3b8; margin-top:0.2rem;">${item.type.toUpperCase()} • ${dateStr}</div>
                                 </div>
-                                <div style="font-size:0.75rem; font-weight:700; color:${statusColor}; padding:2px 8px; border-radius:4px; background:${statusColor}15;">
+                                <div style="font-size:0.7rem; font-weight:700; color:${statusColor}; padding:2px 8px; border-radius:4px; background:${statusColor}15;">
                                     ${item.status}
                                 </div>
                             </div>
@@ -5487,6 +5514,13 @@
                 if (!listing) listing = { symbol, name: symbol, price: 0, yield: 'TBD' };
 
                 document.getElementById('hdStockTitle').innerText = listing.name || symbol;
+
+                // Handle Logo for Listing
+                const hdLogoWrap = document.getElementById('hdLogoWrap');
+                if (hdLogoWrap) {
+                    hdLogoWrap.innerHTML = '';
+                }
+
                 document.getElementById('hdTotalVal').innerText = '₹0.00';
                 document.getElementById('hdTradeId').innerText = 'Listing Information';
                 document.getElementById('hdAssetName').innerText = listing.name || symbol;
@@ -5550,6 +5584,13 @@
             const currentPrice = livePriceData ? livePriceData.price : trade.price;
 
             document.getElementById('hdStockTitle').innerText = trade.name;
+
+            // Handle Logo for Trade
+            const hdLogoWrap = document.getElementById('hdLogoWrap');
+            if (hdLogoWrap) {
+                hdLogoWrap.innerHTML = '';
+            }
+
             document.getElementById('hdTotalVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
             document.getElementById('hdTradeId').innerText = trade.id;
             document.getElementById('hdAssetName').innerText = trade.name;
@@ -6023,6 +6064,9 @@
                 </div>
             </div>
             <div class="popup-body" style="padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: center; margin-bottom: 1rem;">
+                    <div id="hdLogoWrap"></div>
+                </div>
                 <div class="detail-total-label"
                     style="text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.25rem;">Total Value
                 </div>
