@@ -1769,7 +1769,14 @@
                 fetchSafe('withdrawals', '*, users(mobile,username)', 100).then(data => {
                     const list = document.getElementById('withList');
                     if (!list) return;
-                    list.innerHTML = data.length ? data.map(x => `
+                    list.innerHTML = data.length ? data.map(x => {
+                        const statusColors = {
+                            'Pending': 'background:#fef3c7; color:#92400e;',
+                            'Approved': 'background:#dcfce7; color:#166534;',
+                            'Rejected': 'background:#fee2e2; color:#991b1b;'
+                        };
+                        const sStyle = statusColors[x.status] || 'background:#f1f5f9; color:#64748b;';
+                        return `
                         <tr>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
@@ -1777,13 +1784,14 @@
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.amount).toFixed(2)}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.bank_name || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fee2e2; color:#991b1b;">${x.status}</span></td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; ${sStyle}">${x.status}</span></td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
                              <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                 <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openWithdrawalEdit(${x.id}, '${x.users?.mobile || 'User'}', ${x.amount}, '${x.status}', '${x.admin_note || ''}')"></i></div>
                             </td>
                         </tr>
-                    `).join('') : '<tr><td colspan="9" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
+                    `;
+                    }).join('') : '<tr><td colspan="9" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
                     lucide.createIcons();
                 });
 

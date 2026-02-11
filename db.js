@@ -381,6 +381,17 @@ window.DB = {
         return { success: !error, error };
     },
 
+    async submitWithdrawal(withdrawalData) {
+        const client = this.getClient();
+        const { data, error } = await client
+            .from('withdrawals')
+            .insert([withdrawalData])
+            .select()
+            .single();
+
+        return { success: !error, data, error };
+    },
+
     // --- TRADING ---
     async submitTrade(tradeData) {
         const client = this.getClient();

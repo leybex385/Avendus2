@@ -292,10 +292,46 @@
 
                 <div class="account-selector">
                     <div class="account-info">
-                        <h4 id="accDisplayId">INR-ID</h4>
+                        <h4 id="accDisplayId">Main Account</h4>
                         <p id="accDisplayBal">₹0.00</p>
                     </div>
-                    <div class="currency-tag">IN</div>
+                    <div class="currency-tag">INR</div>
+                </div>
+
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Withdraw
+                        To</label>
+                    <select id="withdrawBankSelect" class="reg-input"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white;">
+                        <option value="">Select Bank Account</option>
+                    </select>
+                    <div style="margin-top: 0.5rem; text-align: right;">
+                        <a href="bank_accounts.html"
+                            style="font-size: 0.8rem; color: #3b82f6; text-decoration: none; font-weight: 600;">+ Add
+                            New Bank</a>
+                    </div>
+                </div>
+
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Withdrawal
+                        Amount</label>
+                    <div style="position: relative;">
+                        <span
+                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 700;">₹</span>
+                        <input type="number" id="withdrawAmountInput" class="reg-input" placeholder="Min. ₹100.00"
+                            style="width: 100%; padding: 0.8rem 1rem 0.8rem 2rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    </div>
+                </div>
+
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Withdrawal
+                        PIN</label>
+                    <input type="password" id="withdrawPinInput" class="reg-input" placeholder="4-6 digit PIN"
+                        maxlength="6"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
                 </div>
 
                 <button class="submit-btn" id="withdrawSubmitBtn" disabled>Submit Withdrawal</button>
@@ -318,7 +354,7 @@
                 </div>
 
                 <div class="records-list" id="withdrawRecords">
-                    <!-- Dynamic records will be injected here -->
+                    <div style="text-align:center; padding: 2rem; color: #64748b;">Loading records...</div>
                 </div>
             </section>
         </div>
@@ -763,11 +799,10 @@
 
                         // Enable button if balance > 0
                         if (submitBtn) {
-                            if (effectiveBalance > 0) {
+                            if (effectiveBalance >= 100) {
                                 submitBtn.disabled = false;
                                 submitBtn.style.background = '#1e56a0';
                                 submitBtn.style.cursor = 'pointer';
-                                submitBtn.onclick = () => alert("Withdrawal system maintenance. Please try again later.");
                             } else {
                                 submitBtn.disabled = true;
                                 submitBtn.style.background = '#93c5fd';
@@ -775,11 +810,102 @@
                             }
                         }
                     }
+
+                    // 3. Load user bank accounts
+                    const banks = await window.DB.getBankAccounts(dbUser.id);
+                    const bankSelect = document.getElementById('withdrawBankSelect');
+                    if (bankSelect) {
+                        const currentVal = bankSelect.value;
+                        bankSelect.innerHTML = '<option value="">Select Bank Account</option>' +
+                            banks.map(b => `<option value="${b.id}">${b.bank_name} (${b.account_number.slice(-4)})</option>`).join('');
+                        if (currentVal) bankSelect.value = currentVal;
+                    }
                 }
             } catch (e) {
                 console.error("Sync Withdrawal Page Error:", e);
             }
         }
+
+        async function handleWithdrawalSubmit() {
+            const btn = document.getElementById('withdrawSubmitBtn');
+            if (btn.disabled) return;
+
+            const bankId = document.getElementById('withdrawBankSelect').value;
+            const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+            const pin = document.getElementById('withdrawPinInput').value;
+
+            if (!bankId) {
+                alert("Please select a bank account.");
+                return;
+            }
+
+            if (isNaN(amount) || amount < 100) {
+                alert("Minimum withdrawal amount is ₹100.00");
+                return;
+            }
+
+            if (!pin) {
+                alert("Please enter your withdrawal PIN.");
+                return;
+            }
+
+            const client = window.DB.getClient();
+            const { data: user } = await client.from('users').select('*').eq('id', (window.DB.getCurrentUser()).id).single();
+            if (!user) return;
+
+            // Simple balance check (Frontend)
+            if (amount > (parseFloat(user.balance) || 0)) {
+                alert("Insufficient Available Balance.");
+                return;
+            }
+
+            // PIN Verification
+            if (user.withdrawal_pin && user.withdrawal_pin !== pin) {
+                alert("Incorrect Withdrawal PIN.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "Processing...";
+
+            try {
+                const bank = (await window.DB.getBankAccounts(user.id)).find(b => b.id == bankId);
+
+                const withdrawalData = {
+                    user_id: user.id,
+                    amount: amount,
+                    status: 'Pending',
+                    bank_name: bank ? bank.bank_name : 'Bank Withdrawal',
+                    account_number: bank ? bank.account_number : '',
+                    ifsc: bank ? bank.ifsc : '',
+                    full_name: bank ? (bank.first_name + ' ' + bank.last_name) : ''
+                };
+
+                const res = await window.DB.submitWithdrawal(withdrawalData);
+
+                if (res.success) {
+                    // Deduct balance immediately
+                    const newBalance = (parseFloat(user.balance) || 0) - amount;
+                    await window.DB.updateUserFinancials(user.id, newBalance);
+
+                    alert("Withdrawal request submitted successfully!");
+                    document.getElementById('withdrawAmountInput').value = '';
+                    document.getElementById('withdrawPinInput').value = '';
+                    await syncWithdrawalPage();
+                    await loadWithdrawals();
+                } else {
+                    alert("Failed to submit withdrawal: " + (res.error?.message || "Internal Error"));
+                }
+            } catch (e) {
+                console.error("Withdrawal Error:", e);
+                alert("An error occurred. Please try again.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Submit Withdrawal";
+            }
+        }
+
+        document.getElementById('withdrawSubmitBtn').addEventListener('click', handleWithdrawalSubmit);
 
         async function loadWithdrawals(statusFilter = 'All') {
             const user = DB.getCurrentUser();
@@ -806,17 +932,26 @@
                 }
 
                 list.innerHTML = withdrawals.map(w => `
-                    <div class="record-item">
-                        <div class="record-info">
-                            <div class="record-bank">${w.bank_name || 'Bank Withdrawal'}</div>
-                            <div class="record-date">${new Date(w.created_at).toLocaleString('en-IN')}</div>
+                    <div class="record-item" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="record-info">
+                                <div class="record-bank">${w.bank_name || 'Bank Withdrawal'}</div>
+                                <div class="record-date">${new Date(w.created_at).toLocaleString('en-IN')}</div>
+                            </div>
+                            <div class="record-status" style="text-align: right;">
+                                <div class="record-amount">₹${parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                                <span class="status-badge ${w.status.toLowerCase()}">${w.status}</span>
+                            </div>
                         </div>
-                        <div class="record-status">
-                            <div class="record-amount">₹${parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-                            <span class="status-badge ${w.status.toLowerCase()}">${w.status}</span>
-                        </div>
+                        ${w.admin_note ? `
+                            <div style="font-size: 0.75rem; color: #ef4444; background: #fff1f2; border: 1px solid #fee2e2; padding: 0.6rem; border-radius: 6px; margin-top: 0.5rem; display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <i data-lucide="info" size="14" style="flex-shrink: 0; margin-top: 2px;"></i>
+                                <span><strong>Admin Note:</strong> ${w.admin_note}</span>
+                            </div>
+                        ` : ''}
                     </div>
                 `).join('');
+                if (window.lucide) window.lucide.createIcons();
 
             } catch (e) {
                 console.error("Load Withdrawals Error:", e);
