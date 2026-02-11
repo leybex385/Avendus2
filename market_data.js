@@ -106,6 +106,20 @@
                     else stock.change = -Math.abs(stock.change);
                 });
 
+                // Fluctuate OTC (New: Real-time fluctuation)
+                this.otc.forEach(stock => {
+                    const volatility = 0.003;
+                    const changePercent = (Math.random() * volatility * 2) - volatility;
+                    stock.price += (stock.price * changePercent);
+                });
+
+                // Fluctuate IPO (New: Real-time fluctuation)
+                this.ipo.forEach(stock => {
+                    const volatility = 0.002;
+                    const changePercent = (Math.random() * volatility * 2) - volatility;
+                    stock.price += (stock.price * changePercent);
+                });
+
                 // Fluctuate Indices
                 this.indices.forEach(idx => {
                     const volatility = 0.002; // Indices are less volatile

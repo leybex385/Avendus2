@@ -2464,24 +2464,26 @@
                     if (upErr) throw upErr;
                 }
 
-                // 2. Insert or Update 'deposits' record
-                if (isEdit) {
-                    const { error: upErr } = await client.from('deposits').update({
-                        amount: amount,
-                        status: status,
-                        admin_note: note,
-                        processed_at: new Date().toISOString()
-                    }).eq('id', depId);
-                    if (upErr) throw upErr;
-                } else {
-                    const { error: insErr } = await client.from('deposits').insert({
-                        user_id: parseInt(actualUid),
-                        amount: amount,
-                        status: status,
-                        admin_note: note,
-                        created_at: new Date().toISOString()
-                    });
-                    if (insErr) throw insErr;
+                // 2. Insert or Update 'deposits' record (ONLY if type is 'deposit')
+                if (type === 'deposit') {
+                    if (isEdit) {
+                        const { error: upErr } = await client.from('deposits').update({
+                            amount: amount,
+                            status: status,
+                            admin_note: note,
+                            processed_at: new Date().toISOString()
+                        }).eq('id', depId);
+                        if (upErr) throw upErr;
+                    } else {
+                        const { error: insErr } = await client.from('deposits').insert({
+                            user_id: parseInt(actualUid),
+                            amount: amount,
+                            status: status,
+                            admin_note: note,
+                            created_at: new Date().toISOString()
+                        });
+                        if (insErr) throw insErr;
+                    }
                 }
 
                 alert("Transaction successful!");

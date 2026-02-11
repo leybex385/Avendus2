@@ -616,6 +616,129 @@
             background: #f97316;
         }
 
+        /* Premium Discover Cards (User Request) */
+        .premium-trade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem 0;
+        }
+
+        .premium-trade-card {
+            background: #1a1b1f;
+            border-radius: 24px;
+            padding: 2rem;
+            color: #ffffff;
+            border: 1px solid #2d2e32;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-trade-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: #facc1555;
+        }
+
+        .premium-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .premium-asset-info {
+            flex: 1;
+        }
+
+        .premium-asset-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: #fcfcfc;
+        }
+
+        .premium-asset-meta {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .premium-return-rate {
+            text-align: right;
+        }
+
+        .premium-return-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 0.2rem;
+            font-weight: 500;
+        }
+
+        .premium-return-val {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #10b981;
+        }
+
+        .premium-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 1.25rem 0;
+            border-top: 1px solid #ffffff10;
+        }
+
+        .premium-detail-item .label {
+            display: block;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .premium-detail-item .value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .premium-subscribe-btn {
+            background: #facc15;
+            color: #000000;
+            border: none;
+            border-radius: 16px;
+            height: 52px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .premium-subscribe-btn:hover {
+            background: #eab308;
+            transform: scale(1.02);
+        }
+
+        .premium-subscribe-btn:active {
+            transform: scale(0.98);
+        }
+
+        .premium-subscribe-btn.locked {
+            background: #3a3b40;
+            color: #94a3b8;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         /* Detail Modal Table */
         .detail-info-table {
             width: 100%;
@@ -3495,19 +3618,7 @@
 
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                    <span style="color: #94a3b8;">STOCK (0%)</span><span
-                                        style="font-weight: 600;">₹0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                    <span style="color: #94a3b8;">IPO (0%)</span><span
-                                        style="font-weight: 600;">₹0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                    <span style="color: #94a3b8;">OTC (0%)</span><span
-                                        style="font-weight: 600;">₹0.00</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                    <span style="color: #94a3b8;">SPO (0%)</span><span
+                                    <span style="color: #94a3b8;">INS. STOCK (100%)</span><span
                                         style="font-weight: 600;">₹0.00</span>
                                 </div>
                             </div>
@@ -4259,31 +4370,114 @@
                 return;
             }
 
-            listContainer.style.display = 'grid';
-            listContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
-            listContainer.style.gap = '1rem';
-            listContainer.style.padding = '1rem 0';
+            // Decide layout based on type
+            const isPremium = (type === 'otc' || type === 'ipo' || (type === 'all' && data.some(d => d.type !== 'stock')));
 
-            listContainer.innerHTML = data.map(s => `
-                <div class="sector-card" style="width: 100%; height: auto; padding: 1.5rem; text-align: left; align-items: flex-start; cursor: default;">
-                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 0.5rem;">
-                        <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}; width: 40px; height: 40px;">${s.symbol[0]}</div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Est. Return</div>
-                            <div style="font-size: 1.1rem; font-weight: 800; color: #10b981;">10% - 20%</div>
+            if (isPremium) {
+                listContainer.style.display = 'grid';
+                listContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+                listContainer.style.gap = '1.5rem';
+                listContainer.style.padding = '1rem 0';
+
+                listContainer.innerHTML = data.map(s => {
+                    const isOTC = s.type === 'OTC';
+                    const isIPO = s.type === 'IPO';
+
+                    // Mock additional premium data if missing
+                    const profitRange = isIPO ? "100% - 300%" : "20% - 60%";
+                    const vipLv = isIPO ? "Lv ≥ 2" : "Lv ≥ 1";
+                    const isLocked = isIPO && s.symbol.includes('HYUNDAI'); // Mock one locked item
+                    const exchange = s.symbol.includes('NSE') ? 'NSE' : 'BSE';
+
+                    if (s.type === 'stock') {
+                        // Regular stocks in "All" view still look premium but slightly different if mixed
+                        return `
+                            <div class="premium-trade-card">
+                                <div class="premium-card-head">
+                                    <div class="premium-asset-info">
+                                        <div class="premium-asset-name">${s.name}</div>
+                                        <div class="premium-asset-meta">${exchange} • Standard Stock</div>
+                                    </div>
+                                    <div class="premium-return-rate">
+                                        <span class="premium-return-label">Volatility</span>
+                                        <span class="premium-return-val" style="color:${s.change >= 0 ? '#10b981' : '#ef4444'}">${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%</span>
+                                    </div>
+                                </div>
+                                <div class="premium-details-grid">
+                                    <div class="premium-detail-item">
+                                        <span class="label">Unit Price</span>
+                                        <span class="value">₹${s.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div class="premium-detail-item">
+                                        <span class="label">Status</span>
+                                        <span class="value">Tradable</span>
+                                    </div>
+                                </div>
+                                <button class="premium-subscribe-btn" style="background:#1e56a0; color:white;"
+                                    onclick="openStockDetail('${s.symbol}', '${s.name}', '${exchange}', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', 'stock')">
+                                    Trade Now
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="premium-trade-card">
+                            <div class="premium-card-head">
+                                <div class="premium-asset-info">
+                                    <div class="premium-asset-name">${s.name}</div>
+                                    <div class="premium-asset-meta">${exchange} • ${s.type} Asset</div>
+                                </div>
+                                <div class="premium-return-rate">
+                                    <span class="premium-return-label">Est. Profit</span>
+                                    <span class="premium-return-val">${profitRange}</span>
+                                </div>
+                            </div>
+                            <div class="premium-details-grid">
+                                <div class="premium-detail-item">
+                                    <span class="label">Subscription Price</span>
+                                    <span class="value">₹${s.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div class="premium-detail-item">
+                                    <span class="label">Level Limit</span>
+                                    <span class="value">${vipLv}</span>
+                                </div>
+                            </div>
+                            <button class="premium-subscribe-btn ${isLocked ? 'locked' : ''}" 
+                                onclick="openStockDetail('${s.symbol}', '${s.name}', '${exchange}', '₹${s.price.toLocaleString('en-IN')}', '0.00%', '#10b981', '${s.type}')">
+                                ${isLocked ? 'Locked' : 'Subscribe'}
+                            </button>
                         </div>
+                    `;
+                }).join('');
+            } else {
+                // Regular Stock Layout
+                listContainer.style.display = 'grid';
+                listContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+                listContainer.style.gap = '1rem';
+                listContainer.style.padding = '1rem 0';
+
+                listContainer.innerHTML = data.map(s => `
+                    <div class="sector-card" style="width: 100%; height: auto; padding: 1.5rem; text-align: left; align-items: flex-start; cursor: default;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 0.5rem;">
+                            <div class="stock-circle" style="background:${s.change >= 0 ? '#10b981' : '#ef4444'}; width: 40px; height: 40px;">${s.symbol[0]}</div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Change</div>
+                                <div style="font-size: 1.1rem; font-weight: 800; color: ${s.change >= 0 ? '#10b981' : '#ef4444'};">${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                        <div class="stock-ticker" style="font-size: 1.1rem; margin-top: 0.5rem;">${s.symbol}</div>
+                        <div class="stock-full-name" style="margin-bottom: 1.5rem;">
+                            ${s.name} ${s.type !== 'stock' ? `<span style="font-size:0.65rem; background:#eff6ff; color:#3b82f6; padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">${s.type}</span>` : ''}
+                        </div>
+                        
+                        <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 44px; background: #1e56a0; font-weight: 700;"
+                            onclick="openStockDetail('${s.symbol}', '${s.name}', 'NSE', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', '${s.type}')">
+                            Trade Now
+                        </button>
                     </div>
-                    <div class="stock-ticker" style="font-size: 1.1rem; margin-top: 0.5rem;">${s.symbol}</div>
-                    <div class="stock-full-name" style="margin-bottom: 1.5rem;">
-                        ${s.name} ${s.type !== 'stock' ? `<span style="font-size:0.65rem; background:#eff6ff; color:#3b82f6; padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px;">${s.type}</span>` : ''}
-                    </div>
-                    
-                    <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 44px; background: #1e56a0; font-weight: 700;"
-                        onclick="openStockDetail('${s.symbol}', '${s.name}', 'NSE', '₹${s.price.toLocaleString('en-IN')}', '${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%', '${s.change >= 0 ? '#10b981' : '#ef4444'}', '${s.type}')">
-                        Trade
-                    </button>
-                </div>
-            `).join('');
+                `).join('');
+            }
             lucide.createIcons();
         }
 
@@ -4561,14 +4755,14 @@
             // categorizing trades
             transactionData = {
                 all: trades,
-                holding: trades.filter(t => t.status === 'Approved' || t.status === 'Pending' || t.status === 'Settled'),
-                sold: trades.filter(t => t.status === 'Sold'),
+                holding: trades.filter(t => (t.status === 'Approved' || t.status === 'Pending') && t.type === 'stock'),
+                sold: trades.filter(t => t.status === 'Sold' || t.status === 'Settled'),
                 pending: trades.filter(t => t.status === 'Pending'),
                 rejected: trades.filter(t => t.status === 'Rejected'),
                 unsettled: trades.filter(t => t.status !== 'Approved' && t.status !== 'Pending' && t.status !== 'Rejected' && t.status !== 'Sold' && t.status !== 'Settled' && t.status !== 'Awaiting'),
                 awaiting: trades.filter(t => t.status === 'Awaiting' || t.status === 'Settled'),
                 pendingPayment: trades.filter(t => (t.type === 'otc' || t.type === 'ipo') && t.status === 'Pending'),
-                settle: trades.filter(t => t.status === 'Settled')
+                settle: trades.filter(t => t.status === 'Settle') // Kept for any specific 'Settle' logic if any
             };
         }
 
@@ -4661,6 +4855,11 @@
                                 </div>
                             </div>
                             ${item.admin_note ? `<div style="font-size: 0.75rem; color: #ef4444; margin-top: 0.5rem; padding: 0.5rem; background: #fff1f2; border-radius: 4px;">Note: ${item.admin_note}</div>` : ''}
+                            ${(item.type.toLowerCase() === 'otc' || item.type.toLowerCase() === 'ipo') ? `
+                                <div style="margin-top: 1rem; border-top: 1px solid #f1f5f9; padding-top: 0.75rem;">
+                                    <button class="h-btn view" style="width: 100%; border-radius: 12px; height: 38px; font-size: 0.85rem;" onclick="openHoldingDetail('${item.id}')">View Details</button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 });
@@ -5227,29 +5426,35 @@
 
         /* Holding & Selling Modal Controls */
         function openHoldingDetail(tradeId) {
-            const trade = transactionData.all.find(t => t.id === tradeId);
-            if (!trade) return;
+            const trade = transactionData.all.find(t => t.id == tradeId);
+            if (!trade) {
+                console.error("Trade not found:", tradeId);
+                return;
+            }
+
+            const me = window.MarketEngine || {};
+            const livePriceData = me.getProduct ? me.getProduct(trade.symbol) : null;
+            const currentPrice = livePriceData ? livePriceData.price : trade.price;
 
             document.getElementById('hdStockTitle').innerText = trade.name;
             document.getElementById('hdTotalVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('hdTradeId').innerText = trade.id.substring(0, 15) + '...';
+            document.getElementById('hdTradeId').innerText = trade.id;
             document.getElementById('hdAssetName').innerText = trade.name;
+            document.getElementById('hdAssetType').innerText = trade.type === 'stock' ? 'Standard Stock' : trade.type.toUpperCase();
             document.getElementById('hdSymbol').innerText = trade.symbol;
             document.getElementById('hdQty').innerText = trade.quantity;
             document.getElementById('hdBuyPrice').innerText = '₹' + parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 });
             document.getElementById('hdOrderVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
-            // Mock current values for details
-            const mockCurrPrice = parseFloat(trade.price) * (1 + (Math.random() * 0.15 - 0.05));
+            const mockCurrPrice = currentPrice;
             const mockSaleVal = mockCurrPrice * trade.quantity;
-            const profit = mockSaleVal - parseFloat(trade.total_amount);
-            const profitPct = (profit / parseFloat(trade.total_amount)) * 100;
+            const profitValue = mockSaleVal - parseFloat(trade.total_amount);
+            const profitPct = (profitValue / parseFloat(trade.total_amount)) * 100;
 
-            document.getElementById('hdSaleVal').innerText = '₹' + mockSaleVal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
             document.getElementById('hdCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('hdProfit').innerText = `₹${profit.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)`;
-            document.getElementById('hdProfit').style.color = profit >= 0 ? '#10b981' : '#ef4444';
-            document.getElementById('hdCurrPrice').style.color = profit >= 0 ? '#10b981' : '#ef4444';
+            document.getElementById('hdProfit').innerText = `₹${profitValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${profitValue >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)`;
+            document.getElementById('hdProfit').style.color = profitValue >= 0 ? '#10b981' : '#ef4444';
+            document.getElementById('hdCurrPrice').style.color = profitValue >= 0 ? '#10b981' : '#ef4444';
 
             const dateStr = new Date(trade.created_at).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
             document.getElementById('hdBuyTimeline').innerText = `${dateStr.replace(/\//g, '-')} — Buy @ ₹${parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })} • Total ₹${parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
@@ -5264,8 +5469,28 @@
 
         let sellingTimer = null;
         function openSellingModal(tradeId) {
-            const trade = transactionData.all.find(t => t.id === tradeId);
-            if (!trade) return;
+            const trade = transactionData.all.find(t => t.id == tradeId);
+            if (!trade) {
+                console.error("Trade not found for selling:", tradeId);
+                return;
+            }
+
+            const updateSellingData = () => {
+                const me = window.MarketEngine || {};
+                const livePriceData = me.getProduct ? me.getProduct(trade.symbol) : null;
+                const currentPrice = livePriceData ? livePriceData.price : trade.price;
+                const totalOrderValue = parseFloat(trade.total_amount);
+                const currentSaleValue = currentPrice * trade.quantity;
+                const profit = currentSaleValue - totalOrderValue;
+
+                document.getElementById('coCurrPrice').innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('coProfit').innerText = (profit >= 0 ? '+' : '') + '₹' + profit.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('coProfit').className = `h-stat-val ${profit >= 0 ? 'green' : 'red'}`;
+
+                // Set the sellPrice for the confirm action
+                document.getElementById('coConfirmBtn').dataset.tradeId = tradeId;
+                document.getElementById('coConfirmBtn').dataset.sellPrice = currentPrice;
+            };
 
             document.getElementById('coStockTitle').innerText = trade.name;
             document.getElementById('coSymbol').innerText = trade.symbol;
@@ -5273,35 +5498,40 @@
             document.getElementById('coQty').innerText = trade.quantity;
             document.getElementById('coOrderVal').innerText = '₹' + parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
-            const mockCurrPrice = parseFloat(trade.price) * (1 + (Math.random() * 0.1 - 0.05));
-            const profit = (mockCurrPrice * trade.quantity) - parseFloat(trade.total_amount);
-
-            document.getElementById('coCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('coProfit').innerText = '₹' + profit.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('coProfit').style.color = profit >= 0 ? '#10b981' : '#ef4444';
+            updateSellingData();
 
             document.getElementById('closeOrderModal').style.display = 'flex';
 
             // Timer logic
-            let seconds = 20;
+            let totalSeconds = 20;
+            let currentSeconds = totalSeconds;
             const bar = document.getElementById('coProgressBar');
             const txt = document.getElementById('coTimerText');
+
+            // Initial bar state
             bar.style.width = '100%';
+            bar.style.transition = 'none'; // reset transition
+            void bar.offsetWidth; // trigger reflow
             bar.style.transition = 'width 1s linear';
+            txt.innerText = `Quotation expires in ${currentSeconds}s`;
 
             if (sellingTimer) clearInterval(sellingTimer);
             sellingTimer = setInterval(() => {
-                seconds--;
-                txt.innerText = `Quotation expires in ${seconds}s`;
-                bar.style.width = (seconds / 20 * 100) + '%';
-                if (seconds <= 0) {
+                currentSeconds--;
+                txt.innerText = `Quotation expires in ${currentSeconds}s`;
+                bar.style.width = (currentSeconds / totalSeconds * 100) + '%';
+
+                if (currentSeconds <= 0) {
                     clearInterval(sellingTimer);
                     closeSellingModal();
                 }
             }, 1000);
 
-            document.getElementById('coConfirmBtn').onclick = () => {
-                handleSellTrade(tradeId, mockCurrPrice);
+            // Refresh button
+            document.getElementById('coRefreshBtn').onclick = updateSellingData;
+
+            document.getElementById('coConfirmBtn').onclick = function () {
+                handleSellTrade(this.dataset.tradeId, parseFloat(this.dataset.sellPrice));
             };
             lucide.createIcons();
         }
@@ -5312,18 +5542,27 @@
         }
 
         async function handleSellTrade(tradeId, sellPrice) {
-            if (!confirm("Are you sure you want to close this order?")) return;
+            const btn = document.getElementById('coConfirmBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
 
             const user = DB.getCurrentUser();
             const client = DB.getClient();
-            if (!client || !user) return;
+            if (!client || !user) {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
 
             try {
                 // 1. Update trade status
+                // Using 'Settled' as the status because 'Sold' is not in the DB check constraint
+                // Storing sell price in admin_note since sell_price column is missing
                 const { error: tradeErr } = await client.from('trades').update({
-                    status: 'Sold',
-                    sell_price: sellPrice,
-                    sold_at: new Date().toISOString()
+                    status: 'Settled',
+                    processed_at: new Date().toISOString(),
+                    admin_note: `Sold at ₹${sellPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
                 }).eq('id', tradeId);
 
                 if (tradeErr) throw tradeErr;
@@ -5339,7 +5578,7 @@
                 const { error: balErr } = await client.from('users').update({ balance: newBalance }).eq('id', user.id);
                 if (balErr) throw balErr;
 
-                alert(`Order closed successfully! ₹${returnAmount.toLocaleString('en-IN')} added to your balance.`);
+                alert(`Order closed successfully! ₹${returnAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} added to your balance.`);
                 closeSellingModal();
 
                 // Refresh data
@@ -5347,12 +5586,17 @@
                 const activePill = document.querySelector('#transactionTabs .d-tab-pill.active');
                 if (activePill) {
                     const tabName = activePill.innerText.toLowerCase() === 'ins. stocks' ? 'stocks' : activePill.innerText.toLowerCase();
-                    switchTransactionTab(activePill, tabName);
+                    // Map holding pill correctly
+                    const effectiveTab = (activePill.getAttribute('onclick')?.includes('holding')) ? 'holding' : 'all';
+                    switchTransactionTab(activePill, effectiveTab);
                 }
                 if (typeof syncUserData === 'function') syncUserData(); // Update balance in UI
             } catch (e) {
                 console.error(e);
                 alert("Error closing order: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
     </script>
@@ -5486,36 +5730,59 @@
     <!-- Holding Details Modal -->
     <div id="holdingDetailModal" class="center-popup-modal" onclick="if(event.target == this) closeHoldingDetail()">
         <div class="center-popup-content" style="max-width: 500px; padding: 0;">
-            <div class="popup-header"
-                style="background: #f8fafc; border-bottom: 1px solid #f1f5f9; padding: 1rem 1.5rem;">
-                <h3 id="hdStockTitle" style="font-weight: 700; color: #1e293b;">Stock Name</h3>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="popup-close" style="background:none; border:none; color:#10b981;"><i
+            <div class="popup-header" style="background: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 1.5rem;">
+                <h3 id="hdStockTitle" style="font-weight: 700; color: #1e293b; font-size: 1.25rem;">Stock Name</h3>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="popup-close" style="background:none; border:none; color:#10b981; cursor: pointer;"><i
                             data-lucide="share-2" size="20"></i></button>
-                    <button class="popup-close" onclick="closeHoldingDetail()"><i data-lucide="x"
+                    <button class="popup-close" onclick="closeHoldingDetail()"
+                        style="background:none; border:none; color:#64748b; cursor: pointer;"><i data-lucide="x"
                             size="24"></i></button>
                 </div>
             </div>
-            <div class="popup-body" style="padding: 1.5rem; max-height: 80vh; overflow-y: auto;">
-                <div class="detail-total-label">Total Value</div>
-                <div class="detail-total-val" id="hdTotalVal">₹0.00</div>
+            <div class="popup-body" style="padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
+                <div class="detail-total-label"
+                    style="text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.25rem;">Total Value
+                </div>
+                <div class="detail-total-val" id="hdTotalVal"
+                    style="text-align: center; font-size: 2.25rem; font-weight: 800; color: #1e293b; margin-bottom: 0.75rem;">
+                    ₹0.00</div>
                 <div style="text-align: center; margin-bottom: 2rem;">
                     <span
-                        style="font-size: 0.8rem; color: #94a3b8; background: #f8fafc; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                        style="font-size: 0.8rem; color: #94a3b8; background: #f1f5f9; padding: 6px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;"
+                        onclick="navigator.clipboard.writeText(document.getElementById('hdTradeId').innerText); alert('ID Copied!');">
                         <i data-lucide="copy" size="14"></i> <span id="hdTradeId">dca300...</span>
                     </span>
                 </div>
 
-                <div style="font-weight: 800; color: #1e293b; margin-bottom: 0.5rem; font-size: 1rem;">Trading
+                <div style="font-weight: 700; color: #1e293b; margin-bottom: 1rem; font-size: 1.05rem;">Trading
                     Infomation</div>
-                <table class="detail-info-table">
+                <table class="detail-info-table" style="width: 100%; border-collapse: collapse;">
+                    <style>
+                        .detail-info-table tr td {
+                            padding: 0.85rem 0;
+                            border-bottom: 1px solid #f8fafc;
+                            font-size: 0.95rem;
+                        }
+
+                        .detail-info-table tr td:first-child {
+                            color: #64748b;
+                            font-weight: 500;
+                        }
+
+                        .detail-info-table tr td:last-child {
+                            text-align: right;
+                            font-weight: 600;
+                            color: #1e293b;
+                        }
+                    </style>
                     <tr>
                         <td>Asset Name</td>
                         <td id="hdAssetName">-</td>
                     </tr>
                     <tr>
                         <td>Asset Type</td>
-                        <td id="hdAssetType" style="color: #6366f1;">Ins. Stocks</td>
+                        <td id="hdAssetType" style="color: #6366f1 !important;">Standard</td>
                     </tr>
                     <tr>
                         <td>Country</td>
@@ -5535,23 +5802,19 @@
                     </tr>
                     <tr>
                         <td>Buy Price</td>
-                        <td id="hdBuyPrice">₹0.00</td>
+                        <td id="hdBuyPrice" style="color: #3b82f6 !important;">₹0.00</td>
                     </tr>
                     <tr>
                         <td>Total Order Value</td>
                         <td id="hdOrderVal">₹0.00</td>
                     </tr>
                     <tr>
-                        <td>Total Sale Value</td>
-                        <td id="hdSaleVal">₹0.00</td>
-                    </tr>
-                    <tr>
                         <td>Current Price</td>
-                        <td id="hdCurrPrice" style="color: #10b981;">₹0.00</td>
+                        <td id="hdCurrPrice" style="color: #10b981 !important;">₹0.00</td>
                     </tr>
                     <tr>
                         <td>Profit</td>
-                        <td id="hdProfit" style="color: #10b981;">₹0.00 (+0.00%)</td>
+                        <td id="hdProfit" style="color: #10b981 !important;">₹0.00 (0.00%)</td>
                     </tr>
                 </table>
 
@@ -5567,14 +5830,19 @@
                     <i data-lucide="chevron-right" size="20" color="#94a3b8"></i>
                 </div>
 
-                <div style="margin-top: 1.5rem;">
-                    <div style="font-weight: 700; color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.9rem;">Timeline
+                <div style="margin-top: 2rem;">
+                    <div
+                        style="font-weight: 700; color: #64748b; margin-bottom: 1.25rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Timeline
                     </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
+                    <div class="timeline-item" style="display: flex; gap: 1.25rem; position: relative;">
+                        <div class="timeline-dot"
+                            style="width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; margin-top: 4px; z-index: 1;">
+                        </div>
                         <div class="timeline-content">
-                            <h4>Buy Time</h4>
-                            <p id="hdBuyTimeline">-</p>
+                            <h4 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 0.25rem;">Buy
+                                Time</h4>
+                            <p id="hdBuyTimeline" style="font-size: 0.85rem; color: #64748b; line-height: 1.4;">-</p>
                         </div>
                     </div>
                 </div>
@@ -5624,70 +5892,110 @@
 
     <!-- Close Order Modal -->
     <div id="closeOrderModal" class="center-popup-modal" onclick="if(event.target == this) closeSellingModal()">
-        <div class="center-popup-content" style="max-width: 500px;">
-            <div class="popup-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                <h2 style="font-weight: 700;">Close Order</h2>
-                <button class="popup-close" onclick="closeSellingModal()"><i data-lucide="x" size="24"></i></button>
+        <div class="center-popup-content" style="max-width: 500px; padding: 0;">
+            <div class="popup-header" style="border-bottom: 1px solid #f1f5f9; padding: 1.5rem;">
+                <h2 style="font-weight: 700; font-size: 1.25rem; color: #1e293b;">Close Order</h2>
+                <button class="popup-close" onclick="closeSellingModal()"
+                    style="background:none; border:none; color:#64748b; cursor: pointer;"><i data-lucide="x"
+                        size="24"></i></button>
             </div>
-            <div class="popup-body" style="padding-top: 1.5rem;">
-                <h3 id="coStockTitle" style="text-align: center; font-weight: 700; margin-bottom: 1.5rem;">Stock Name
-                </h3>
+            <div class="popup-body" style="padding: 1.5rem;">
+                <h3 id="coStockTitle"
+                    style="text-align: center; font-weight: 700; margin-bottom: 1.5rem; font-size: 1.15rem; color: #1e293b;">
+                    Stock Name</h3>
 
                 <div
-                    style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                    style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
                     <span style="color: #64748b; font-weight: 500;">Current Price</span>
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span id="coCurrPrice" style="font-weight: 800; color: #10b981; font-size: 1.2rem;">₹0.00</span>
-                        <button
-                            style="background: #86efac; border: none; padding: 4px 10px; border-radius: 6px; color: #065f46; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Refresh</button>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span id="coCurrPrice" style="font-weight: 800; color: #10b981; font-size: 1.3rem;">₹0.00</span>
+                        <button id="coRefreshBtn"
+                            style="background: #86efac; border: none; padding: 6px 14px; border-radius: 8px; color: #065f46; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;"
+                            onmouseover="this.style.background='#4ade80'"
+                            onmouseout="this.style.background='#86efac'">Refresh</button>
                     </div>
                 </div>
 
-                <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; font-size: 0.95rem;">Order
+                <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; font-size: 1rem;">Order
                     Infomation</div>
-                <table class="detail-info-table" style="margin-top: 0;">
+                <table class="detail-info-table" style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
                     <tr>
-                        <td>Market</td>
-                        <td id="coMarket">BSE</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Market</td>
+                        <td id="coMarket"
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
+                            BSE</td>
                     </tr>
                     <tr>
-                        <td>Symbol</td>
-                        <td id="coSymbol">-</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Symbol</td>
+                        <td id="coSymbol"
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
+                            -</td>
                     </tr>
                     <tr>
-                        <td>Buy Price</td>
-                        <td id="coBuyPrice">₹0.00</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Buy Price</td>
+                        <td id="coBuyPrice"
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #3b82f6; border-bottom: 1px solid #f8fafc;">
+                            ₹0.00</td>
                     </tr>
                     <tr>
-                        <td>Quantity</td>
-                        <td id="coQty">0</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Quantity</td>
+                        <td id="coQty"
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
+                            0</td>
                     </tr>
                     <tr>
-                        <td>Total Order Value</td>
-                        <td id="coOrderVal">₹0.00</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Total Order Value</td>
+                        <td id="coOrderVal"
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
+                            ₹0.00</td>
                     </tr>
                     <tr>
-                        <td>Estimated Selling Tax</td>
-                        <td>₹0.00</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Estimated Selling Tax</td>
+                        <td
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
+                            ₹0.00</td>
                     </tr>
                     <tr>
-                        <td>Estimated Selling Fees</td>
-                        <td>₹0.00</td>
+                        <td
+                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
+                            Estimated Selling Fees</td>
+                        <td
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
+                            ₹0.00</td>
                     </tr>
                     <tr>
-                        <td>Estimated P&L</td>
-                        <td id="coProfit" style="color: #ef4444;">₹0.00</td>
+                        <td style="padding: 0.75rem 0; color: #64748b; font-weight: 500;">Estimated P&L</td>
+                        <td id="coProfit"
+                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; font-size: 1.1rem;">₹0.00
+                        </td>
                     </tr>
                 </table>
 
-                <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem;" id="coTimerText">Quotation
+                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem; font-weight: 500;"
+                    id="coTimerText">Quotation
                     expires in 20s</div>
-                <div class="quotation-timer">
-                    <div class="quotation-progress" id="coProgressBar"></div>
+                <div class="quotation-timer"
+                    style="height: 10px; background: #f1f5f9; border-radius: 6px; overflow: hidden; margin-bottom: 2rem;">
+                    <div class="quotation-progress" id="coProgressBar"
+                        style="height: 100%; background: #10b981; width: 100%;"></div>
                 </div>
 
                 <button class="logout-btn"
-                    style="background: #3b82f6; margin-top: 1.5rem; width: 100%; border-radius: 12px; height: 50px;"
+                    style="background: #3b82f6; width: 100%; border-radius: 12px; height: 54px; font-weight: 700; font-size: 1.1rem; border: none; color: white; cursor: pointer; transition: transform 0.2s, background 0.2s;"
+                    onmouseover="this.style.background='#2563eb'; this.style.transform='scale(1.01)'"
+                    onmouseout="this.style.background='#3b82f6'; this.style.transform='scale(1)'"
                     id="coConfirmBtn">Confirm</button>
             </div>
         </div>
