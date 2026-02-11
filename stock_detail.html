@@ -584,7 +584,7 @@
                 return;
             }
 
-            const isSubscription = (currentProductType === 'OTC' || currentProductType === 'IPO');
+            const isSubscription = ['otc', 'ipo'].includes((currentProductType || '').toLowerCase());
             const confirmMsg = isSubscription
                 ? `Confirm subscription request for ${currentStockName} (${qty} units @ ₹${tradePrice})?`
                 : `Confirm buy: ${qty} shares of ${currentActiveSymbol} @ ₹${tradePrice}?`;
@@ -612,28 +612,40 @@
                     return;
                 }
 
+                // Determine trade status based on product type
+                const tradeStatus = isSubscription ? 'Pending' : 'Approved';
+
                 // Submit Trade Request to Backend
                 const tradeData = {
                     user_id: freshUser.id,
                     symbol: currentActiveSymbol,
                     name: currentStockName,
-                    type: (currentProductType || 'stock').toLowerCase(), // Ensure lowercase and default
+                    type: (currentProductType || 'stock').toLowerCase(),
                     quantity: qty,
                     price: tradePrice,
-                    total_amount: totalCost
+                    total_amount: totalCost,
+                    status: tradeStatus
                 };
 
-                console.log("Submitting trade:", tradeData); // Debug log
+                console.log("Submitting trade:", tradeData);
 
                 const result = await window.DB.submitTrade(tradeData);
-                console.log("Trade submission result:", result); // Debug log
+                console.log("Trade submission result:", result);
 
                 if (result.success) {
+                    if (tradeStatus === 'Approved') {
+                        // Deduct Balance for immediately approved stocks
+                        const newBalance = currentBalance - totalCost;
+                        const newInvested = (parseFloat(freshUser.invested) || 0) + totalCost;
+                        await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested);
+                    }
+
                     if (isSubscription) {
                         openPurchaseModal(currentProductType, currentActiveSymbol, currentStockName, qty, totalCost);
                     } else {
-                        alert(`Trade request for ${currentActiveSymbol} submitted. Your order will be processed shortly.`);
+                        alert(`Successfully purchased ${qty} shares of ${currentStockName}.`);
                         syncBalance();
+                        loadHoldings(); // Immediate refresh
                     }
                 } else {
                     console.error("Trade submission failed:", result.error);
@@ -648,46 +660,50 @@
             }
         }
 
-        function loadHoldings() {
+        async function loadHoldings() {
             const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
             const list = document.getElementById('holdingsListWrapper');
-            if (!list) return;
+            if (!list || !user) return;
 
-            if (!user || !user.holdings || user.holdings.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">No active holdings</div>';
-                return;
-            }
+            try {
+                // Fetch latest trades for this user
+                const allTrades = await window.DB.getTradesByUserId(user.id);
 
-            // Filter for current stock? Or show all? User likely wants to see specific stock holdings here, or all. 
-            // "Dapat mag appear sa transactions kapag nabuy na ang stocks."
-            // Usually on a stock detail page, you see holdings for THAT stock.
-            // But let's show all for now, maybe highlight current?
-            // Let's filter to show ONLY current stock holdings to be cleaner "Detail Page".
+                // Filter for Approved trades for THIS specific stock/product
+                const myTrades = allTrades.filter(t =>
+                    t.status === 'Approved' &&
+                    t.symbol.toUpperCase() === currentActiveSymbol.toUpperCase()
+                );
 
-            // Check if we have holding for THIS stock
-            const myHolding = user.holdings.find(h => h.s === currentActiveSymbol);
+                if (myTrades.length > 0) {
+                    list.innerHTML = myTrades.map(trade => {
+                        const tradeDate = new Date(trade.created_at).toLocaleDateString('en-IN', {
+                            day: '2-digit', month: 'short'
+                        });
+                        const total = parseFloat(trade.total_amount);
+                        const qty = parseInt(trade.quantity);
+                        const price = parseFloat(trade.price);
 
-            if (myHolding) {
-                const curVal = myHolding.q * currentPrice;
-                const investVal = myHolding.q * myHolding.avg;
-                const pl = curVal - investVal;
-                const plPct = (pl / investVal) * 100;
-                const isProf = pl >= 0;
-
-                list.innerHTML = `
-                        <div class="tl-item">
-                            <div class="tl-left">
-                                <div class="tl-symbol">${myHolding.s}</div>
-                                <div class="tl-date">${myHolding.n}</div>
+                        // Show each purchase as an entry
+                        return `
+                            <div class="tl-item">
+                                <div class="tl-left">
+                                    <div class="tl-symbol">${trade.symbol}</div>
+                                    <div class="tl-date">${tradeDate} • Bought at ₹${price.toLocaleString('en-IN')}</div>
+                                </div>
+                                <div class="tl-right">
+                                    <div class="tl-price">₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                                    <div class="tl-qty">${qty} Shares</div>
+                                </div>
                             </div>
-                            <div class="tl-right">
-                                <div class="tl-price">Avg: ₹${myHolding.avg.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                                <div class="tl-qty">${myHolding.q} Qty <span style="font-weight:600; ${isProf ? 'color:#10b981' : 'color:#ef4444'}">(${isProf ? '+' : ''}${plPct.toFixed(2)}%)</span></div>
-                            </div>
-                        </div>
                         `;
-            } else {
-                list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">You do not own this stock.</div>';
+                    }).join('');
+                } else {
+                    list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">You do not own this stock yet.</div>';
+                }
+            } catch (e) {
+                console.error("Error loading holdings:", e);
+                list.innerHTML = '<div style="text-align:center; padding:1rem; color:#ef4444; font-size:0.75rem;">Error updating holdings</div>';
             }
         }
 

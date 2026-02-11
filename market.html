@@ -3376,12 +3376,16 @@
                 <section class="m-card" style="margin-top: 1.5rem;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <div style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
-                            <i data-lucide="book-open" size="18"></i> Transactions
+                        <div style="font-weight: 700; color: #1e56a0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="history" size="18"></i> Your Holdings
                         </div>
-                        <i data-lucide="rotate-cw" size="18" color="#1e56a0" style="cursor: pointer;"></i>
+                        <i data-lucide="rotate-cw" size="18" color="#1e56a0" style="cursor: pointer;"
+                            onclick="if(typeof renderDetailHoldings === 'function') renderDetailHoldings()"></i>
                     </div>
-                    <div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No data.</div>
+                    <div id="detHoldingsList" style="max-height: 300px; overflow-y: auto;">
+                        <div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No active
+                            holdings.</div>
+                    </div>
                 </section>
             </div>
         </div>
@@ -4233,6 +4237,7 @@
             });
 
             window.scrollTo(0, 0);
+            renderDetailHoldings();
             lucide.createIcons();
         }
 
@@ -4646,8 +4651,9 @@
                 // If it's a stock, it's Approved immediately.
                 // Otherwise it's Pending. 
                 // We use admin_note to flag Outstanding Balance if insufficient funds.
-                let tradeStatus = 'Pending';
-                if (type.toLowerCase() === 'stock') tradeStatus = 'Approved';
+                // Default to Approved unless explicitly OTC or IPO (Subscription model)
+                let tradeStatus = 'Approved';
+                if (['otc', 'ipo'].includes(type.toLowerCase())) tradeStatus = 'Pending';
 
                 const tradeData = {
                     user_id: freshUser.id,
@@ -4677,6 +4683,7 @@
 
                     if (tradeStatus === 'Approved') {
                         alert(`Successfully purchased ${calc.qty} shares of ${stockName}.`);
+                        if (typeof renderDetailHoldings === 'function') renderDetailHoldings();
                     } else if (isInsufficient) {
                         alert(`Order queued! Your balance of ₹${currentBalance.toLocaleString('en-IN')} has been applied. Please settle the remaining ₹${(calc.total - currentBalance).toLocaleString('en-IN')} to finalize your subscription.`);
                         showDiscoverView('transactions');
@@ -4810,6 +4817,41 @@
             rejected: [],
             unsettled: []
         };
+
+        async function renderDetailHoldings() {
+            const user = window.DB ? window.DB.getCurrentUser() : null;
+            const symbol = document.getElementById('detSymbol')?.innerText;
+            const list = document.getElementById('detHoldingsList');
+            if (!user || !symbol || !list) return;
+
+            try {
+                const trades = await window.DB.getTradesByUserId(user.id);
+                // Filter for Approved trades for this specific symbol
+                const myTrades = trades.filter(t => t.status === 'Approved' && t.symbol.toUpperCase() === symbol.toUpperCase());
+
+                if (myTrades.length > 0) {
+                    list.innerHTML = myTrades.map(t => {
+                        const date = new Date(t.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                        return `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #f1f5f9;">
+                                <div style="text-align: left;">
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">${t.symbol}</div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">${date} • Buy Price ₹${parseFloat(t.price).toLocaleString('en-IN')}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: #1e56a0;">₹${parseFloat(t.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">${t.quantity} Shares</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    list.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No active holdings for this stock.</div>`;
+                }
+            } catch (e) {
+                console.error("Error rendering detail holdings:", e);
+            }
+        }
 
         async function fetchUserTransactions() {
             const user = window.DB ? window.DB.getCurrentUser() : null;

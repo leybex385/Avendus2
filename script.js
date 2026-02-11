@@ -49,16 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const AV_API_KEY = '0AQTPTM1OF8VJQA1';
 
     if (globalSearchInput && globalSearchResults) {
-        globalSearchInput.addEventListener('focus', () => {
-            if (globalSearchInput.value.trim() === '') {
-                renderIndicesGrid();
-            }
-        });
-
         globalSearchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim().toUpperCase();
             if (query.length < 1) {
-                renderIndicesGrid();
+                globalSearchResults.style.display = 'none';
                 return;
             }
 
@@ -167,25 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
 
-        // 1. Show small indices overview if query is short
-        if (globalSearchInput.value.length < 3) {
-            const indices = window.MarketEngine ? window.MarketEngine.getIndices() : [];
-            html += `<div class="search-section-title">Market Overview</div>`;
-            html += `<div class="index-grid" style="grid-template-columns: repeat(3, 1fr); padding:8px; gap:6px;">`;
-            indices.slice(0, 3).forEach(idx => {
-                const isUp = idx.change >= 0;
-                html += `
-                    <div class="index-card ${isUp ? 'bg-green' : 'bg-red'}" style="padding:8px;">
-                        <div class="index-name" style="font-size:0.6rem;">${idx.symbol}</div>
-                        <div class="index-price" style="font-size:0.85rem; margin:2px 0;">${idx.price.toLocaleString('en-IN', { maximumFractionDigits: 1 })}</div>
-                        <div class="index-change ${isUp ? 'up' : 'down'}" style="font-size:0.6rem;">${isUp ? '+' : ''}${idx.changePercent.toFixed(1)}%</div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-        }
-
-        // 2. Separate local results by type
+        // 1. Separate local results by type
         const stocks = localResults.filter(r => r.type === 'stock');
         const otcs = localResults.filter(r => r.type === 'OTC');
         const ipos = localResults.filter(r => r.type === 'IPO');
