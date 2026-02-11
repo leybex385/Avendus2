@@ -4384,8 +4384,8 @@
                     const isIPO = s.type === 'IPO';
 
                     // Mock additional premium data if missing
-                    const profitRange = isIPO ? "100% - 300%" : "20% - 60%";
-                    const vipLv = isIPO ? "Lv ≥ 2" : "Lv ≥ 1";
+                    const profitRange = (isIPO && s.yield) ? s.yield : (isIPO ? "100% - 300%" : "20% - 60%");
+                    const vipLv = (isIPO && s.level) ? s.level : (isIPO ? "Lv ≥ 2" : "Lv ≥ 1");
                     const isLocked = isIPO && s.symbol.includes('HYUNDAI'); // Mock one locked item
                     const exchange = s.symbol.includes('NSE') ? 'NSE' : 'BSE';
 
@@ -4429,8 +4429,8 @@
                                     <div class="premium-asset-meta">${exchange} • ${s.type} Asset</div>
                                 </div>
                                 <div class="premium-return-rate">
-                                    <span class="premium-return-label">Est. Profit</span>
-                                    <span class="premium-return-val">${profitRange}</span>
+                                    <span class="premium-return-label">${isIPO ? 'Yield' : 'Est. Profit'}</span>
+                                    <span class="premium-return-val" style="${isIPO && s.yield ? 'color: #10b981;' : ''}">${profitRange}</span>
                                 </div>
                             </div>
                             <div class="premium-details-grid">

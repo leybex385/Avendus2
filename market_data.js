@@ -71,7 +71,8 @@
     const IPO_DATA = [
         { symbol: 'HYUNDAI-IPO', name: 'Hyundai India IPO', price: 1960.00, change: 0, type: 'IPO' },
         { symbol: 'OLA-IPO', name: 'Ola Electric IPO', price: 76.00, change: 0, type: 'IPO' },
-        { symbol: 'NSDL-IPO', name: 'NSDL IPO', price: 920.00, change: 0, type: 'IPO' }
+        { symbol: 'NSDL-IPO', name: 'NSDL IPO', price: 920.00, change: 0, type: 'IPO' },
+        { symbol: 'COLGATE-IPO', name: 'Colgate-Palmolive India', price: 1648.88, yield: '31.39%', level: 'Lv > 1', type: 'IPO' }
     ];
 
     const INDICES_DATA = [
