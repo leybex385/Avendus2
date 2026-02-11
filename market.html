@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
+    <script src="db.js?v=20260212"></script>
     <script src="market_data.js"></script>
     <style>
         /* Using global styles from styles.css */
@@ -3358,11 +3358,11 @@
                         </tr>
                         <tr>
                             <td>Tax Fees</td>
-                            <td class="val">₹0.00</td>
+                            <td class="val" id="buyTaxFees">₹0.00</td>
                         </tr>
                         <tr>
                             <td>Txn Charge</td>
-                            <td class="val">₹0.00</td>
+                            <td class="val" id="buyTxnCharge">₹0.00</td>
                         </tr>
                         <tr>
                             <td style="font-weight: 700;">Total Est. Investment</td>
@@ -3370,7 +3370,12 @@
                         </tr>
                     </table>
 
-                    <button class="buy-btn" id="buyBtn" onclick="handleTradeAction()">Buy</button>
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button class="buy-btn" id="buyBtn" onclick="handleTradeAction()"
+                            style="flex: 1; margin-top: 0;">Buy</button>
+                        <button class="buy-btn" id="sellBtn" onclick="handleSellFromDetail()"
+                            style="flex: 1; margin-top: 0; background: #ef4444;">Sell</button>
+                    </div>
                 </section>
 
                 <section class="m-card" style="margin-top: 1.5rem;">
@@ -3515,8 +3520,9 @@
                             <span class="p-asset-sub">Loan</span>
                         </div>
                         <div class="p-asset-item">
+                            <span class="p-asset-label">Outstanding</span>
                             <span class="p-asset-val red" id="pPendingSettlement" data-val="₹0.00">₹0.00</span>
-                            <span class="p-asset-sub red">Outstanding</span>
+                            <span class="p-asset-sub red">Clear Due</span>
                         </div>
                     </div>
                 </div>
@@ -3826,7 +3832,7 @@
                         <div style="display: flex; align-items: center; gap: 1rem; color: #3b82f6;">
                             <i data-lucide="landmark"></i> Fund Records
                         </div>
-                        <i data-lucide="rotate-cw" size="18" style="cursor: pointer;"></i>
+                        <i data-lucide="rotate-cw" size="18" style="cursor: pointer;" onclick="manualRefreshFund()"></i>
                     </div>
 
                     <div class="p-tab-bar" id="fundTabs">
@@ -4186,12 +4192,25 @@
             if (modal) modal.style.display = 'none';
         }
 
+        let detailLiveTimer = null;
         function openStockDetail(symbol, name, exchange, price, change, color, type = 'stock') {
             document.getElementById('mainDashboard').style.display = 'none';
-            document.getElementById('discoverView').style.display = 'none'; // Hide discover if open
+            document.getElementById('discoverView').style.display = 'none';
             document.querySelector('.header').style.display = 'none';
             document.getElementById('stockDetailHeader').style.display = 'flex';
             document.getElementById('stockDetailView').style.display = 'grid';
+
+            // Start Live Updates
+            if (detailLiveTimer) clearInterval(detailLiveTimer);
+            detailLiveTimer = setInterval(() => {
+                const updatedPrice = MarketEngine.getProduct(symbol)?.price || MarketEngine.getIndices()[symbol]?.price;
+                if (updatedPrice) {
+                    const formatted = '₹' + updatedPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                    document.getElementById('detPrice').innerText = formatted;
+                    document.getElementById('detBuyPrice').innerText = formatted;
+                    updateBuyCalculations();
+                }
+            }, 1000);
 
             // Populate Data
             document.getElementById('detailStockTitle').innerText = name;
@@ -4203,32 +4222,30 @@
             document.getElementById('detBuyPrice').innerText = price;
             document.getElementById('detSymbol').innerText = symbol;
 
-            // Handle Buy/Subscribe button text
             const buyBtn = document.getElementById('buyBtn');
+            const sellBtn = document.getElementById('sellBtn');
             if (buyBtn) {
                 if (type === 'OTC' || type === 'IPO') {
                     buyBtn.innerText = 'Subscribe';
                     buyBtn.dataset.type = type;
+                    if (sellBtn) sellBtn.style.display = 'none';
                 } else {
                     buyBtn.innerText = 'Buy';
                     buyBtn.dataset.type = 'stock';
+                    if (sellBtn) sellBtn.style.display = 'block';
                 }
             }
 
-            // Handle Logo
             const detLogoWrap = document.getElementById('detLogoWrap');
-            if (detLogoWrap) {
-                detLogoWrap.innerHTML = '';
-            }
+            if (detLogoWrap) detLogoWrap.innerHTML = '';
 
-            // Load Chart
             new TradingView.widget({
                 "autosize": true,
                 "symbol": exchange + ":" + symbol,
                 "interval": "D",
                 "timezone": "Etc/UTC",
                 "theme": "light",
-                "style": "3", // Area chart
+                "style": "3",
                 "locale": "en",
                 "toolbar_bg": "#f1f3f6",
                 "enable_publishing": false,
@@ -4241,7 +4258,42 @@
             lucide.createIcons();
         }
 
+        async function handleSellFromDetail() {
+            const btn = document.getElementById('sellBtn');
+            const symbol = document.getElementById('detSymbol')?.innerText;
+            const user = window.DB ? window.DB.getCurrentUser() : null;
+            if (!user || !symbol) return;
+
+            const originalText = btn.innerText;
+            btn.innerText = "Checking...";
+            btn.disabled = true;
+
+            try {
+                // Fetch latest trades directly from DB for maximum reliability
+                const trades = await window.DB.getTradesByUserId(user.id);
+                const myTrades = trades.filter(t => t.status === 'Approved' && t.symbol.toUpperCase() === symbol.toUpperCase());
+
+                if (myTrades.length === 0) {
+                    alert("You do not have any active holdings for " + symbol + " to sell.");
+                    return;
+                }
+
+                // Update global cache just in case
+                if (typeof transactionData !== 'undefined') transactionData.all = trades;
+
+                // Open selling modal for the first available holding
+                openSellingModal(myTrades[0]);
+            } catch (e) {
+                console.error("Sell Action Error:", e);
+                alert("Error: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
         function closeStockDetail() {
+            if (detailLiveTimer) clearInterval(detailLiveTimer);
             document.getElementById('mainDashboard').style.display = 'grid';
             document.querySelector('.header').style.display = 'flex';
             document.getElementById('stockDetailHeader').style.display = 'none';
@@ -4295,6 +4347,9 @@
             DB.refreshCurrentUser().then(fullUser => {
                 if (fullUser) syncUserData();
             });
+
+            // Load Fund Records
+            if (typeof loadFundRecords === 'function') loadFundRecords();
         }
 
         function showMeView() {
@@ -4434,7 +4489,7 @@
                     const isLocked = false; // Allow all IPOs to be viewable for now as requested
                     const exchange = s.symbol.includes('NSE') ? 'NSE' : 'BSE';
 
-                    if (s.type === 'stock' && type === 'all') {
+                    if (s.type === 'stock' && (type === 'all' || type === 'stocks')) {
                         // Regular stocks in "All" view still look premium but slightly different if mixed
                         return `
                             <div class="premium-trade-card">
@@ -4533,6 +4588,8 @@
             const qtyInput = document.getElementById('buyQuantityInput');
             const priceEl = document.getElementById('detBuyPrice');
             const totalEl = document.getElementById('buyTotalCost');
+            const taxEl = document.getElementById('buyTaxFees');
+            const txnEl = document.getElementById('buyTxnCharge');
             const displayQty = document.getElementById('displayQuantity'); // Optional display
 
             if (!qtyInput || !priceEl || !totalEl) return;
@@ -4542,12 +4599,21 @@
             const priceText = priceEl.innerText.replace(/[^\d.]/g, '');
             const price = parseFloat(priceText) || 0;
 
-            const total = qty * price;
-            totalEl.innerText = '₹' + total.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+            const baseTotal = qty * price;
+
+            // Realtime Market Fees (e.g. 0.12% Tax, 0.03% Txn Charge)
+            const tax = baseTotal * 0.0012;
+            const txnCharge = baseTotal * 0.0003;
+            const finalTotal = baseTotal + tax + txnCharge;
+
+            if (taxEl) taxEl.innerText = '₹' + tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (txnEl) txnEl.innerText = '₹' + txnCharge.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            totalEl.innerText = '₹' + finalTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
             if (displayQty) displayQty.innerText = qty;
 
-            return { qty, price, total };
+            return { qty, price, baseTotal, tax, txnCharge, total: finalTotal };
         }
 
         async function setMaxQuantity() {
@@ -4597,11 +4663,55 @@
             if (qInput) qInput.addEventListener('input', updateBuyCalculations);
         });
 
+        let globalModalCallback = null;
+        function showModal(type, title, msg, callback) {
+            const modal = document.getElementById('globalModal');
+            if (!modal) {
+                alert(msg);
+                if (callback) callback();
+                return;
+            }
+            const iconContainer = document.getElementById('modalIconContainer');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const msgEl = document.getElementById('modalMsg');
+            const btn = document.getElementById('modalBtn');
+            titleEl.innerText = title;
+            msgEl.innerText = msg;
+            globalModalCallback = callback;
+            if (type === 'success') {
+                iconContainer.style.background = '#ecfdf5';
+                iconContainer.style.color = '#10b981';
+                icon.setAttribute('data-lucide', 'check-circle');
+                btn.style.background = '#1e56a0';
+            } else if (type === 'error') {
+                iconContainer.style.background = '#fef2f2';
+                iconContainer.style.color = '#ef4444';
+                icon.setAttribute('data-lucide', 'alert-circle');
+                btn.style.background = '#ef4444';
+            } else if (type === 'warning') {
+                iconContainer.style.background = '#fffbeb';
+                iconContainer.style.color = '#f59e0b';
+                icon.setAttribute('data-lucide', 'alert-triangle');
+                btn.style.background = '#f59e0b';
+            }
+            modal.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+        }
+        function closeGlobalModal() {
+            document.getElementById('globalModal').style.display = 'none';
+            if (globalModalCallback) {
+                globalModalCallback();
+                globalModalCallback = null;
+            }
+        }
+
         async function handleTradeAction() {
             const btn = document.getElementById('buyBtn');
             const type = (btn.dataset.type || 'stock').toLowerCase();
             const symbol = document.getElementById('detSymbol').innerText;
             const stockName = document.getElementById('detName').innerText;
+            const exchangeText = document.getElementById('detExchange').innerText;
 
             const calc = updateBuyCalculations();
             if (!calc || calc.qty <= 0) {
@@ -4624,8 +4734,45 @@
                 }
             }
 
+            // Populate Premium Confirmation Modal
+            const ocName = document.getElementById('ocAssetName');
+            const ocSym = document.getElementById('ocAssetSymbol');
+            const ocQty = document.getElementById('ocQuantity');
+            const ocPr = document.getElementById('ocPrice');
+            const ocBase = document.getElementById('ocBaseAmount');
+            const ocTx = document.getElementById('ocTax');
+            const ocTn = document.getElementById('ocTxn');
+            const ocTot = document.getElementById('ocTotal');
+            const ocBtn = document.getElementById('ocConfirmBtn');
+
+            if (ocName) ocName.innerText = stockName;
+            if (ocSym) ocSym.innerText = `${symbol} • ${exchangeText}`;
+            if (ocQty) ocQty.innerText = calc.qty.toLocaleString();
+            if (ocPr) ocPr.innerText = '₹' + calc.price.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (ocBase) ocBase.innerText = '₹' + calc.baseTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (ocTx) ocTx.innerText = '+₹' + calc.tax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (ocTn) ocTn.innerText = '+₹' + calc.txnCharge.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (ocTot) ocTot.innerText = '₹' + calc.total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            if (ocBtn) {
+                ocBtn.innerText = `CONFIRM ${type.toUpperCase()} ORDER`;
+                ocBtn.onclick = () => executeConfirmedTrade(type, symbol, stockName, calc);
+            }
+
+            const modal = document.getElementById('orderConfirmModal');
+            if (modal) modal.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeOrderConfirm() {
+            const modal = document.getElementById('orderConfirmModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function executeConfirmedTrade(type, symbol, stockName, calc) {
+            const btn = document.getElementById('ocConfirmBtn');
             const originalText = btn.innerText;
-            btn.innerText = "Processing...";
+            btn.innerText = "EXECUTING...";
             btn.disabled = true;
 
             try {
@@ -4641,17 +4788,14 @@
                 const currentBalance = parseFloat(freshUser.balance || 0);
                 const isInsufficient = calc.total > currentBalance;
 
-                // For stocks, we still require full balance. For OTC/IPO, we allow subscription with whatever balance is left (Outstanding Balance).
                 if (type.toLowerCase() === 'stock' && isInsufficient) {
-                    alert(`Insufficient balance! Your available balance is ₹${currentBalance.toFixed(2)}, but total cost is ₹${calc.total.toFixed(2)}.`);
+                    showModal('error', 'Insufficient Balance', `Your available balance is ₹${currentBalance.toFixed(2)}, but total cost is ₹${calc.total.toFixed(2)}.`, () => {
+                        closeOrderConfirm();
+                    });
                     return;
                 }
 
                 // 3. Submit Trade
-                // If it's a stock, it's Approved immediately.
-                // Otherwise it's Pending. 
-                // We use admin_note to flag Outstanding Balance if insufficient funds.
-                // Default to Approved unless explicitly OTC or IPO (Subscription model)
                 let tradeStatus = 'Approved';
                 if (['otc', 'ipo'].includes(type.toLowerCase())) tradeStatus = 'Pending';
 
@@ -4663,6 +4807,8 @@
                     quantity: calc.qty,
                     price: calc.price,
                     total_amount: calc.total,
+                    tax_amount: calc.tax,
+                    txn_charge: calc.txnCharge,
                     admin_note: isInsufficient ? 'OUTSTANDING:' + currentBalance : '',
                     status: tradeStatus
                 };
@@ -4670,34 +4816,46 @@
                 const result = await window.DB.submitTrade(tradeData);
 
                 if (result.success) {
-                    if (tradeStatus === 'Approved' || (isInsufficient && currentBalance > 0)) {
-                        // Deduct Balance for Stocks or Outstanding Subscriptions
+                    if (tradeStatus === 'Approved' || isInsufficient) {
                         const deduction = isInsufficient ? currentBalance : calc.total;
                         const newBalance = currentBalance - deduction;
                         const currentInvested = parseFloat(freshUser.invested) || 0;
                         const newInvested = currentInvested + deduction;
 
-                        // Update Backend
-                        await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested);
+                        const currentOutstanding = parseFloat(freshUser.outstanding) || 0;
+                        const addedOutstanding = isInsufficient ? (calc.total - currentBalance) : 0;
+                        const newOutstanding = currentOutstanding + addedOutstanding;
+
+                        await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested, newOutstanding);
                     }
 
+                    closeOrderConfirm();
+
                     if (tradeStatus === 'Approved') {
-                        alert(`Successfully purchased ${calc.qty} shares of ${stockName}.`);
-                        if (typeof renderDetailHoldings === 'function') renderDetailHoldings();
+                        showModal('success', 'Order Successful', `Successfully purchased ${calc.qty} shares of ${stockName}.`, () => {
+                            window.DB.refreshCurrentUser().then(() => {
+                                if (typeof syncUserData === 'function') syncUserData();
+                                if (typeof renderDetailHoldings === 'function') renderDetailHoldings();
+                                if (typeof fetchUserTransactions === 'function') fetchUserTransactions();
+                            });
+                        });
                     } else if (isInsufficient) {
-                        alert(`Order queued! Your balance of ₹${currentBalance.toLocaleString('en-IN')} has been applied. Please settle the remaining ₹${(calc.total - currentBalance).toLocaleString('en-IN')} to finalize your subscription.`);
-                        showDiscoverView('transactions');
-                        switchTransactionTab(null, 'pendingPayment');
+                        showModal('warning', 'Order Queued', `Your balance of ₹${currentBalance.toLocaleString('en-IN')} has been applied. Please settle the remaining ₹${(calc.total - currentBalance).toLocaleString('en-IN')} to finalize your subscription.`, () => {
+                            window.DB.refreshCurrentUser().then(() => {
+                                if (typeof syncUserData === 'function') syncUserData();
+                                showDiscoverView('transactions');
+                                switchTransactionTab(null, 'pendingPayment');
+                            });
+                        });
                     } else {
-                        // Regular Pending (OTC/IPO with enough balance)
+                        // For OTC/IPO that isn't insufficient but just needs a nicer approval modal
                         openPurchaseModal(type, symbol, stockName, calc.qty, calc.total);
                     }
                 } else {
-                    alert("Failed to pre-submit trade: " + (result.error?.message || "Unknown error"));
+                    alert("Submission failed: " + (result.error?.message || "Unknown error"));
                 }
-
             } catch (e) {
-                console.error(e);
+                console.error("Trade Error:", e);
                 alert("An error occurred: " + e.message);
             } finally {
                 btn.innerText = originalText;
@@ -4732,9 +4890,10 @@
             btn.disabled = true;
 
             try {
-                alert(`Your subscription request for ${currentPurchaseData.name} has been received and is waiting for administrator approval.`);
-                closePurchaseModal();
-                if (typeof fetchUserTransactions === 'function') await fetchUserTransactions();
+                showModal('success', 'Request Received', `Your subscription request for ${currentPurchaseData.name} has been received and is waiting for administrator approval.`, () => {
+                    closePurchaseModal();
+                    if (typeof fetchUserTransactions === 'function') fetchUserTransactions();
+                });
             } catch (e) {
                 console.error(e);
                 alert("Error: " + e.message);
@@ -4837,6 +4996,7 @@
                                 <div style="text-align: left;">
                                     <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">${t.symbol}</div>
                                     <div style="font-size: 0.75rem; color: #64748b;">${date} • Buy Price ₹${parseFloat(t.price).toLocaleString('en-IN')}</div>
+                                    <button class="h-btn close" style="margin-top: 0.5rem; padding: 4px 12px; height: auto; font-size: 0.75rem;" onclick="openSellingModal('${t.id}')">Close Order</button>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-weight: 700; color: #1e56a0;">₹${parseFloat(t.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
@@ -4977,8 +5137,143 @@
         }
 
         const fundRecordsData = {
-            all: []
+            all: [],
+            today: [],
+            '7D': [],
+            '30D': [],
+            '90D': []
         };
+
+        async function loadFundRecords() {
+            const list = document.getElementById('fundRecordsList');
+            if (list && list.innerHTML.trim() === '') list.innerHTML = '<div style="text-align:center; padding:2rem; color:#94a3b8;">Loading records...</div>';
+
+            const user = window.DB ? window.DB.getCurrentUser() : null;
+            if (!user) return;
+            const client = window.DB.getClient();
+            if (!client) return;
+
+            try {
+                // Fetch all data in parallel
+                const [tradesRes, depositsRes, withdrawalsRes] = await Promise.all([
+                    window.DB.getTradesByUserId(user.id),
+                    client.from('deposits').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+                    client.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+                ]);
+
+                const trades = tradesRes || [];
+                const deposits = (depositsRes && depositsRes.data) || [];
+                const withdrawals = (withdrawalsRes && withdrawalsRes.data) || [];
+
+                // Debug log
+                console.log(`[FundRecords] Found ${trades.length} trades, ${deposits.length} deposits, ${withdrawals.length} withdrawals`);
+
+                let allRecords = [];
+
+                // Normalize Trades
+                trades.forEach(t => {
+                    const isBuy = t.type !== 'sell'; // Assuming 'sell' type for selling
+                    // Buy = Negative (outflow), Sell = Positive (inflow)
+                    // If trade is approved/pending, we show it.
+                    allRecords.push({
+                        rawDate: new Date(t.created_at),
+                        type: isBuy ? `Buy ${t.symbol}` : `Sell ${t.symbol}`,
+                        ex: 'Wallet',
+                        id: t.id ? String(t.id).substring(0, 8).toUpperCase() : 'N/A',
+                        amount: parseFloat(t.total_amount) || 0,
+                        isNegative: isBuy, // Buy is expense
+                        rawStatus: t.status
+                    });
+                });
+
+                // Normalize Deposits
+                deposits.forEach(d => {
+                    allRecords.push({
+                        rawDate: new Date(d.created_at),
+                        type: 'Deposit',
+                        ex: d.method || 'Bank Transfer',
+                        id: d.id ? String(d.id).substring(0, 8).toUpperCase() : 'N/A',
+                        amount: parseFloat(d.amount) || 0,
+                        isNegative: false, // Inflow
+                        rawStatus: d.status
+                    });
+                });
+
+                // Normalize Withdrawals
+                withdrawals.forEach(w => {
+                    allRecords.push({
+                        rawDate: new Date(w.created_at),
+                        type: 'Withdrawal',
+                        ex: w.method || 'Bank Transfer',
+                        id: w.id ? String(w.id).substring(0, 8).toUpperCase() : 'N/A',
+                        amount: parseFloat(w.amount) || 0,
+                        isNegative: true, // Outflow
+                        rawStatus: w.status
+                    });
+                });
+
+                // Sort by Date Descending
+                allRecords.sort((a, b) => b.rawDate - a.rawDate);
+
+                // Helper to format for display
+                const mapToDisplay = (rec) => ({
+                    type: rec.type,
+                    date: rec.rawDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+                    ex: `${rec.ex} • ${rec.rawStatus}`,
+                    id: rec.id,
+                    amount: rec.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+                    isNegative: rec.isNegative,
+                    rawDate: rec.rawDate
+                });
+
+                // Filter into buckets
+                const now = new Date();
+                const todayStr = now.toDateString(); // "Fri Feb 11 2026"
+
+                // Rolling windows for others
+                const days7 = new Date(now); days7.setDate(now.getDate() - 7);
+                const days30 = new Date(now); days30.setDate(now.getDate() - 30);
+                const days90 = new Date(now); days90.setDate(now.getDate() - 90);
+
+                fundRecordsData['all'] = allRecords.map(mapToDisplay);
+
+                // Strict Today check (Calendar day)
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                fundRecordsData['today'] = allRecords.filter(r => r.rawDate >= todayStart).map(mapToDisplay);
+
+                // Rolling windows
+                fundRecordsData['7D'] = allRecords.filter(r => r.rawDate >= days7).map(mapToDisplay);
+                fundRecordsData['30D'] = allRecords.filter(r => r.rawDate >= days30).map(mapToDisplay);
+                fundRecordsData['90D'] = allRecords.filter(r => r.rawDate >= days90).map(mapToDisplay);
+
+                // Re-render current tab
+                const activeTab = document.querySelector('#fundTabs .p-tab.active');
+                if (activeTab) {
+                    const tabName = activeTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    renderFundRecords(tabName);
+                } else {
+                    renderFundRecords('all');
+                }
+
+            } catch (e) {
+                console.error("Error loading fund records:", e);
+                const list = document.getElementById('fundRecordsList');
+                if (list) list.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 2rem;">Failed to load records: ${e.message}</div>`;
+            }
+        }
+
+        window.manualRefreshFund = async function () {
+            const icon = document.querySelector('[data-lucide="rotate-cw"]');
+            if (icon) {
+                icon.style.transition = 'transform 1s';
+                icon.style.transform = 'rotate(360deg)';
+            }
+            await loadFundRecords();
+            if (icon) {
+                setTimeout(() => icon.style.transform = 'none', 1000);
+            }
+            alert("Fund records updated.");
+        }
 
         function switchFundTab(el, tab) {
             document.querySelectorAll('#fundTabs .p-tab').forEach(t => t.classList.remove('active'));
@@ -4986,13 +5281,31 @@
             renderFundRecords(tab);
         }
 
-        function renderFundRecords(tab) {
+        // Helper to render filtered list
+        function renderFundList(data) {
             const list = document.getElementById('fundRecordsList');
-            const data = fundRecordsData[tab] || fundRecordsData['all'] || [];
-
             if (data.length === 0) {
                 list.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No data.</div>`;
+                document.getElementById('fundRecordCount').textContent = '0 records';
+                document.getElementById('fundTotalAmount').textContent = '₹0.00';
                 return;
+            }
+
+            // Update Summary
+            let currentTotal = 0;
+            data.forEach(item => {
+                const val = parseFloat((item.amount || "0").toString().replace(/,/g, ''));
+                if (item.isNegative) currentTotal -= val;
+                else currentTotal += val;
+            });
+
+            const countEl = document.getElementById('fundRecordCount');
+            if (countEl) countEl.textContent = `${data.length} records`;
+
+            const totalEl = document.getElementById('fundTotalAmount');
+            if (totalEl) {
+                totalEl.textContent = `₹${currentTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+                totalEl.style.color = currentTotal >= 0 ? '#10b981' : '#ef4444';
             }
 
             list.innerHTML = data.map(item => `
@@ -5010,6 +5323,11 @@
             `).join('');
         }
 
+        function renderFundRecords(tab) {
+            const data = fundRecordsData[tab] || fundRecordsData['all'] || [];
+            renderFundList(data);
+        }
+
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-IN', { hour12: false });
@@ -5019,17 +5337,49 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Date filtering simulation
-        const fundDateFrom = document.getElementById('fundDateFrom');
-        if (fundDateFrom) {
-            fundDateFrom.addEventListener('change', (e) => {
-                console.log('Filtering from:', e.target.value);
-            });
+        // Date Filtering Logic
+        function applyDateFilter() {
+            const fVal = document.getElementById('fundDateFrom').value;
+            const tVal = document.getElementById('fundDateTo').value;
+
+            // If empty, maybe revert to tab? Let's just filter 'all' if input changes
+            if (!fVal && !tVal) return;
+
+            // Deselect tabs visually to indicate custom filter
+            document.querySelectorAll('#fundTabs .p-tab').forEach(t => t.classList.remove('active'));
+
+            let list = fundRecordsData['all'] || [];
+            if (fVal) {
+                const fromD = new Date(fVal);
+                fromD.setHours(0, 0, 0, 0);
+                list = list.filter(i => i.rawDate && i.rawDate >= fromD);
+            }
+            if (tVal) {
+                const toD = new Date(tVal);
+                toD.setHours(23, 59, 59, 999);
+                list = list.filter(i => i.rawDate && i.rawDate <= toD);
+            }
+            renderFundList(list);
         }
+
+        const fundDateFrom = document.getElementById('fundDateFrom');
+        if (fundDateFrom) fundDateFrom.addEventListener('change', applyDateFilter);
+
         const fundDateTo = document.getElementById('fundDateTo');
-        if (fundDateTo) {
-            fundDateTo.addEventListener('change', (e) => {
-                console.log('Filtering to:', e.target.value);
+        if (fundDateTo) fundDateTo.addEventListener('change', applyDateFilter);
+
+        const clearBtn = document.querySelector('.clear-btn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (fundDateFrom) fundDateFrom.value = '';
+                if (fundDateTo) fundDateTo.value = '';
+                // Reset to All Tab
+                const allTab = document.querySelector('#fundTabs .p-tab[onclick*="all"]');
+                if (allTab) {
+                    allTab.click(); // easier than calling switchFundTab manually
+                } else {
+                    renderFundRecords('all');
+                }
             });
         }
 
@@ -5408,9 +5758,31 @@
             // ignoring pending items so user sees exactly what Admin set.
             const rawBalance = parseFloat(dbUser.balance) || 0;
 
+            // Helper to safe-fit text
+            const fitText = (el, text) => {
+                el.textContent = text;
+                el.setAttribute('data-val', text);
+                el.title = text; // Tooltip for full precision
+
+                // Reset style
+                el.style.fontSize = '';
+                el.style.whiteSpace = 'nowrap';
+                el.style.overflow = 'hidden';
+                el.style.textOverflow = 'ellipsis';
+                el.style.display = 'block';
+
+                // Dynamic sizing based on length
+                if (text.length > 30) el.style.fontSize = '0.65rem';
+                else if (text.length > 20) el.style.fontSize = '0.75rem';
+                else if (text.length > 15) el.style.fontSize = '0.85rem';
+            };
+
             const updateVal = (id, val) => {
                 const el = document.getElementById(id);
-                if (el) el.textContent = '₹' + val.toLocaleString('en-IN', formats);
+                if (el) {
+                    const fmt = '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    fitText(el, fmt);
+                }
             };
 
             updateVal('meAvailableBalance', rawBalance);
@@ -5429,23 +5801,43 @@
 
             // Update sidebar assets
             const assetAmounts = document.querySelectorAll('.asset-amount');
-            if (assetAmounts.length >= 2) {
-                assetAmounts[0].textContent = '₹' + rawBalance.toLocaleString('en-IN', formats);
-                assetAmounts[1].textContent = '₹' + inv.toLocaleString('en-IN', formats);
+            if (assetAmounts.length >= 6) {
+                // Map values to the 6 grid items in order:
+                // 1. Available (Cash)
+                // 2. Invested (Invested)
+                // 3. Bonus (Credit)
+                // 4. Frozen (Pending)
+                // 5. Loan (Funds)
+                // 6. Pending (Settle) -> This is actually Outstanding
+
+                const fmtRaw = '₹' + rawBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtInv = '₹' + inv.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtBonus = '₹' + bonus.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtFrozen = '₹' + frozen.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtLoan = '₹' + loan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtOut = '₹' + outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                // We use fitText logic for sidebar items too to be safe, but they are spans inside divs.
+                // Simplified text content update for now to match structure
+                assetAmounts[0].textContent = fmtRaw;
+                assetAmounts[1].textContent = fmtInv;
+                assetAmounts[2].textContent = fmtBonus;
+                assetAmounts[3].textContent = fmtFrozen;
+                assetAmounts[4].textContent = fmtLoan;
+                assetAmounts[5].textContent = fmtOut;
             }
 
             // Update Portfolio View Invested Amounts
-            const formattedRawBal = '₹' + rawBalance.toLocaleString('en-IN', formats);
-            const formattedInv = '₹' + inv.toLocaleString('en-IN', formats);
+            const formattedRawBal = '₹' + rawBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const formattedInv = '₹' + inv.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             // Update p-asset-val elements in Portfolio view
             // Use ID targeting for precision
             const updatePortfolioVal = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    const fmt = '₹' + val.toLocaleString('en-IN', formats);
-                    el.textContent = fmt;
-                    el.setAttribute('data-val', fmt);
+                    const fmt = '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    fitText(el, fmt);
                 }
             };
 
@@ -5833,12 +6225,21 @@
         }
 
         let sellingTimer = null;
-        function openSellingModal(tradeId) {
-            const trade = transactionData.all.find(t => t.id == tradeId);
+        function openSellingModal(tradeOrId) {
+            let trade;
+            if (typeof tradeOrId === 'object') {
+                trade = tradeOrId;
+            } else {
+                trade = transactionData.all.find(t => t.id == tradeOrId);
+            }
+
             if (!trade) {
-                console.error("Trade not found for selling:", tradeId);
+                console.error("Trade not found for selling:", tradeOrId);
+                alert("Trade details could not be found. Please try again.");
                 return;
             }
+
+            const tradeId = trade.id;
 
             const updateSellingData = () => {
                 const me = window.MarketEngine || {};
@@ -5846,15 +6247,33 @@
                 const currentPrice = livePriceData ? livePriceData.price : trade.price;
                 const totalOrderValue = parseFloat(trade.total_amount);
                 const currentSaleValue = currentPrice * trade.quantity;
-                const profit = currentSaleValue - totalOrderValue;
 
-                document.getElementById('coCurrPrice').innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-                document.getElementById('coProfit').innerText = (profit >= 0 ? '+' : '') + '₹' + profit.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-                document.getElementById('coProfit').className = `h-stat-val ${profit >= 0 ? 'green' : 'red'}`;
+                // Stat Fees for Premium Modal
+                const sellTax = currentSaleValue * 0.0012;
+                const sellTxn = currentSaleValue * 0.0003;
+                const netProceeds = currentSaleValue - sellTax - sellTxn;
 
-                // Set the sellPrice for the confirm action
-                document.getElementById('coConfirmBtn').dataset.tradeId = tradeId;
-                document.getElementById('coConfirmBtn').dataset.sellPrice = currentPrice;
+                const priceEl = document.getElementById('coCurrPrice');
+                const qtyEl = document.getElementById('coQty');
+                const valEl = document.getElementById('coOrderVal');
+                const taxEl = document.getElementById('coTaxAmt');
+                const txnEl = document.getElementById('coTxnCharge');
+                const netEl = document.getElementById('coNetReturn');
+
+                if (priceEl) priceEl.innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                if (qtyEl) qtyEl.innerText = trade.quantity;
+                if (valEl) valEl.innerText = '₹' + currentSaleValue.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                if (taxEl) taxEl.innerText = '-₹' + sellTax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                if (txnEl) txnEl.innerText = '-₹' + sellTxn.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                if (netEl) netEl.innerText = '₹' + netProceeds.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+                // Update confirm button properties
+                const confirmBtn = document.getElementById('coConfirmBtn');
+                if (confirmBtn) {
+                    confirmBtn.dataset.tradeId = tradeId;
+                    confirmBtn.dataset.sellPrice = currentPrice;
+                    confirmBtn.dataset.netReturn = netProceeds;
+                }
             };
 
             document.getElementById('coStockTitle').innerText = trade.name;
@@ -5886,6 +6305,9 @@
                 txt.innerText = `Quotation expires in ${currentSeconds}s`;
                 bar.style.width = (currentSeconds / totalSeconds * 100) + '%';
 
+                // Real-time price update during quotation
+                updateSellingData();
+
                 if (currentSeconds <= 0) {
                     clearInterval(sellingTimer);
                     closeSellingModal();
@@ -5896,20 +6318,22 @@
             document.getElementById('coRefreshBtn').onclick = updateSellingData;
 
             document.getElementById('coConfirmBtn').onclick = function () {
-                handleSellTrade(this.dataset.tradeId, parseFloat(this.dataset.sellPrice));
+                handleSellTrade(this.dataset.tradeId, parseFloat(this.dataset.sellPrice), parseFloat(this.dataset.netReturn));
             };
-            lucide.createIcons();
+            if (window.lucide) window.lucide.createIcons();
         }
 
         function closeSellingModal() {
-            document.getElementById('closeOrderModal').style.display = 'none';
+            const modal = document.getElementById('closeOrderModal');
+            if (modal) modal.style.display = 'none';
             if (sellingTimer) clearInterval(sellingTimer);
         }
 
-        async function handleSellTrade(tradeId, sellPrice) {
+        async function handleSellTrade(tradeId, sellPrice, netReturn) {
+            if (!tradeId) return;
             const btn = document.getElementById('coConfirmBtn');
             const originalText = btn.innerText;
-            btn.innerText = "Processing...";
+            btn.innerText = "EXECUTING...";
             btn.disabled = true;
 
             const user = DB.getCurrentUser();
@@ -5921,44 +6345,44 @@
             }
 
             try {
-                // 1. Update trade status
-                // Using 'Settled' as the status because 'Sold' is not in the DB check constraint
-                // Storing sell price in admin_note since sell_price column is missing
+                // 1. Update trade status to Settled
                 const { error: tradeErr } = await client.from('trades').update({
                     status: 'Settled',
                     processed_at: new Date().toISOString(),
-                    admin_note: `Sold at ₹${sellPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                    admin_note: `Sold at Market ₹${sellPrice.toFixed(2)}`
                 }).eq('id', tradeId);
-
                 if (tradeErr) throw tradeErr;
 
-                // 2. Fetch trade info to calculate return to balance
-                const { data: tradeData } = await client.from('trades').select('*').eq('id', tradeId).single();
-                const returnAmount = parseFloat(tradeData.quantity) * sellPrice;
+                // 2. Fetch fresh user data
+                const freshUser = await window.DB.refreshCurrentUser();
+                const trade = transactionData.all.find(t => t.id == tradeId);
 
-                // 3. Update user balance
-                const { data: userDb } = await client.from('users').select('balance').eq('id', user.id).single();
-                const newBalance = (parseFloat(userDb.balance) || 0) + returnAmount;
+                // Fallback netReturn calculation if not provided by modal data
+                if (!netReturn || isNaN(netReturn)) {
+                    const qty = parseFloat(trade?.quantity || 0);
+                    const gross = qty * sellPrice;
+                    netReturn = gross - (gross * 0.0012) - (gross * 0.0003);
+                }
 
-                const { error: balErr } = await client.from('users').update({ balance: newBalance }).eq('id', user.id);
+                const newBalance = (parseFloat(freshUser.balance) || 0) + netReturn;
+                const newInvested = Math.max(0, (parseFloat(freshUser.invested) || 0) - (parseFloat(trade?.total_amount || 0)));
+
+                // 3. Update User Balance & Invested
+                const { error: balErr } = await client.from('users').update({
+                    balance: newBalance,
+                    invested: newInvested
+                }).eq('id', user.id);
                 if (balErr) throw balErr;
 
-                alert(`Order closed successfully! ₹${returnAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} added to your balance.`);
-                closeSellingModal();
-
-                // Refresh data
-                await fetchUserTransactions();
-                const activePill = document.querySelector('#transactionTabs .d-tab-pill.active');
-                if (activePill) {
-                    const tabName = activePill.innerText.toLowerCase() === 'ins. stocks' ? 'stocks' : activePill.innerText.toLowerCase();
-                    // Map holding pill correctly
-                    const effectiveTab = (activePill.getAttribute('onclick')?.includes('holding')) ? 'holding' : 'all';
-                    switchTransactionTab(activePill, effectiveTab);
-                }
-                if (typeof syncUserData === 'function') syncUserData(); // Update balance in UI
+                showModal('success', 'Position Closed', `Position closed successfully! ₹${netReturn.toLocaleString('en-IN', { minimumFractionDigits: 2 })} credited to your wallet.`, () => {
+                    closeSellingModal();
+                    fetchUserTransactions();
+                    if (window.syncUserData) window.syncUserData();
+                    if (window.renderDetailHoldings) window.renderDetailHoldings();
+                });
             } catch (e) {
-                console.error(e);
-                alert("Error closing order: " + e.message);
+                console.error("Sell trade error:", e);
+                alert("Failed to close position: " + e.message);
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
@@ -6281,153 +6705,215 @@
         </div>
     </div>
 
+    <!-- Premium Order Confirmation Modal -->
+    <div id="orderConfirmModal" class="center-popup-modal" onclick="if(event.target == this) closeOrderConfirm()">
+        <div class="center-popup-content"
+            style="max-width: 480px; padding: 0; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <div style="background: linear-gradient(135deg, #1e56a0 0%, #16427d 100%); padding: 1.5rem; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <div id="ocTypeLabel"
+                            style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; font-weight: 700; margin-bottom: 0.25rem;">
+                            PRO ORDER CONFIRMATION</div>
+                        <h2 id="ocAssetName" style="font-weight: 800; font-size: 1.5rem; margin: 0; line-height: 1.2;">
+                            Stock Name</h2>
+                        <div id="ocAssetSymbol"
+                            style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem; font-weight: 500;">SYMBOL •
+                            EXCHANGE</div>
+                    </div>
+                    <button class="popup-close" onclick="closeOrderConfirm()"
+                        style="background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;"><i
+                            data-lucide="x" size="20"></i></button>
+                </div>
+            </div>
+
+            <div class="popup-body" style="padding: 1.5rem; background: #ffffff;">
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <div
+                        style="flex: 1; background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #f1f5f9;">
+                        <div
+                            style="font-size: 0.7rem; color: #64748b; font-weight: 700; margin-bottom: 0.25rem; text-transform: uppercase;">
+                            Quantity</div>
+                        <div id="ocQuantity" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">0</div>
+                    </div>
+                    <div
+                        style="flex: 1; background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #f1f5f9;">
+                        <div
+                            style="font-size: 0.7rem; color: #64748b; font-weight: 700; margin-bottom: 0.25rem; text-transform: uppercase;">
+                            Price/Share</div>
+                        <div id="ocPrice" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">₹0.00</div>
+                    </div>
+                </div>
+
+                <div style="border-radius: 16px; background: #f1f5f9; padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Base Amount</span>
+                        <span id="ocBaseAmount"
+                            style="font-weight: 600; color: #1e293b; font-size: 0.95rem;">₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #64748b; font-size: 0.85rem;">Tax (0.12%)</span>
+                        <span id="ocTax" style="font-weight: 600; color: #ef4444; font-size: 0.85rem;">+₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span style="color: #64748b; font-size: 0.85rem;">Txn Charge (0.03%)</span>
+                        <span id="ocTxn" style="font-weight: 600; color: #ef4444; font-size: 0.85rem;">+₹0.00</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px dashed #cbd5e1;">
+                        <span style="color: #1e56a0; font-weight: 800; font-size: 1rem;">EST. TOTAL</span>
+                        <span id="ocTotal" style="font-weight: 900; color: #1e56a0; font-size: 1.4rem;">₹0.00</span>
+                    </div>
+                </div>
+
+                <div
+                    style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; margin-bottom: 2rem;">
+                    <i data-lucide="shield-check" size="18" color="#d97706"></i>
+                    <span style="font-size: 0.75rem; color: #92400e; line-height: 1.4; font-weight: 500;">By confirming,
+                        you agree to execute the order at the current market value. Real-time volatility may affect the
+                        final price.</span>
+                </div>
+
+                <button id="ocConfirmBtn"
+                    style="width: 100%; padding: 1.25rem; background: #1e56a0; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(30, 86, 160, 0.3);"
+                    onmouseover="this.style.background='#16427d'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(30, 86, 160, 0.4)';"
+                    onmouseout="this.style.background='#1e56a0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(30, 86, 160, 0.3)';">CONFIRM
+                    BUY ORDER</button>
+
+                <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: #94a3b8; font-weight: 500;">
+                    Fast execution • Secured by Avendus Enterprise</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirm Purchase Modal (For OTC/IPO) -->
     <div id="purchaseConfirmModal" class="center-popup-modal" onclick="if(event.target == this) closePurchaseModal()">
-        <div class="center-popup-content" style="max-width: 500px;">
-            <div class="popup-header">
-                <h2 style="font-weight: 700;">Confirm Purchase</h2>
-                <button class="popup-close" onclick="closePurchaseModal()"><i data-lucide="x" size="24"></i></button>
+        <div class="center-popup-content"
+            style="max-width: 480px; padding: 0; overflow: hidden; border: none; border-radius: 20px;">
+            <div style="background: #1e56a0; padding: 1.5rem; color: white;">
+                <h2 style="font-weight: 800; margin: 0; font-size: 1.25rem;">Subscription Confirmation</h2>
+                <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">Review your institutional allocation
+                    request</div>
             </div>
-            <div class="popup-body">
-                <div style="background: #eff6ff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div class="popup-body" style="padding: 1.5rem;">
+                <div style="background: #f1f5f9; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
                         <span style="color: #64748b; font-size: 0.9rem;">Product</span>
                         <span id="cpName" style="font-weight: 700; color: #1e293b;">-</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
                         <span style="color: #64748b; font-size: 0.9rem;">Symbol</span>
                         <span id="cpSymbol" style="font-weight: 700; color: #1e293b;">-</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: #64748b; font-size: 0.9rem;">Quantity</span>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span style="color: #64748b; font-size: 0.9rem;">Quantity Requested</span>
                         <span id="cpQty" style="font-weight: 700; color: #1e293b;">0</span>
                     </div>
                     <div
-                        style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid #dbeafe;">
-                        <span style="color: #1e56a0; font-weight: 700;">Total Amount</span>
-                        <span id="cpTotal" style="font-weight: 800; color: #1e56a0; font-size: 1.1rem;">₹0.00</span>
+                        style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px dashed #cbd5e1;">
+                        <span style="color: #1e56a0; font-weight: 800;">TOTAL PAYABLE</span>
+                        <span id="cpTotal" style="font-weight: 900; color: #1e56a0; font-size: 1.25rem;">₹0.00</span>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 1.5rem; text-align: center; color: #64748b; font-size: 0.9rem;">
-                    Your subscription request will be sent to our backend for review. Once approved, it will be
-                    reflected in your holdings.
+                <div
+                    style="margin-bottom: 1.5rem; text-align: center; color: #64748b; font-size: 0.85rem; line-height: 1.5; padding: 0 1rem;">
+                    Your subscription request will be sent to our desk for review. Once verified, units will be credited
+                    to your portfolio.
                 </div>
 
                 <button class="logout-btn"
-                    style="background: #3b82f6; width: 100%; border-radius: 12px; height: 52px; font-weight: 700; border:none; color:white; cursor:pointer;"
-                    id="cpSubmitBtn" onclick="confirmPurchaseSubscription()">Confirm Subscription</button>
+                    style="background: #1e56a0; width: 100%; border-radius: 12px; height: 56px; font-weight: 800; border:none; color:white; cursor:pointer; font-size: 1rem; transition: all 0.2s;"
+                    onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'"
+                    id="cpSubmitBtn" onclick="confirmPurchaseSubscription()">SEND SUBSCRIPTION REQUEST</button>
             </div>
         </div>
     </div>
 
     <!-- Close Order Modal -->
     <div id="closeOrderModal" class="center-popup-modal" onclick="if(event.target == this) closeSellingModal()">
-        <div class="center-popup-content" style="max-width: 500px; padding: 0;">
-            <div class="popup-header" style="border-bottom: 1px solid #f1f5f9; padding: 1.5rem;">
-                <h2 style="font-weight: 700; font-size: 1.25rem; color: #1e293b;">Close Order</h2>
-                <button class="popup-close" onclick="closeSellingModal()"
-                    style="background:none; border:none; color:#64748b; cursor: pointer;"><i data-lucide="x"
-                        size="24"></i></button>
+        <div class="center-popup-content"
+            style="max-width: 480px; padding: 0; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border-radius: 20px;">
+            <div style="background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); padding: 1.5rem; color: white;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <div
+                            style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; font-weight: 700; margin-bottom: 0.25rem;">
+                            PRO SELL ORDER</div>
+                        <h2 id="coStockTitle" style="font-weight: 800; font-size: 1.5rem; margin: 0; line-height: 1.2;">
+                            Stock Name</h2>
+                        <div id="coSymbolLabel"
+                            style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem; font-weight: 500;">SYMBOL •
+                            SELL QUOTATION</div>
+                    </div>
+                    <button class="popup-close" onclick="closeSellingModal()"
+                        style="background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;"><i
+                            data-lucide="x" size="20"></i></button>
+                </div>
             </div>
-            <div class="popup-body" style="padding: 1.5rem;">
-                <h3 id="coStockTitle"
-                    style="text-align: center; font-weight: 700; margin-bottom: 1.5rem; font-size: 1.15rem; color: #1e293b;">
-                    Stock Name</h3>
+
+            <div class="popup-body" style="padding: 1.5rem; background: #ffffff;">
+                <div
+                    style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.75rem; color: #991b1b; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;">Live
+                            Market Exit</span>
+                        <span id="coCurrPrice" style="font-weight: 800; color: #b91c1c; font-size: 1.5rem;">₹0.00</span>
+                    </div>
+                    <button id="coRefreshBtn"
+                        style="background: #ef4444; border: none; padding: 8px 16px; border-radius: 8px; color: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;"
+                        onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'"><i
+                            data-lucide="refresh-cw" size="14"></i> Refresh</button>
+                </div>
 
                 <div
-                    style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                    <span style="color: #64748b; font-weight: 500;">Current Price</span>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <span id="coCurrPrice" style="font-weight: 800; color: #10b981; font-size: 1.3rem;">₹0.00</span>
-                        <button id="coRefreshBtn"
-                            style="background: #86efac; border: none; padding: 6px 14px; border-radius: 8px; color: #065f46; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;"
-                            onmouseover="this.style.background='#4ade80'"
-                            onmouseout="this.style.background='#86efac'">Refresh</button>
+                    style="background: #f8fafc; border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid #f1f5f9;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #64748b; font-size: 0.85rem; font-weight: 500;">Exit Quantity</span>
+                        <span id="coQty" style="font-weight: 700; color: #1e293b; font-size: 0.9rem;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span style="color: #64748b; font-size: 0.85rem; font-weight: 500;">Market Value</span>
+                        <span id="coOrderVal" style="font-weight: 700; color: #1e293b; font-size: 0.9rem;">₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #64748b; font-size: 0.8rem;">Selling Tax (0.12%)</span>
+                        <span id="coTaxAmt" style="font-weight: 600; color: #ef4444; font-size: 0.8rem;">-₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <span style="color: #64748b; font-size: 0.8rem;">Exit Charge (0.03%)</span>
+                        <span id="coTxnCharge"
+                            style="font-weight: 600; color: #ef4444; font-size: 0.8rem;">-₹0.00</span>
+                    </div>
+                    <div
+                        style="display: flex; justify-content: space-between; padding-top: 1rem; border-top: 1px dashed #cbd5e1;">
+                        <span style="color: #991b1b; font-weight: 800; font-size: 1rem;">NET PROCEEDS</span>
+                        <span id="coNetReturn" style="font-weight: 900; color: #991b1b; font-size: 1.4rem;">₹0.00</span>
                     </div>
                 </div>
 
-                <div style="font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; font-size: 1rem;">Order
-                    Infomation</div>
-                <table class="detail-info-table" style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Market</td>
-                        <td id="coMarket"
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
-                            BSE</td>
-                    </tr>
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Symbol</td>
-                        <td id="coSymbol"
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
-                            -</td>
-                    </tr>
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Buy Price</td>
-                        <td id="coBuyPrice"
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #3b82f6; border-bottom: 1px solid #f8fafc;">
-                            ₹0.00</td>
-                    </tr>
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Quantity</td>
-                        <td id="coQty"
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
-                            0</td>
-                    </tr>
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Total Order Value</td>
-                        <td id="coOrderVal"
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
-                            ₹0.00</td>
-                    </tr>
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Estimated Selling Tax</td>
-                        <td
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
-                            ₹0.00</td>
-                    </tr>
-                    <tr>
-                        <td
-                            style="padding: 0.75rem 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f8fafc;">
-                            Estimated Selling Fees</td>
-                        <td
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; color: #1e293b; border-bottom: 1px solid #f8fafc;">
-                            ₹0.00</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 0.75rem 0; color: #64748b; font-weight: 500;">Estimated P&L</td>
-                        <td id="coProfit"
-                            style="padding: 0.75rem 0; text-align: right; font-weight: 600; font-size: 1.1rem;">₹0.00
-                        </td>
-                    </tr>
-                </table>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                    <span id="coTimerText" style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Quotation
+                        expires in 20s</span>
+                    <span id="coSymbol" style="font-size: 0.8rem; color: #94a3b8; font-weight: 700;">-</span>
+                </div>
 
-                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem; font-weight: 500;"
-                    id="coTimerText">Quotation
-                    expires in 20s</div>
                 <div class="quotation-timer"
-                    style="height: 10px; background: #f1f5f9; border-radius: 6px; overflow: hidden; margin-bottom: 2rem;">
+                    style="height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; margin-bottom: 2rem;">
                     <div class="quotation-progress" id="coProgressBar"
-                        style="height: 100%; background: #10b981; width: 100%;"></div>
+                        style="height: 100%; background: #ef4444; width: 100%; transition: width 1s linear;"></div>
                 </div>
 
                 <button class="logout-btn"
-                    style="background: #3b82f6; width: 100%; border-radius: 12px; height: 54px; font-weight: 700; font-size: 1.1rem; border: none; color: white; cursor: pointer; transition: transform 0.2s, background 0.2s;"
-                    onmouseover="this.style.background='#2563eb'; this.style.transform='scale(1.01)'"
-                    onmouseout="this.style.background='#3b82f6'; this.style.transform='scale(1)'"
-                    id="coConfirmBtn">Confirm</button>
+                    style="background: #b91c1c; width: 100%; border-radius: 12px; height: 56px; font-weight: 800; font-size: 1.1rem; border: none; color: white; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 6px -1px rgba(185, 28, 28, 0.3);"
+                    onmouseover="this.style.background='#991b1b'; this.style.transform='translateY(-2px)';"
+                    onmouseout="this.style.background='#b91c1c'; this.style.transform='translateY(0)';"
+                    id="coConfirmBtn">CLOSE POSITION</button>
+
+                <p style="text-align: center; margin-top: 1rem; font-size: 0.7rem; color: #94a3b8; line-height: 1.4;">
+                    Settlement will be immediate. Proceeds will be credited to your wallet after statutory deductions.
+                </p>
             </div>
         </div>
     </div>
@@ -6443,7 +6929,28 @@
             <div id="chatBox"
                 style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
             </div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="file" id="csImageInput" accept="image/*" style="display: none;"
+                    onchange="handleCSImageUpload(this)">
+                <button onclick="document.getElementById('csImageInput').click()"
+                    style="background: none; border: none; cursor: pointer; color: #64748b; padding: 0.5rem;">
+                    <i data-lucide="image" size="20"></i>
+                </button>
+                <button onclick="toggleEmojiPicker()"
+                    style="background: none; border: none; cursor: pointer; color: #64748b; padding: 0.5rem; position: relative;">
+                    <i data-lucide="smile" size="20"></i>
+                    <div id="emojiPicker"
+                        style="display: none; position: absolute; bottom: 40px; left: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 150px;">
+                        <span onclick="insertEmoji('👍')" style="cursor: pointer; font-size: 1.2rem;">👍</span>
+                        <span onclick="insertEmoji('👋')" style="cursor: pointer; font-size: 1.2rem;">👋</span>
+                        <span onclick="insertEmoji('😊')" style="cursor: pointer; font-size: 1.2rem;">😊</span>
+                        <span onclick="insertEmoji('😂')" style="cursor: pointer; font-size: 1.2rem;">😂</span>
+                        <span onclick="insertEmoji('❤️')" style="cursor: pointer; font-size: 1.2rem;">❤️</span>
+                        <span onclick="insertEmoji('🔥')" style="cursor: pointer; font-size: 1.2rem;">🔥</span>
+                        <span onclick="insertEmoji('🎉')" style="cursor: pointer; font-size: 1.2rem;">🎉</span>
+                        <span onclick="insertEmoji('😢')" style="cursor: pointer; font-size: 1.2rem;">😢</span>
+                    </div>
+                </button>
                 <input type="text" id="csInput" placeholder="Type a message..."
                     style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
                 <button onclick="sendCSMessage()"
@@ -6678,6 +7185,27 @@
                         onclick="closeEditNameModal()">Cancel</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Global Notification Modal -->
+    <div id="globalModal" class="center-popup-modal" onclick="if(event.target == this) closeGlobalModal()"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center;">
+        <div class="center-popup-content"
+            style="max-width: 400px; padding: 2.5rem 2rem; text-align: center; border-radius: 24px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); background: white;">
+            <div id="modalIconContainer"
+                style="width: 80px; height: 80px; background: #ecfdf5; color: #10b981; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1.5rem;">
+                <i id="modalIcon" data-lucide="check-circle" size="48"></i>
+            </div>
+            <h2 id="modalTitle" style="font-weight: 800; font-size: 1.5rem; color: #1e293b; margin-bottom: 0.5rem;">
+                Success</h2>
+            <p id="modalMsg" style="color: #64748b; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">Your
+                transaction has been processed successfully.</p>
+            <button id="modalBtn" onclick="closeGlobalModal()"
+                style="width: 100%; padding: 1rem; background: #1e56a0; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s;"
+                onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+                CONTINUE
+            </button>
         </div>
     </div>
 

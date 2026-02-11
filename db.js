@@ -429,10 +429,11 @@ window.DB = {
         return { success: !error, error };
     },
 
-    async updateUserFinancials(userId, newBalance, newInvested) {
+    async updateUserFinancials(userId, newBalance, newInvested, newOutstanding) {
         const client = this.getClient();
         const updates = { balance: newBalance };
         if (newInvested !== undefined) updates.invested = newInvested;
+        if (newOutstanding !== undefined) updates.outstanding = newOutstanding;
 
         const { data, error } = await client
             .from('users')

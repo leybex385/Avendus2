@@ -1264,6 +1264,57 @@ window.sendCSMessage = async () => {
     }
 };
 
+window.toggleEmojiPicker = function () {
+    const picker = document.getElementById('emojiPicker');
+    if (picker) {
+        picker.style.display = picker.style.display === 'none' ? 'grid' : 'none';
+    }
+};
+
+window.insertEmoji = function (emoji) {
+    const input = document.getElementById('csInput');
+    if (input) {
+        input.value += emoji;
+        input.focus();
+    }
+    // Close picker
+    const picker = document.getElementById('emojiPicker');
+    if (picker) picker.style.display = 'none';
+};
+
+window.handleCSImageUpload = function (input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        // Size check (e.g. 2MB limit)
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Image file is too large (max 2MB).");
+            input.value = ''; // Reset
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            const base64 = e.target.result;
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+
+            if (user && window.DB && window.DB.sendMessage) {
+                // Send as an IMG tag
+                const imgMsg = `<img src="${base64}" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src, '_blank')">`;
+
+                // Show uploading state? Or just send.
+                const { success, error } = await window.DB.sendMessage(user.id, imgMsg, 'User');
+                if (!success) {
+                    alert("Failed to send image.");
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    // Reset input so same file can be selected again if needed
+    input.value = '';
+};
+
 function playNotificationSound() {
     try {
         const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');

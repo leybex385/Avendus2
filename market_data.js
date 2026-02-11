@@ -157,7 +157,7 @@
                 });
 
                 this.notifyListeners();
-            }, 3000);
+            }, 1000);
         }
 
         search(query) {
