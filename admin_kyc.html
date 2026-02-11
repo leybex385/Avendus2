@@ -199,6 +199,90 @@
             border: none;
         }
 
+        /* VSL Framework Classes */
+        .vsl-page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .vsl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .vsl-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .vsl-btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vsl-btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .vsl-btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .vsl-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .vsl-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .vsl-input:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Messaging Center Custom */
         .msg-layout {
             display: flex;
@@ -703,9 +787,13 @@
             <div class="menu-item" id="btn_bank_accounts" onclick="switchPage('bank_accounts')"><i
                     data-lucide="credit-card" size="18"></i>
                 Bank Accounts</div>
-            <div class="menu-item" onclick="toggleSub('financial')"><i data-lucide="wallet" size="18"></i> Financial
+            <div class="menu-item" id="btn_products" onclick="switchPage('products')"><i data-lucide="box"
+                    size="18"></i> Product Management</div>
+            <div class="menu-item" id="btn_stock057" onclick="switchPage('stock057')"><i data-lucide="trending-up"
+                    size="18"></i> Institutional Stock 057</div>
+            <div class="menu-item" onclick="toggleSub('subFinancial')"><i data-lucide="wallet" size="18"></i> Financial
                 Management <i data-lucide="chevron-down" size="14" style="margin-left:auto;"></i></div>
-            <div class="sub-menu" id="financialSub">
+            <div class="sub-menu" id="subFinancial">
                 <div class="sub-item" id="btn_deposits" onclick="switchPage('deposits')">Deposit records</div>
                 <div class="sub-item" id="btn_withdrawals" onclick="switchPage('withdrawals')">Withdrawal records</div>
                 <div class="sub-item" id="btn_loans" onclick="switchPage('loans')">Loan records</div>
@@ -796,7 +884,6 @@
                                 </tr>
                             </thead>
                             <tbody id="bankAccountsTableBody">
-                                <!-- Populated via JS -->
                             </tbody>
                         </table>
                     </div>
@@ -1317,6 +1404,50 @@
             </div>
 
             <!-- Page: Quant -->
+            <!-- Product Management Page -->
+            <div id="pageProducts" class="vsl-page" style="display:none;">
+                <div class="vsl-header">
+                    <h2 class="vsl-title">Product Management</h2>
+                    <button class="vsl-btn-primary" onclick="openAddProductModal()">+ Add Product</button>
+                </div>
+                <div class="section-card">
+                    <div class="vsl-table-wrap">
+                        <table class="vsl-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Estimated Profit</th>
+                                    <th>Listing Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productList">
+                                <!-- Mock Data -->
+                                <tr>
+                                    <td>Hyundai India IPO</td>
+                                    <td>300%</td>
+                                    <td>2026-03-15</td>
+                                    <td><span class="vsl-badge approved">Selling</span></td>
+                                    <td><button class="vsl-btn-small"
+                                            onclick="alert('Edit logic to be implemented')">Edit</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Institutional Stock 057 -->
+            <div id="pageStock057" class="vsl-page" style="display:none;">
+                <div class="vsl-header">
+                    <h2 class="vsl-title">Institutional Stock 057</h2>
+                </div>
+                <div class="section-card">
+                    <p>Institutional terminal configuration and stock list.</p>
+                </div>
+            </div>
+
             <div id="pageQuant" class="vsl-page" style="display:none;">
                 <div class="section-card">
                     <h3>Quantitative Trading</h3>
@@ -1555,7 +1686,7 @@
             'deposits': 'Deposit records', 'withdrawals': 'Withdrawal records', 'loans': 'Loan records',
             'rewards': 'Bonus Points Record', 'stock': 'Stock trading', 'bulk': 'Large transactions',
             'ipo': 'IPO', 'fund': 'Fund trading', 'quant': 'Quantitative Trading', 'messages': 'Notification Center',
-            'livechat': 'Customer Service Support'
+            'livechat': 'Customer Service Support', 'products': 'Product Management', 'stock057': 'Institutional Stock 057'
         };
         let openTabs = ['home'];
         let allUsers = [];
@@ -1954,7 +2085,12 @@
 
             if (p === 'livechat') initLiveChat();
             if (p === 'bank_accounts') loadBankAccounts();
+            if (p === 'products') renderProducts();
+            if (p === 'stock057') renderStock057();
         }
+
+
+
 
         async function loadBankAccounts() {
             const tbody = document.getElementById('bankAccountsTableBody');
@@ -2106,7 +2242,7 @@
             }).map(m => {
                 const isAdmin = m.sender === 'Admin';
                 return `
-                <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'}; 
+                <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'};
                                 background: ${isAdmin ? '#3b82f6' : 'white'};
             color: ${isAdmin ? 'white' : '#1e293b'};
             padding: 10px 16px; border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'};
@@ -2356,10 +2492,10 @@
         }
 
         function openDepositModal(uid, uname) {
-            document.getElementById('dep_id').value = ''; // Reset ID for new
+            document.getElementById('dep_id').value = '';
             document.getElementById('dep_user_id').value = uid;
             document.getElementById('dep_username').value = uname || 'User #' + uid;
-            document.getElementById('dep_type').value = 'deposit'; // Default
+            document.getElementById('dep_type').value = 'deposit';
             document.getElementById('dep_amount').value = '';
             document.getElementById('dep_status').value = 'Approved';
             document.getElementById('dep_note').value = 'Manual Transaction by Admin';
@@ -2514,7 +2650,6 @@
                 if (getErr) throw getErr;
 
                 // 2. Handle balance reverson if Rejected (Assuming balance was deducted on request)
-                // Note: Balance deduction on request is a common pattern.
                 if (status === 'Rejected' && existing.status !== 'Rejected') {
                     const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', existing.user_id).single();
                     if (uErr) throw uErr;
@@ -2541,19 +2676,16 @@
             }
         }
 
-
         async function updateTradeStatus(id, newStatus) {
             const client = DB.getClient();
             showLoader(true);
             try {
-                // 1. Fetch current trade details
                 const { data: trade, error: tErr } = await client.from('trades').select('*').eq('id', id).single();
                 if (tErr || !trade) throw new Error("Trade not found");
 
                 const uid = trade.user_id;
                 const amount = parseFloat(trade.total_amount);
 
-                // 2. Fetch User
                 const { data: user, error: uErr } = await client.from('users').select('*').eq('id', uid).single();
                 if (uErr || !user) throw new Error("User not found: " + uid);
 
@@ -2564,9 +2696,7 @@
                 let newInvested = currentInvested;
                 let shouldUpdateUser = false;
 
-                // Logic for State Transitions
                 if (trade.status === 'Pending' && newStatus === 'Settled') {
-                    // Approve: Deduct Balance, Add to Invested
                     if (currentBalance < amount) {
                         alert(`Cannot approve: User (ID: ${uid}) has insufficient balance (₹${currentBalance.toFixed(2)}) for this trade (₹${amount.toFixed(2)}).`);
                         showLoader(false);
@@ -2577,14 +2707,11 @@
                     shouldUpdateUser = true;
 
                 } else if (trade.status === 'Settled' && newStatus === 'Rejected') {
-                    // Reject previously settled: Refund Balance, Reduce Invested
-                    // (Assuming we want to reverse the trade completely)
                     newBalance += amount;
                     newInvested -= amount;
                     shouldUpdateUser = true;
 
                 } else if (trade.status === 'Rejected' && newStatus === 'Settled') {
-                    // Re-approve: Deduct Balance, Add to Invested
                     if (currentBalance < amount) {
                         alert(`Cannot approve: User (ID: ${uid}) has insufficient balance (₹${currentBalance.toFixed(2)}) for this trade (₹${amount.toFixed(2)}).`);
                         showLoader(false);
@@ -2594,9 +2721,7 @@
                     newInvested += amount;
                     shouldUpdateUser = true;
                 }
-                // (Pending -> Rejected: No balance change needed as it wasn't deducted yet)
 
-                // 3. Update User Balance if needed
                 if (shouldUpdateUser) {
                     const { error: upUserErr } = await client.from('users').update({
                         balance: newBalance,
@@ -2605,7 +2730,6 @@
                     if (upUserErr) throw new Error("Failed to update user balance: " + upUserErr.message);
                 }
 
-                // 4. Update Trade Status
                 const { error: upTradeErr } = await client.from('trades').update({
                     status: newStatus,
                     processed_at: new Date().toISOString()
@@ -2623,10 +2747,7 @@
                 } catch (ne) { console.error(ne); }
 
                 alert(`Trade #${id} successfully updated to ${newStatus}.`);
-
-                // Refresh Dashboard
-                if (typeof init === 'function') init();
-                else window.location.reload();
+                init();
 
             } catch (e) {
                 console.error(e);
@@ -2639,8 +2760,202 @@
         function adminLogout() { if (confirm("Logout from admin terminal?")) { sessionStorage.removeItem('admin_auth'); window.location.href = 'admin_login.html'; } }
         function toggleSub(id) { document.getElementById(id + 'Sub').classList.toggle('show'); }
         function showLoader(s) { document.getElementById('vslLoader').style.display = s ? 'flex' : 'none'; }
+
+        // --- Product Management Logic ---
+        let products = JSON.parse(localStorage.getItem('vsl_products') || '[]');
+
+        function openAddProductModal() {
+            console.log("Opening Add Product Modal...");
+            const modal = document.getElementById('addProductModal');
+            if (!modal) {
+                console.error("Modal element not found!");
+                return;
+            }
+
+            // Reset fields
+            const fields = ['p_name', 'p_profit', 'p_price', 'p_start', 'p_end', 'p_listing', 'p_min', 'p_max', 'p_desc'];
+            fields.forEach(f => {
+                const el = document.getElementById(f);
+                if (el) el.value = (f === 'p_min') ? '100000' : (f === 'p_max' ? '10000000' : '');
+            });
+
+            const premium = document.getElementById('p_premium');
+            if (premium) premium.checked = false;
+
+            modal.style.display = 'flex';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeProductModal() {
+            document.getElementById('addProductModal').style.display = 'none';
+        }
+
+        function saveProduct() {
+            const p = {
+                id: Date.now(),
+                name: document.getElementById('p_name').value,
+                profit: document.getElementById('p_profit').value,
+                price: document.getElementById('p_price').value,
+                start: document.getElementById('p_start').value,
+                end: document.getElementById('p_end').value,
+                listing: document.getElementById('p_listing').value,
+                min: document.getElementById('p_min').value,
+                max: document.getElementById('p_max').value,
+                premium: document.getElementById('p_premium').checked,
+                desc: document.getElementById('p_desc').value,
+                status: 'Active'
+            };
+
+            if (!p.name) { alert("Product Name is required!"); return; }
+
+            products.push(p);
+            localStorage.setItem('vsl_products', JSON.stringify(products));
+            alert("Product saved successfully! Note: Using localStorage for testing.");
+            closeProductModal();
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            if (!list) return;
+            if (products.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">No products found. Add one to see it here.</td></tr>';
+                return;
+            }
+            list.innerHTML = products.map(p => `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px; font-weight:600;">${p.name}</td>
+                    <td style="padding:12px; color:#10b981;">${p.profit}</td>
+                    <td style="padding:12px;">${p.listing}</td>
+                    <td style="padding:12px;"><span class="vsl-badge approved">Selling</span></td>
+                    <td style="padding:12px;">
+                        <button class="vsl-btn-small" style="background:#ef4444; color:white; border:none;" onclick="deleteProduct(${p.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteProduct(id) {
+            if (!confirm("Are you sure you want to delete this product?")) return;
+            products = products.filter(p => p.id !== id);
+            localStorage.setItem('vsl_products', JSON.stringify(products));
+            renderProducts();
+        }
+
+        // --- Institutional Stock 057 Logic ---
+        function renderStock057() {
+            const page = document.getElementById('pageStock057');
+            if (!page) return;
+            page.innerHTML = `
+                <div class="vsl-header">
+                    <h2 class="vsl-title">Institutional Stock 057</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="section-card">
+                        <h3>Configuration</h3>
+                        <div class="fm-group">
+                            <label>Terminal Status</label>
+                            <select class="vsl-input">
+                                <option>Online</option>
+                                <option>Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="fm-group">
+                            <label>Max Quantity (Institutional)</label>
+                            <input type="number" class="vsl-input" value="1000000">
+                        </div>
+                        <button class="vsl-btn-primary" style="width:100%;" onclick="alert('Config saved!')">Update Configuration</button>
+                    </div>
+                    <div class="section-card">
+                        <h3>Active Terminals</h3>
+                        <div class="vsl-table-wrap">
+                            <table class="vsl-table" style="width:100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Terminal ID</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>T-057-01</td>
+                                        <td>Mumbai Hub</td>
+                                        <td><span class="vsl-badge approved">Active</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>T-057-02</td>
+                                        <td>Delhi DC</td>
+                                        <td><span class="vsl-badge approved">Active</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         window.onload = () => { switchPage('home'); init(); };
     </script>
+
+    <div id="addProductModal" class="vsl-modal">
+        <div class="section-card" style="width:100%; max-width:600px; max-height:90vh; overflow-y:auto; margin:0;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid #f1f5f9; padding-bottom:1rem;">
+                <h3 style="margin:0;">Add New Product</h3>
+                <button onclick="closeProductModal()" style="background:none; border:none; cursor:pointer;"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="fm-group" style="grid-column: span 2;">
+                    <label>Product Name</label>
+                    <input type="text" id="p_name" class="vsl-input" placeholder="e.g. Colgate-Palmolive India">
+                </div>
+                <div class="fm-group">
+                    <label>Estimated Profit</label>
+                    <input type="text" id="p_profit" class="vsl-input" placeholder="e.g. 31.39%">
+                </div>
+                <div class="fm-group">
+                    <label>Allocation Price</label>
+                    <input type="text" id="p_price" class="vsl-input" placeholder="e.g. 1648.88">
+                </div>
+                <div class="fm-group">
+                    <label>Start Subscription</label>
+                    <input type="datetime-local" id="p_start" class="vsl-input">
+                </div>
+                <div class="fm-group">
+                    <label>End Subscription</label>
+                    <input type="datetime-local" id="p_end" class="vsl-input">
+                </div>
+                <div class="fm-group">
+                    <label>Listing Date</label>
+                    <input type="date" id="p_listing" class="vsl-input">
+                </div>
+                <div class="fm-group">
+                    <label>Minimum Investment</label>
+                    <input type="number" id="p_min" class="vsl-input" placeholder="e.g. 100000">
+                </div>
+                <div class="fm-group">
+                    <label>Maximum Investment</label>
+                    <input type="number" id="p_max" class="vsl-input" placeholder="e.g. 10000000">
+                </div>
+                <div class="fm-group" style="grid-column: span 2; display:flex; align-items:center; gap:1rem;">
+                    <label style="margin:0;">Enable High Premium Product</label>
+                    <input type="checkbox" id="p_premium" style="width:20px; height:20px;">
+                </div>
+                <div class="fm-group" style="grid-column: span 2;">
+                    <label>Product Details</label>
+                    <textarea id="p_desc" class="vsl-input" style="height:100px; resize:none;"></textarea>
+                </div>
+            </div>
+            <div style="margin-top:2rem; display:flex; justify-content:flex-end; gap:1rem;">
+                <button onclick="closeProductModal()" class="vsl-btn-small"
+                    style="background:#f1f5f9; color:#64748b;">Cancel</button>
+                <button onclick="saveProduct()" class="vsl-btn-primary">Save Product</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

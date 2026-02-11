@@ -4386,7 +4386,7 @@
                     // Mock additional premium data if missing
                     const profitRange = (isIPO && s.yield) ? s.yield : (isIPO ? "100% - 300%" : "20% - 60%");
                     const vipLv = (isIPO && s.level) ? s.level : (isIPO ? "Lv ≥ 2" : "Lv ≥ 1");
-                    const isLocked = isIPO && s.symbol.includes('HYUNDAI'); // Mock one locked item
+                    const isLocked = false; // Allow all IPOs to be viewable for now as requested
                     const exchange = s.symbol.includes('NSE') ? 'NSE' : 'BSE';
 
                     if (s.type === 'stock') {
@@ -4444,7 +4444,7 @@
                                 </div>
                             </div>
                             <button class="premium-subscribe-btn ${isLocked ? 'locked' : ''}" 
-                                onclick="openStockDetail('${s.symbol}', '${s.name}', '${exchange}', '₹${s.price.toLocaleString('en-IN')}', '0.00%', '#10b981', '${s.type}')">
+                                onclick="openStockDetail('${s.symbol}', '${s.name}', '${exchange}', '₹${s.price.toLocaleString('en-IN')}', '${profitRange}', '#10b981', '${s.type}')">
                                 ${isLocked ? 'Locked' : 'Subscribe'}
                             </button>
                         </div>
@@ -4553,9 +4553,9 @@
 
         async function handleTradeAction() {
             const btn = document.getElementById('buyBtn');
-            const type = btn.dataset.type || 'stock';
+            const type = (btn.dataset.type || 'stock').toLowerCase();
+            const symbol = document.getElementById('detSymbol').innerText;
             const stockName = document.getElementById('detName').innerText;
-            const symbol = document.getElementById('detSymbol').innerText; // Assuming this exists from openStockDetail
 
             const calc = updateBuyCalculations();
             if (!calc || calc.qty <= 0) {
@@ -5436,6 +5436,80 @@
 
         /* Holding & Selling Modal Controls */
         function openHoldingDetail(tradeId) {
+            const queuedNotice = document.getElementById('hdQueuedNotice');
+            const outstandingNotice = document.getElementById('hdOutstandingNotice');
+            const settleBtn = document.getElementById('settleBtnContainer');
+            const saleValueRow = document.getElementById('hdSaleValueRow');
+            const timelineTitle = document.getElementById('hdTimelineTitle');
+
+            if (queuedNotice) queuedNotice.style.display = 'none';
+            if (outstandingNotice) outstandingNotice.style.display = 'none';
+            if (settleBtn) settleBtn.style.display = 'none';
+
+            if (tradeId.startsWith('LISTING:')) {
+                const symbol = tradeId.split(':')[1];
+                let listing = (window.MarketEngine ? window.MarketEngine.getIPO().find(x => x.symbol === symbol) : null);
+
+                // Fallback for search by name if symbol exact match fails
+                if (!listing && window.MarketEngine) {
+                    listing = window.MarketEngine.getIPO().find(x => symbol.includes(x.symbol) || x.symbol.includes(symbol));
+                }
+
+                if (!listing) listing = { symbol, name: symbol, price: 0, yield: 'TBD' };
+
+                document.getElementById('hdStockTitle').innerText = listing.name || symbol;
+                document.getElementById('hdTotalVal').innerText = '₹0.00';
+                document.getElementById('hdTradeId').innerText = 'Listing Information';
+                document.getElementById('hdAssetName').innerText = listing.name || symbol;
+                document.getElementById('hdAssetType').innerText = 'IPO Information';
+                document.getElementById('hdSymbol').innerText = symbol;
+                document.getElementById('hdQty').innerText = '-';
+                document.getElementById('hdBuyPrice').innerText = '₹' + parseFloat(listing.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('hdOrderVal').innerText = '-';
+
+                document.getElementById('hdCurrPrice').innerText = '-';
+                document.getElementById('hdProfit').innerText = '-';
+
+                document.getElementById('hdPremiumHeader').style.display = 'block';
+                document.getElementById('hdPremiumTitle').innerText = (listing.name || symbol) + ' (QIB)';
+                document.getElementById('hdPremiumYield').innerText = listing.yield || 'TBD';
+                document.getElementById('hdEstProfit').innerText = listing.yield || 'TBD';
+
+                document.getElementById('hdNormalTradeTitle').innerText = (listing.name || symbol) + ' Listing Info';
+                document.getElementById('hdAssetLabel').innerText = 'Subscription Price';
+                document.getElementById('hdAssetName').innerText = '₹' + parseFloat(listing.price || 0).toLocaleString('en-IN');
+
+                document.getElementById('hdAllocPriceRow').style.display = 'table-row';
+                document.getElementById('hdAllocPrice').innerText = '₹' + parseFloat(listing.price || 0).toLocaleString('en-IN');
+
+                document.getElementById('hdSubDateRow').style.display = 'table-row';
+                document.getElementById('hdSubDate').innerText = listing.subDate || 'Open Now';
+
+                document.getElementById('hdDeadlineRow').style.display = 'table-row';
+                document.getElementById('hdDeadline').innerText = listing.deadline || 'Final Call';
+
+                document.getElementById('hdAllocDateRow').style.display = 'table-row';
+                document.getElementById('hdAllocDate').innerText = listing.allocDate || 'Pending';
+
+                document.getElementById('hdListingDateRow').style.display = 'table-row';
+                document.getElementById('hdListingDate').innerText = listing.listingDate || 'TBD';
+
+                document.getElementById('hdEstProfitRow').style.display = 'table-row';
+
+                document.getElementById('hdNormalTypeRow').style.display = 'none';
+                document.getElementById('hdNormalQtyRow').style.display = 'none';
+                document.getElementById('hdNormalBuyPriceRow').style.display = 'none';
+                document.getElementById('hdNormalOrderValRow').style.display = 'none';
+                document.getElementById('hdNormalCurrPriceRow').style.display = 'none';
+                document.getElementById('hdNormalProfitRow').style.display = 'none';
+                document.getElementById('hdTimelineTitle').style.display = 'none';
+                document.getElementById('hdBuyTimeline').style.display = 'none';
+
+                document.getElementById('holdingDetailModal').style.display = 'flex';
+                lucide.createIcons();
+                return;
+            }
+
             const trade = transactionData.all.find(t => t.id == tradeId);
             if (!trade) {
                 console.error("Trade not found:", tradeId);
@@ -5468,16 +5542,6 @@
             const isOutstanding = trade.status === 'Pending' && (note === 'OUTSTANDING_BALANCE' || note.startsWith('OUTSTANDING:'));
             const isPending = trade.status === 'Pending' && !isOutstanding;
 
-            const queuedNotice = document.getElementById('hdQueuedNotice');
-            const outstandingNotice = document.getElementById('hdOutstandingNotice');
-            const settleBtn = document.getElementById('settleBtnContainer');
-            const saleValueRow = document.getElementById('hdSaleValueRow');
-            const timelineTitle = document.getElementById('hdTimelineTitle');
-
-            if (queuedNotice) queuedNotice.style.display = 'none';
-            if (outstandingNotice) outstandingNotice.style.display = 'none';
-            if (settleBtn) settleBtn.style.display = 'none';
-
             if (isPending) {
                 document.getElementById('hdCurrPrice').innerText = '-';
                 document.getElementById('hdProfit').innerText = '-';
@@ -5485,8 +5549,18 @@
                 document.getElementById('hdCurrPrice').style.color = '#1e293b';
                 if (queuedNotice) queuedNotice.style.display = 'block';
                 if (saleValueRow) saleValueRow.style.display = 'none';
-                if (timelineTitle) timelineTitle.innerText = 'Subscribe';
-                document.getElementById('hdBuyTimeline').innerText = `Subscribe @ ${dateStr.replace(/\//g, '-')}`;
+
+                if (trade.type === 'ipo') {
+                    if (timelineTitle) timelineTitle.innerText = 'Subscribe';
+                    document.getElementById('hdBuyTimeline').innerText = `Subscribe @ ${dateStr.replace(/\//g, '-')}`;
+                    // Additional "Black Arrow" UI for IPO Pending
+                    const listingInfo = note.includes('LISTING:') ? note.split('LISTING:')[1].split(';')[0] : 'TBD';
+                    const estProfit = note.includes('PROFIT:') ? note.split('PROFIT:')[1].split(';')[0] : 'TBD';
+                    document.getElementById('hdBuyTimeline').innerHTML += `<br><span style="margin-top:0.5rem; display:block;">Listing Date (est): ${listingInfo}</span><span style="display:block;">Estimated Profit: ${estProfit}</span>`;
+                } else {
+                    if (timelineTitle) timelineTitle.innerText = 'Pending Approval';
+                    document.getElementById('hdBuyTimeline').innerText = `Order Placed @ ${dateStr.replace(/\//g, '-')}`;
+                }
             } else {
                 document.getElementById('hdCurrPrice').innerText = '₹' + mockCurrPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
                 document.getElementById('hdProfit').innerText = `₹${profitValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${profitValue >= 0 ? '+' : ''}${profitPct.toFixed(2)}%)`;
@@ -5521,8 +5595,47 @@
                     }
                 }
 
-                if (timelineTitle) timelineTitle.innerText = 'Buy Time';
-                document.getElementById('hdBuyTimeline').innerText = `${dateStr.replace(/\//g, '-')} — Buy @ ₹${parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })} • Total ₹${parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+                if (trade.type === 'ipo') {
+                    if (timelineTitle) timelineTitle.innerText = 'Listing Time';
+                    document.getElementById('hdBuyTimeline').innerText = `Listed @ ${dateStr.replace(/\//g, '-')} — Price ₹${mockCurrPrice.toLocaleString('en-IN')}`;
+                } else {
+                    if (timelineTitle) timelineTitle.innerText = 'Buy Time';
+                    document.getElementById('hdBuyTimeline').innerText = `${dateStr.replace(/\//g, '-')} — Buy @ ₹${parseFloat(trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })} • Total ₹${parseFloat(trade.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+                }
+            }
+
+            // --- IPO Milestone Data (Blue Arrow Section) ---
+            const isIPO = trade.type === 'ipo';
+            document.getElementById('hdPremiumHeader').style.display = isIPO ? 'block' : 'none';
+            document.getElementById('hdNormalTradeTitle').innerText = isIPO ? (trade.name + ' Allocation Price:') : 'Trading Infomation';
+            document.getElementById('hdAssetLabel').innerText = isIPO ? 'Allocation Price' : 'Asset Name';
+
+            // Show/Hide IPO rows
+            ['hdAllocPrice', 'hdSubDate', 'hdDeadline', 'hdAllocDate', 'hdListingDate', 'hdEstProfit'].forEach(id => {
+                const row = document.getElementById(id + 'Row');
+                if (row) row.style.display = isIPO ? 'table-row' : 'none';
+            });
+            document.getElementById('hdNormalTypeRow').style.display = isIPO ? 'none' : 'table-row';
+
+            if (isIPO) {
+                // Try to find original listing data for accurate dates/yields
+                const listing = (window.MarketEngine ? window.MarketEngine.getIPO().find(x => x.symbol === trade.symbol) : null);
+                const parseNote = (key) => note.includes(key + ':') ? note.split(key + ':')[1].split(';')[0] : null;
+
+                document.getElementById('hdPremiumTitle').innerText = trade.name + ' (QIB)';
+                const yieldVal = parseNote('PROFIT') || (listing ? listing.yield : '300%');
+                document.getElementById('hdPremiumYield').innerText = yieldVal;
+                document.getElementById('hdEstProfit').innerText = yieldVal;
+
+                document.getElementById('hdAssetName').innerText = '₹' + parseFloat(trade.price).toLocaleString('en-IN');
+                document.getElementById('hdAllocPrice').innerText = '₹' + parseFloat(trade.price).toLocaleString('en-IN');
+                document.getElementById('hdSubDate').innerText = parseNote('SUB_DATE') || (listing ? listing.subDate : dateStr.split(' ')[0]);
+                document.getElementById('hdDeadline').innerText = parseNote('DEADLINE') || (listing ? listing.deadline : 'TBD');
+                document.getElementById('hdAllocDate').innerText = parseNote('ALLOC_DATE') || (listing ? listing.allocDate : 'Pending');
+                document.getElementById('hdListingDate').innerText = parseNote('LISTING') || (listing ? listing.listingDate : 'TBD');
+
+                // Redesign labels to match Blue Arrow section
+                document.getElementById('hdAssetName').innerText = '₹' + parseFloat(trade.price).toLocaleString('en-IN');
             }
 
             // Set Market based on symbol if possible, else default BSE
@@ -5530,6 +5643,10 @@
 
             document.getElementById('holdingDetailModal').style.display = 'flex';
             lucide.createIcons();
+        }
+
+        function openIpoListingDetail(symbol) {
+            openHoldingDetail('LISTING:' + symbol);
         }
 
         async function settleOutstanding(tradeId, btnEl) {
@@ -5891,8 +6008,17 @@
                     </span>
                 </div>
 
-                <div style="font-weight: 700; color: #1e293b; margin-bottom: 1rem; font-size: 1.05rem;">Trading
-                    Infomation</div>
+                <!-- Premium IPO Header (Green Arrow Section) -->
+                <div id="hdPremiumHeader" style="display: none; text-align: center; margin-bottom: 2rem;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 1.15rem; margin-bottom: 0.5rem;"
+                        id="hdPremiumTitle">ICICI India IPO (QIB)</div>
+                    <div style="font-size: 2.5rem; font-weight: 800; color: #10b981; margin-bottom: 0.25rem;"
+                        id="hdPremiumYield">300%</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Estimated Profit</div>
+                </div>
+
+                <div style="font-weight: 700; color: #1e293b; margin-bottom: 1rem; font-size: 1.05rem;"
+                    id="hdNormalTradeTitle">Trading Infomation</div>
                 <table class="detail-info-table" style="width: 100%; border-collapse: collapse;">
                     <style>
                         .detail-info-table tr td {
@@ -5913,10 +6039,34 @@
                         }
                     </style>
                     <tr>
-                        <td>Asset Name</td>
+                        <td id="hdAssetLabel">Asset Name</td>
                         <td id="hdAssetName">-</td>
                     </tr>
-                    <tr>
+                    <tr id="hdAllocPriceRow" style="display: none;">
+                        <td>Allocation Price</td>
+                        <td id="hdAllocPrice">₹0.00</td>
+                    </tr>
+                    <tr id="hdSubDateRow" style="display: none;">
+                        <td>Subscription Date</td>
+                        <td id="hdSubDate">-</td>
+                    </tr>
+                    <tr id="hdDeadlineRow" style="display: none;">
+                        <td>Subscription Deadline</td>
+                        <td id="hdDeadline">-</td>
+                    </tr>
+                    <tr id="hdAllocDateRow" style="display: none;">
+                        <td>Allocation Date</td>
+                        <td id="hdAllocDate">-</td>
+                    </tr>
+                    <tr id="hdListingDateRow" style="display: none;">
+                        <td>Listing Date</td>
+                        <td id="hdListingDate">-</td>
+                    </tr>
+                    <tr id="hdEstProfitRow" style="display: none;">
+                        <td>Estimated Profit</td>
+                        <td id="hdEstProfit" style="color: #10b981 !important;">300%</td>
+                    </tr>
+                    <tr id="hdNormalTypeRow">
                         <td>Asset Type</td>
                         <td id="hdAssetType" style="color: #6366f1 !important;">Standard</td>
                     </tr>
@@ -5932,15 +6082,15 @@
                         <td>Symbol</td>
                         <td id="hdSymbol">-</td>
                     </tr>
-                    <tr>
+                    <tr id="hdNormalQtyRow">
                         <td>Quantity</td>
                         <td id="hdQty">0</td>
                     </tr>
-                    <tr>
+                    <tr id="hdNormalBuyPriceRow">
                         <td>Buy Price</td>
                         <td id="hdBuyPrice" style="color: #3b82f6 !important;">₹0.00</td>
                     </tr>
-                    <tr>
+                    <tr id="hdNormalOrderValRow">
                         <td>Total Order Value</td>
                         <td id="hdOrderVal">₹0.00</td>
                     </tr>
@@ -5948,11 +6098,11 @@
                         <td>Total Sale Value</td>
                         <td id="hdTotalSaleVal">₹0.00</td>
                     </tr>
-                    <tr>
+                    <tr id="hdNormalCurrPriceRow">
                         <td>Current Price</td>
                         <td id="hdCurrPrice" style="color: #10b981 !important;">₹0.00</td>
                     </tr>
-                    <tr>
+                    <tr id="hdNormalProfitRow">
                         <td>Profit</td>
                         <td id="hdProfit" style="color: #10b981 !important;">₹0.00 (0.00%)</td>
                     </tr>

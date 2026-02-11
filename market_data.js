@@ -138,7 +138,7 @@
         search(query) {
             if (!query) return [];
             const q = query.toLowerCase();
-            const all = [...this.stocks, ...this.otc, ...this.ipo, ...this.indices];
+            const all = [...this.stocks, ...this.otc, ...this.getIPO(), ...this.indices];
             return all.filter(s =>
                 s.symbol.toLowerCase().includes(q) ||
                 s.name.toLowerCase().includes(q)
@@ -149,10 +149,25 @@
 
         getAllStocks() { return this.stocks; }
         getOTC() { return this.otc; }
-        getIPO() { return this.ipo; }
+        getIPO() {
+            const localProducts = JSON.parse(localStorage.getItem('vsl_products') || '[]');
+            const mapped = localProducts.map(p => ({
+                symbol: p.name.split(' ')[0].toUpperCase() + '-IPO',
+                name: p.name,
+                price: parseFloat(p.price) || 0,
+                yield: p.profit || 'TBD',
+                subDate: p.start || 'TBD',
+                deadline: p.end || 'TBD',
+                listingDate: p.listing || 'TBD',
+                level: (parseFloat(p.min) > 100000) ? 'Lv ≥ 2' : 'Lv ≥ 1',
+                type: 'IPO',
+                change: 0
+            }));
+            return [...this.ipo, ...mapped];
+        }
 
         getProduct(symbol) {
-            const all = [...this.stocks, ...this.otc, ...this.ipo, ...this.indices];
+            const all = [...this.stocks, ...this.otc, ...this.getIPO(), ...this.indices];
             return all.find(s => s.symbol === symbol);
         }
     }
