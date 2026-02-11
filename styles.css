@@ -1,216 +1,156 @@
 /* =====================================================
-   BLACK GOLD INSTITUTIONAL TERMINAL – FINAL CLEAN VERSION
+   FINAL STOP-BLEED OVERRIDE – BLACK GOLD INSTITUTIONAL
+   放在 CSS 最底部，不要改上面的任何代码
    ===================================================== */
 
-:root {
-  --bg-main: #07090c;
-  --bg-card: #0e1117;
-  --bg-elevated: #131826;
-
-  --gold: #d4b36a;
-  --gold-soft: #f0d99a;
-  --gold-dim: rgba(212,179,106,0.12);
-
-  --text-main: #f3f4f6;
-  --text-muted: #9aa4b2;
-  --text-dim: #6b7280;
-
-  --positive-green: #3ddc97;
-  --negative-red: #f87171;
-
-  --border-dark: rgba(255,255,255,0.06);
-
-  --header-height: 72px;
-  --transition: all .25s ease;
-}
-
-/* ===== RESET ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* ===== 全局背景 & 文字兜底 ===== */
 body {
-  font-family: 'Outfit', system-ui, sans-serif;
-  background: var(--bg-main);
-  color: var(--text-main);
-  line-height: 1.5;
+  background: var(--bg-main) !important;
+  color: var(--text-main) !important;
 }
 
-/* ===== LAYOUT ===== */
-.app-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem;
+/* ===== 强制消灭蓝色（SaaS / App 感）===== */
+[class*="blue"],
+[class*="primary"]:hover,
+.nav-item:hover,
+.control-btn:hover,
+.settings-item:hover,
+.submenu-item:hover {
+  color: var(--gold) !important;
 }
 
-/* ===== HEADER ===== */
-.header {
-  height: var(--header-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(
-    to bottom,
-    rgba(7,9,12,0.98),
-    rgba(7,9,12,0.9)
-  );
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(212,179,106,0.15);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+.ma-line-svg path,
+.settings-item:hover,
+.mc-item:hover {
+  border-color: rgba(212,179,106,0.35) !important;
 }
 
-.logo-name {
-  color: var(--gold);
-  font-weight: 800;
+/* ===== 输入框 / 白底全部黑化 ===== */
+input,
+textarea,
+.search-input,
+.reg-input,
+.kyc-field-input {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-dark) !important;
 }
 
-.logo-tagline {
-  color: rgba(212,179,106,0.6);
-  font-size: 0.75rem;
-  letter-spacing: 2px;
+input::placeholder {
+  color: var(--text-dim) !important;
 }
 
-/* ===== NAV ===== */
-.nav {
-  display: flex;
-  gap: .4rem;
-  background: rgba(255,255,255,0.06);
-  padding: .4rem;
-  border-radius: 14px;
-  border: 1px solid var(--border-dark);
-}
-
-.nav-item {
-  color: var(--text-muted);
-  padding: .45rem .9rem;
-  border-radius: 10px;
-  font-size: .9rem;
-  transition: var(--transition);
-}
-
-.nav-item:hover {
-  color: var(--text-main);
-  background: rgba(255,255,255,0.06);
-}
-
-.nav-item.active {
-  color: var(--gold);
-  background: var(--gold-dim);
-}
-
-/* ===== SEARCH ===== */
-.search-input {
-  background: var(--bg-card);
-  border: 1px solid var(--border-dark);
-  color: var(--text-main);
-  padding: .6rem 1rem .6rem 2.6rem;
-  border-radius: 10px;
-}
-
+/* 禁止 focus 变白 */
+input:focus,
 .search-input:focus {
-  outline: none;
-  border-color: rgba(212,179,106,0.4);
+  background: var(--bg-card) !important;
+  box-shadow: none !important;
 }
 
-/* ===== BUTTONS ===== */
+/* ===== 卡片统一黑卡 ===== */
+.card,
+.stock-card,
+.offer-card,
+.notif-card,
+.mc-item,
+.settings-item,
+.chat-bubble.support,
+.image-placeholder,
+.index-card,
+.search-results-dropdown,
+.search-item,
+.center-content,
+.settings-content,
+.message-center-modal {
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-dark) !important;
+}
+
+/* ===== 彻底关掉白色 hover ===== */
+.card:hover,
+.stock-card:hover,
+.offer-card:hover,
+.settings-item:hover,
+.mc-item:hover,
+.search-item:hover {
+  background: var(--bg-elevated) !important;
+}
+
+/* ===== 主按钮：只允许金色 ===== */
 .primary-terminal-btn,
 .join-btn-large,
 .btn-deposit,
 .btn-submit,
-.btn-primary {
-  background: linear-gradient(135deg,#d4b36a,#9f7c32);
-  color: #07090c;
-  font-weight: 800;
-  border: none;
-  border-radius: 12px;
-  transition: var(--transition);
+.btn-primary,
+.floating-csr {
+  background: linear-gradient(135deg, #d4b36a, #9f7c32) !important;
+  color: #07090c !important;
+  box-shadow: none !important;
 }
 
+/* 禁止主按钮 hover 变蓝 */
 .primary-terminal-btn:hover,
-.join-btn-large:hover {
-  filter: brightness(1.08);
+.join-btn-large:hover,
+.btn-submit:hover,
+.btn-primary:hover,
+.floating-csr:hover {
+  background: linear-gradient(135deg, #e6c77a, #b8963f) !important;
   transform: translateY(-2px);
 }
 
-.secondary-terminal-btn {
-  background: transparent;
-  border: 1px solid rgba(212,179,106,0.35);
-  color: var(--gold);
-  border-radius: 12px;
+/* ===== 次按钮 / 提现：降级 ===== */
+.btn-withdraw,
+.secondary-terminal-btn,
+.btn-secondary {
+  background: transparent !important;
+  color: var(--gold) !important;
+  border: 1px solid rgba(212,179,106,0.35) !important;
 }
 
-/* ===== CARDS ===== */
-.card,
-.stock-card,
-.offer-card,
-.portfolio-summary-bar {
-  background: var(--bg-card);
-  border: 1px solid var(--border-dark);
-  border-radius: 18px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.55);
-}
-
-/* ===== TERMINAL ===== */
+/* ===== 图表止荧光 ===== */
 .tech-grid {
   background-image:
     linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px) !important;
 }
 
-.p-candle.green { background: var(--positive-green); }
-.p-candle.red   { background: var(--negative-red); }
-
-.ma-line-svg path {
-  stroke: rgba(212,179,106,0.6);
+.live-price-marker {
+  box-shadow: none !important;
 }
 
-/* ===== VIDEO ===== */
-.video-container video {
-  animation: kenBurns 24s ease-in-out infinite alternate;
-}
-
-@keyframes kenBurns {
-  from { transform: scale(1); }
-  to   { transform: scale(1.12); }
-}
-
-/* ===== FLOAT KILL ===== */
+/* ===== 关闭浮夸动画 ===== */
 @keyframes floatText {
-  0%,100% { transform: translateY(0); }
+  0%,100% { transform: translateY(0) !important; }
 }
 
-/* ===== MODALS ===== */
-.settings-content,
-.center-content,
-.message-center-modal {
-  background: var(--bg-card);
-  border: 1px solid var(--border-dark);
+/* 禁用 glimmer */
+.video-container::after {
+  display: none !important;
 }
 
-/* ===== CHAT ===== */
+/* ===== 聊天气泡统一 ===== */
 .chat-bubble.user {
-  background: linear-gradient(135deg,#d4b36a,#9f7c32);
-  color: #07090c;
+  background: linear-gradient(135deg, #d4b36a, #9f7c32) !important;
+  color: #07090c !important;
 }
 
 .chat-bubble.support {
-  background: var(--bg-elevated);
-  color: var(--text-main);
-  border: 1px solid var(--border-dark);
+  background: var(--bg-elevated) !important;
+  color: var(--text-main) !important;
 }
 
-/* ===== FLOATING CSR ===== */
-.floating-csr {
-  background: linear-gradient(135deg,#d4b36a,#9f7c32);
-  color: #07090c;
+/* ===== 消灭所有亮橙 / 活动感 ===== */
+[class*="orange"],
+.ivsl-btn.withdraw,
+.ivsl-vip-badge {
+  background: transparent !important;
+  color: var(--gold) !important;
+  border: 1px solid rgba(212,179,106,0.35) !important;
 }
 
-/* ===== FOOTER ===== */
+/* ===== Footer 稳定 ===== */
 .footer {
-  border-top: 1px solid var(--border-dark);
-  color: var(--text-muted);
+  border-top: 1px solid var(--border-dark) !important;
+  color: var(--text-muted) !important;
 }
