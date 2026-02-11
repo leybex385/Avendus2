@@ -60,9 +60,11 @@
 
         .asset-mini-card {
             background: #f8fafc;
-            padding: 1rem;
+            padding: 0.8rem 0.6rem;
             border-radius: 12px;
             border: 1px solid #f1f5f9;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .asset-label {
@@ -73,7 +75,9 @@
 
         .asset-val {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
+            word-break: break-all;
+            line-height: 1.2;
         }
 
         .asset-val.green {
@@ -3537,76 +3541,113 @@
                 <!-- Statistics Section -->
                 <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem;">
                     <!-- Invested Card -->
-                    <div class="p-card" style="flex: 1; margin-bottom: 0;">
+                    <div class="p-card" style="flex: 1; margin-bottom: 0; min-width: 0;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                             <span style="font-weight: 700; color: #1e56a0;">Invested</span>
                             <span style="font-size: 0.8rem; color: #3b82f6;">INR</span>
                         </div>
                         <div style="text-align: center;">
-                            <div id="pInvestedMain" style="font-size: 1.2rem; font-weight: 700; color: #10b981;">₹0.00
-                            </div>
-                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">Invested</div>
-                            <div class="donut-circle-box" style="margin-bottom: 1.5rem;">
-                                <svg viewBox="0 0 100 100" style="width: 100%; transform: rotate(-90deg);">
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" />
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" stroke-width="12"
-                                        stroke-dasharray="251.2" stroke-dashoffset="180" stroke-linecap="round" />
+                            <div id="pInvestedMain"
+                                style="font-size: 1.25rem; font-weight: 800; color: #3b82f6; margin-bottom: 0.25rem;">
+                                ₹0.00</div>
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1.5rem; font-weight: 500;">
+                                Total Invested</div>
+                            <div class="donut-circle-box"
+                                style="margin: 0 auto 2rem; width: 140px; height: 140px; position: relative;">
+                                <svg viewBox="0 0 100 100"
+                                    style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" stroke-width="10" />
+                                    <circle id="pDonutCircle" cx="50" cy="50" r="40" fill="none" stroke="#10b981"
+                                        stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                                        stroke-linecap="round"
+                                        style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);" />
                                 </svg>
+                                <div
+                                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <div id="pDonutPct" style="font-size: 1.2rem; font-weight: 800; color: #1e293b;">0%
+                                    </div>
+                                    <div
+                                        style="font-size: 0.6rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">
+                                        Profit</div>
+                                </div>
                             </div>
                             <div
-                                style="display: flex; justify-content: center; gap: 1rem; font-size: 0.8rem; margin-bottom: 1rem;">
-                                <span style="display: flex; align-items: center; gap: 4px;">
-                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;">
+                                style="display: flex; justify-content: center; gap: 1.5rem; font-size: 0.8rem; margin-bottom: 1.5rem; padding: 0 0.5rem;">
+                                <span
+                                    style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #475569;">
+                                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;">
                                     </div> Invested
                                 </span>
-                                <span style="display: flex; align-items: center; gap: 4px;">
-                                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;">
+                                <span
+                                    style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #475569;">
+                                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;">
                                     </div> Profit
                                 </span>
                             </div>
                             <div
-                                style="display: flex; justify-content: space-around; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
-                                <div style="text-align: left;">
-                                    <div style="font-size: 0.7rem; color: #3b82f6; font-weight: 700;">PROFIT</div>
-                                    <div style="font-weight: 700; font-size: 0.9rem; color: #10b981;">₹0.00
-                                    </div>
+                                style="display: flex; justify-content: space-around; border-top: 1px solid #f1f5f9; padding-top: 1.25rem;">
+                                <div style="text-align: left; flex: 1;">
+                                    <div
+                                        style="font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;">
+                                        Overall Profit</div>
+                                    <div id="pProfitMain" style="font-weight: 800; font-size: 1.1rem; color: #10b981;">
+                                        ₹0.00</div>
                                 </div>
-                                <div style="text-align: left;">
-                                    <div style="font-size: 0.7rem; color: #3b82f6; font-weight: 700;">ROI</div>
-                                    <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">0.0%</div>
+                                <div style="text-align: right; flex: 1;">
+                                    <div
+                                        style="font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;">
+                                        Growth (ROI)</div>
+                                    <div id="pROIMain" style="font-weight: 800; font-size: 1.1rem; color: #1e293b;">
+                                        0.00%</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- Trades Card -->
-                    <div class="p-card" style="flex: 1; margin-bottom: 0;">
+                    <div class="p-card" style="flex: 1; margin-bottom: 0; min-width: 0;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                             <span style="font-weight: 700; color: #1e56a0;">Trades</span>
-                            <span style="font-size: 0.8rem; color: #64748b;">ROI</span>
+                            <span style="font-size: 0.8rem; color: #64748b;">ROI Tracking</span>
                         </div>
-                        <div style="text-align: center; position: relative;">
-                            <svg viewBox="0 0 100 50" style="width: 100%; margin-top: 2rem;">
-                                <!-- Semi-circle gauge with parts -->
-                                <path d="M 10 50 A 40 40 0 0 1 35 15" fill="none" stroke="#f87171" stroke-width="12" />
-                                <path d="M 35 15 A 40 40 0 0 1 65 15" fill="none" stroke="#fbbf24" stroke-width="12" />
-                                <path d="M 65 15 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="12" />
-                            </svg>
-                            <!-- Needle -->
+                        <div style="text-align: center; position: relative; padding-top: 1rem;">
                             <div
-                                style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) rotate(70deg); width: 2px; height: 35px; background: #1e293b; transform-origin: bottom center;">
-                                <div
-                                    style="width: 8px; height: 8px; border-radius: 50%; background: #1e293b; position: absolute; bottom: -4px; left: -3px;">
+                                style="width: 180px; height: 90px; margin: 0 auto; position: relative; overflow: hidden;">
+                                <svg viewBox="0 0 100 50" style="width: 100%; height: 100%;">
+                                    <!-- Background Gauge Track -->
+                                    <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#f1f5f9" stroke-width="10"
+                                        stroke-linecap="round" />
+                                    <!-- Segmented Indicators -->
+                                    <path d="M 10 50 A 40 40 0 0 1 35 15" fill="none" stroke="#f87171" stroke-width="10"
+                                        opacity="0.6" />
+                                    <path d="M 35 15 A 40 40 0 0 1 65 15" fill="none" stroke="#fbbf24" stroke-width="10"
+                                        opacity="0.6" />
+                                    <path d="M 65 15 A 40 40 0 0 1 90 50" fill="none" stroke="#10b981" stroke-width="10"
+                                        opacity="0.6" />
+                                </svg>
+                                <!-- Needle -->
+                                <div id="pGaugeNeedle"
+                                    style="position: absolute; bottom: 0; left: 50%; width: 3px; height: 45px; background: #1e293b; transform-origin: bottom center; transform: translateX(-50%) rotate(-90deg); transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px;">
+                                    <div
+                                        style="width: 10px; height: 10px; border-radius: 50%; background: #1e293b; position: absolute; bottom: -5px; left: -3.5px; border: 2px solid white;">
+                                    </div>
                                 </div>
                             </div>
+
                             <div
-                                style="display: flex; justify-content: space-around; margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
-                                <div style="text-align: left;">
-                                    <div style="font-size: 0.7rem; color: #64748b;">Trades</div>
-                                    <div style="font-weight: 700; font-size: 1rem; color: #1e293b;">0</div>
+                                style="display: flex; justify-content: space-around; margin-top: 2rem; border-top: 1px solid #f1f5f9; padding-top: 1.25rem;">
+                                <div style="text-align: left; flex: 1;">
+                                    <div
+                                        style="font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">
+                                        Total Trades</div>
+                                    <div id="pTradesCount" style="font-weight: 800; font-size: 1.1rem; color: #1e293b;">
+                                        0</div>
                                 </div>
-                                <div style="text-align: left;">
-                                    <div style="font-size: 0.7rem; color: #64748b;">Profit</div>
-                                    <div style="font-weight: 700; font-size: 1rem; color: #10b981;">₹0.00</div>
+                                <div style="text-align: right; flex: 1;">
+                                    <div
+                                        style="font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">
+                                        Direct Profit</div>
+                                    <div id="pTradesProfit"
+                                        style="font-weight: 800; font-size: 1.1rem; color: #10b981;">₹0.00</div>
                                 </div>
                             </div>
                         </div>
@@ -3630,7 +3671,7 @@
 
                             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                                    <span style="color: #94a3b8;">INS. STOCK (100%)</span><span
+                                    <span style="color: #94a3b8;">INS. STOCK (100%)</span><span id="pInsStockVal"
                                         style="font-weight: 600;">₹0.00</span>
                                 </div>
                             </div>
@@ -3666,7 +3707,8 @@
                             <div id="pStatsCurrentValue" style="font-size: 0.9rem; font-weight: 700; color: #10b981;">
                                 ₹0.00</div>
                             <div style="font-size: 0.8rem; color: #10b981;"><i data-lucide="arrow-up" size="12"></i>
-                                0.00%</div>
+                                <span id="pStatsROI">0.00%</span>
+                            </div>
                         </div>
                     </div>
 
@@ -3689,22 +3731,22 @@
                     <div style="margin-top: 1.5rem;">
                         <div style="font-weight: 700; font-size: 0.85rem; color: #10b981;">Top Gainer</div>
                         <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
-                            <div style="font-size: 0.85rem;">-</div>
+                            <div id="pGainerName" style="font-size: 0.85rem;">-</div>
                             <div style="text-align: right;">
-                                <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                                <div style="font-size: 0.75rem; color: #94a3b8;"><i data-lucide="minus" size="12"></i>
-                                    0.00%</div>
+                                <div id="pGainerVal" style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
+                                <div id="pGainerPct" style="font-size: 0.75rem; color: #10b981;"><i
+                                        data-lucide="arrow-up" size="12"></i> 0.00%</div>
                             </div>
                         </div>
 
                         <div style="font-weight: 700; font-size: 0.85rem; color: #ef4444; margin-top: 1.5rem;">Top Loser
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
-                            <div style="font-size: 0.85rem;">-</div>
+                            <div id="pLoserName" style="font-size: 0.85rem;">-</div>
                             <div style="text-align: right;">
-                                <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                                <div style="font-size: 0.75rem; color: #94a3b8;"><i data-lucide="minus" size="12"></i>
-                                    0.00%</div>
+                                <div id="pLoserVal" style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
+                                <div id="pLoserPct" style="font-size: 0.75rem; color: #ef4444;"><i
+                                        data-lucide="arrow-down" size="12"></i> 0.00%</div>
                             </div>
                         </div>
                     </div>
@@ -3719,13 +3761,13 @@
                                     </div>
                                     <div>
                                         <div style="font-size: 0.85rem;">Inst. Stocks</div>
-                                        <div style="font-size: 0.7rem; color: #94a3b8;">0.00%</div>
+                                        <div id="pAllocInstPct" style="font-size: 0.7rem; color: #94a3b8;">100.00%</div>
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
-                                    <div style="font-size: 0.7rem; color: #94a3b8;"><i data-lucide="minus"
-                                            size="10"></i>
+                                    <div id="pAllocInstVal" style="font-weight: 700; font-size: 0.85rem;">₹0.00</div>
+                                    <div id="pAllocInstChg" style="font-size: 0.7rem; color: #94a3b8;"><i
+                                            data-lucide="minus" size="10"></i>
                                         ₹0.00 (0.00%)</div>
                                 </div>
                             </div>
@@ -3782,41 +3824,54 @@
                 <script>
                     const chartData = {
                         weekly: [
-                            { date: '2026-01-27', invested: 0, profit: 0 },
-                            { date: '2026-01-28', invested: 0, profit: 0 },
-                            { date: '2026-01-29', invested: 0, profit: 0 },
-                            { date: '2026-01-30', invested: 0, profit: 0 },
-                            { date: '2026-02-02', invested: 0, profit: 0 },
-                            { date: '2026-02-03', invested: 0, profit: 0 },
-                            { date: '2026-02-04', invested: 0, profit: 0 }
+                            { date: '27 Jan', invested: 30, profit: 5, roi: 1.2 },
+                            { date: '28 Jan', invested: 45, profit: 8, roi: 1.5 },
+                            { date: '29 Jan', invested: 45, profit: 12, roi: 2.1 },
+                            { date: '30 Jan', invested: 60, profit: 15, roi: 2.5 },
+                            { date: '02 Feb', invested: 60, profit: 18, roi: 2.8 },
+                            { date: '03 Feb', invested: 80, profit: 22, roi: 3.2 },
+                            { date: 'Today', invested: 100, profit: 25, roi: 3.5 }
                         ],
                         monthly: [
-                            { date: 'Oct', invested: 0, profit: 0 },
-                            { date: 'Nov', invested: 0, profit: 0 },
-                            { date: 'Dec', invested: 0, profit: 0 },
-                            { date: 'Jan', invested: 0, profit: 0 }
+                            { date: 'Oct', invested: 20, profit: 3, roi: 1.0 },
+                            { date: 'Nov', invested: 40, profit: 8, roi: 1.8 },
+                            { date: 'Dec', invested: 70, profit: 15, roi: 2.5 },
+                            { date: 'Jan', invested: 100, profit: 25, roi: 3.5 }
                         ]
                     };
 
                     function switchChartData(type) {
-                        // Update buttons
-                        document.getElementById('btnWeekly').classList.toggle('active', type === 'weekly');
-                        document.getElementById('btnMonthly').classList.toggle('active', type === 'monthly');
+                        const btnW = document.getElementById('btnWeekly');
+                        const btnM = document.getElementById('btnMonthly');
+                        if (btnW) btnW.classList.toggle('active', type === 'weekly');
+                        if (btnM) btnM.classList.toggle('active', type === 'monthly');
 
                         const container = document.getElementById('chartContainer');
                         const labels = document.getElementById('chartLabels');
                         const data = chartData[type];
 
-                        // Render Bars
-                        container.innerHTML = data.map(d => `
-                            <div style="display: flex; gap: 4px; align-items: flex-end; height: 100%; flex: 1; justify-content: center;">
-                                <div style="width: 12px; height: ${d.invested}%; background: #3b82f6; border-radius: 2px 2px 0 0;" title="Invested: ${d.invested}%"></div>
-                                <div style="width: 12px; height: ${d.profit}%; background: #10b981; border-radius: 2px 2px 0 0;" title="Profit: ${d.profit}%"></div>
-                            </div>
-                        `).join('');
+                        // Scaling logic: find max value in set to keep bars visible but relative
+                        const maxVal = Math.max(...data.map(d => Math.max(d.invested, d.profit, 1)));
 
-                        // Render Labels
-                        labels.innerHTML = data.map(d => `<span style="flex: 1; text-align: center;">${d.date}</span>`).join('');
+                        // Render Bars with integrated ROI line indicator
+                        container.innerHTML = data.map(d => {
+                            const hInv = (d.invested / maxVal) * 90; // scale to 90% of container height
+                            const hProf = (d.profit / maxVal) * 90;
+                            const roiTop = 100 - (Math.min(d.roi * 10, 95)); // placeholder roi visualization
+
+                            return `
+                                <div style="display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; position: relative; justify-content: flex-end;">
+                                    <div style="display: flex; gap: 4px; align-items: flex-end; width: 100%; justify-content: center; height: 100%;">
+                                        <div style="width: 10px; height: ${hInv}%; background: #3b82f6; border-radius: 2px 2px 0 0;" title="Invested: ${d.invested}"></div>
+                                        <div style="width: 10px; height: ${hProf}%; background: #10b981; border-radius: 2px 2px 0 0;" title="Profit: ${d.profit}"></div>
+                                    </div>
+                                    <!-- ROI Indicator Dot -->
+                                    <div style="position: absolute; top: ${roiTop}%; width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; border: 1px solid white; z-index: 2;" title="ROI: ${d.roi}%"></div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        labels.innerHTML = data.map(d => `<span style="flex: 1; text-align: center; font-size: 0.65rem;">${d.date}</span>`).join('');
                     }
 
                     // Initial chart load
@@ -3852,7 +3907,7 @@
                             <input type="date" placeholder="dd/mm/yyyy" id="fundDateTo"> <i data-lucide="calendar"
                                 size="16"></i>
                         </div>
-                        <button class="clear-btn">Clear</button>
+                        <button class="clear-btn" onclick="clearFundFilters()">Clear</button>
                     </div>
 
                     <div style="display: flex; gap: 1.5rem; font-size: 0.85rem; color: #64748b; margin-bottom: 2rem;">
@@ -5368,20 +5423,21 @@
         const fundDateTo = document.getElementById('fundDateTo');
         if (fundDateTo) fundDateTo.addEventListener('change', applyDateFilter);
 
-        const clearBtn = document.querySelector('.clear-btn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                if (fundDateFrom) fundDateFrom.value = '';
-                if (fundDateTo) fundDateTo.value = '';
-                // Reset to All Tab
-                const allTab = document.querySelector('#fundTabs .p-tab[onclick*="all"]');
-                if (allTab) {
-                    allTab.click(); // easier than calling switchFundTab manually
-                } else {
-                    renderFundRecords('all');
-                }
-            });
-        }
+        window.clearFundFilters = function () {
+            const fFrom = document.getElementById('fundDateFrom');
+            const fTo = document.getElementById('fundDateTo');
+            if (fFrom) fFrom.value = '';
+            if (fTo) fTo.value = '';
+
+            // Reset to All Tab
+            const fundTabs = document.getElementById('fundTabs');
+            if (fundTabs) {
+                const allTab = fundTabs.querySelector('.p-tab'); // First tab is 'All'
+                if (allTab) switchFundTab(allTab, 'all');
+            } else {
+                renderFundRecords('all');
+            }
+        };
 
         // Settings Modal Logic
         function deleteAllMessages() {
@@ -5772,9 +5828,9 @@
                 el.style.display = 'block';
 
                 // Dynamic sizing based on length
-                if (text.length > 30) el.style.fontSize = '0.65rem';
-                else if (text.length > 20) el.style.fontSize = '0.75rem';
-                else if (text.length > 15) el.style.fontSize = '0.85rem';
+                if (text.length > 28) el.style.fontSize = '0.6rem';
+                else if (text.length > 22) el.style.fontSize = '0.7rem';
+                else if (text.length > 16) el.style.fontSize = '0.8rem';
             };
 
             const updateVal = (id, val) => {
@@ -5817,14 +5873,12 @@
                 const fmtLoan = '₹' + loan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const fmtOut = '₹' + outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                // We use fitText logic for sidebar items too to be safe, but they are spans inside divs.
-                // Simplified text content update for now to match structure
-                assetAmounts[0].textContent = fmtRaw;
-                assetAmounts[1].textContent = fmtInv;
-                assetAmounts[2].textContent = fmtBonus;
-                assetAmounts[3].textContent = fmtFrozen;
-                assetAmounts[4].textContent = fmtLoan;
-                assetAmounts[5].textContent = fmtOut;
+                fitText(assetAmounts[0], fmtRaw);
+                fitText(assetAmounts[1], fmtInv);
+                fitText(assetAmounts[2], fmtBonus);
+                fitText(assetAmounts[3], fmtFrozen);
+                fitText(assetAmounts[4], fmtLoan);
+                fitText(assetAmounts[5], fmtOut);
             }
 
             // Update Portfolio View Invested Amounts
@@ -5864,20 +5918,130 @@
                 }
             });
 
-            const pInvestedMain = document.getElementById('pInvestedMain');
-            if (pInvestedMain) pInvestedMain.textContent = formattedInv;
+            updateVal('pInvestedMain', inv);
 
-            const pPortfolioTotal = document.getElementById('pPortfolioTotal');
-            if (pPortfolioTotal) pPortfolioTotal.textContent = formattedInv;
+            updateVal('pPortfolioTotal', inv);
 
-            const pCircleText = document.getElementById('pCircleText');
-            if (pCircleText) pCircleText.innerText = formattedInv;
+            updateVal('pCircleText', inv);
 
-            const pStatsInvested = document.getElementById('pStatsInvested');
-            if (pStatsInvested) pStatsInvested.textContent = formattedInv;
+            updateVal('pInsStockVal', inv);
 
-            const pStatsCurrentValue = document.getElementById('pStatsCurrentValue');
-            if (pStatsCurrentValue) pStatsCurrentValue.textContent = formattedInv;
+            updateVal('pStatsInvested', inv);
+            updateVal('pStatsCurrentValue', inv);
+
+            // --- PORTFOLIO DASHBOARD ENHANCEMENTS ---
+            // Calculate Total Profit & ROI for the charts
+            let totalProfit = 0;
+            let tradesCount = 0;
+
+            if (typeof transactionData !== 'undefined' && transactionData.holding) {
+                tradesCount = transactionData.holding.length;
+                transactionData.holding.forEach(item => {
+                    // Use actual market price if available, else mock drift
+                    const currentPrice = (window.MarketEngine ? window.MarketEngine.getProduct(item.symbol)?.price : null) ||
+                        (parseFloat(item.price) * (1 + (Math.random() * 0.04 - 0.02)));
+                    const profit = (currentPrice * item.quantity) - parseFloat(item.total_amount);
+                    totalProfit += profit;
+                });
+            }
+
+            const roiPercent = inv > 0 ? (totalProfit / inv) * 100 : 0;
+
+            // Update Text Elements
+            updateVal('pProfitMain', totalProfit);
+
+            const roiEl = document.getElementById('pROIMain');
+            if (roiEl) {
+                roiEl.textContent = (roiPercent >= 0 ? '+' : '') + roiPercent.toFixed(2) + '%';
+                roiEl.style.color = roiPercent >= 0 ? '#10b981' : '#ef4444';
+            }
+
+            const tradesCountEl = document.getElementById('pTradesCount');
+            if (tradesCountEl) tradesCountEl.textContent = tradesCount;
+
+            updateVal('pTradesProfit', totalProfit);
+
+            // Animate Donut Chart
+            // The donut shows profit ratio relative to investment (capped at 100% for visual)
+            const donutCircle = document.getElementById('pDonutCircle');
+            const donutPctLabel = document.getElementById('pDonutPct');
+            if (donutCircle) {
+                let profitRatio = Math.min(Math.max(totalProfit / (inv || 1), 0), 1);
+                // Ensure a visual sliver if profit exists but is proportionately tiny
+                if (totalProfit > 0 && profitRatio < 0.01) profitRatio = 0.01;
+
+                const offset = 251.2 * (1 - profitRatio);
+                donutCircle.style.strokeDashoffset = offset;
+                if (donutPctLabel) {
+                    const displayPct = (totalProfit / (inv || 1) * 100);
+                    donutPctLabel.textContent = (displayPct < 0.01 && totalProfit > 0 ? '<0.01' : displayPct.toFixed(displayPct < 1 ? 2 : 0)) + '%';
+                }
+            }
+
+            // Animate Gauge Needle
+            // Map ROI -10% to +10% to the gauge 0-100%
+            const gaugeNeedle = document.getElementById('pGaugeNeedle');
+            if (gaugeNeedle) {
+                // Normalize ROI to a value between 0 and 1
+                // -10% (0) | 0% (0.5) | +10% (1.0)
+                let normalizedROI = (roiPercent + 10) / 20;
+                normalizedROI = Math.min(Math.max(normalizedROI, 0), 1);
+                const angle = -90 + (normalizedROI * 180);
+                gaugeNeedle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+            }
+
+            // Sync Stats View
+            const statsROI = document.getElementById('pStatsROI');
+            if (statsROI) {
+                statsROI.textContent = (roiPercent >= 0 ? '+' : '') + roiPercent.toFixed(2) + '%';
+            }
+
+            // Calculate Top Gainer/Loser
+            if (typeof transactionData !== 'undefined' && transactionData.holding && transactionData.holding.length > 0) {
+                let gainer = null, loser = null;
+                let maxProfitPct = -Infinity, maxLossPct = Infinity;
+
+                transactionData.holding.forEach(item => {
+                    const currentPrice = (window.MarketEngine ? window.MarketEngine.getProduct(item.symbol)?.price : null) ||
+                        (parseFloat(item.price) * (1 + (Math.random() * 0.04 - 0.02)));
+                    const profit = (currentPrice * item.quantity) - parseFloat(item.total_amount);
+                    const profitPct = (profit / parseFloat(item.total_amount)) * 100;
+
+                    if (profitPct > maxProfitPct) {
+                        maxProfitPct = profitPct;
+                        gainer = { ...item, currentPrice, profit, profitPct };
+                    }
+                    if (profitPct < maxLossPct) {
+                        maxLossPct = profitPct;
+                        loser = { ...item, currentPrice, profit, profitPct };
+                    }
+                });
+
+                if (gainer) {
+                    const gName = document.getElementById('pGainerName');
+                    if (gName) gName.textContent = gainer.name;
+                    updateVal('pGainerVal', gainer.currentPrice);
+                    const gPct = document.getElementById('pGainerPct');
+                    if (gPct) gPct.innerHTML = `<i data-lucide="arrow-up" size="12"></i> ${gainer.profitPct.toFixed(2)}%`;
+                }
+
+                if (loser) {
+                    const lName = document.getElementById('pLoserName');
+                    if (lName) lName.textContent = loser.name;
+                    updateVal('pLoserVal', loser.currentPrice);
+                    const lPct = document.getElementById('pLoserPct');
+                    if (lPct) lPct.innerHTML = `<i data-lucide="arrow-down" size="12"></i> ${loser.profitPct.toFixed(2)}%`;
+                }
+            }
+
+            // Sync Allocation
+            updateVal('pAllocInstVal', inv);
+            const allocChg = document.getElementById('pAllocInstChg');
+            if (allocChg) {
+                allocChg.innerHTML = `<i data-lucide="${totalProfit >= 0 ? 'arrow-up' : 'arrow-down'}" size="10"></i> ₹${Math.abs(totalProfit).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${roiPercent.toFixed(2)}%)`;
+                allocChg.style.color = totalProfit >= 0 ? '#10b981' : '#ef4444';
+            }
+            // ----------------------------------------
 
             // Update Buy Widget Balance Info
             const fundStatus = document.getElementById('fundStatus');
