@@ -278,25 +278,29 @@
         <div class="left-col">
             <section class="white-card">
                 <h2 class="section-title">Trading accounts</h2>
-                <div class="warning-box">
-                    <div class="warning-title">Outstanding balance detected</div>
-                    <p class="warning-text">You cannot withdraw until outstanding balances are cleared.</p>
-                    <div class="balance-tag">
-                        <span>INRDD08029 - INR</span>
-                        <span>• ₹83,34,495.52</span>
+                <div class="warning-box" id="outstandingWarning" style="display: none; border: 2px solid #ef4444;">
+                    <div class="warning-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="info" size="20"></i> Outstanding balance detected
+                    </div>
+                    <p class="warning-text">Your account has an unsettled balance from institutional trading. You cannot
+                        withdraw until this is cleared.</p>
+                    <div class="balance-tag" style="background: white; font-weight: 700;">
+                        <span id="wAccountNum">INR-ID - INR</span>
+                        <span id="wAmount">• ₹0.00</span>
                     </div>
                 </div>
 
                 <div class="account-selector">
                     <div class="account-info">
-                        <h4>INRDD08029</h4>
-                        <p>₹0.00</p>
+                        <h4 id="accDisplayId">INR-ID</h4>
+                        <p id="accDisplayBal">₹0.00</p>
                     </div>
                     <div class="currency-tag">IN</div>
                 </div>
 
-                <button class="submit-btn" disabled>Submit Withdrawal</button>
-                <div class="error-footer">You cannot withdraw until outstanding balances are cleared.</div>
+                <button class="submit-btn" id="withdrawSubmitBtn" disabled>Submit Withdrawal</button>
+                <div class="error-footer" id="withdrawErrorMsg" style="display: none;">You cannot withdraw until
+                    outstanding balances are cleared.</div>
                 <div class="policy-text">By proceeding, you agree to our deposit terms and conditions.</div>
             </section>
 
@@ -692,32 +696,85 @@
             try {
                 const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
                 if (dbUser) {
-                    // Calculate Effective Balance
+                    const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+
+                    // 1. Calculate and Show Effective Balance
                     const [pD, pW, pT] = await Promise.all([
                         client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
                         client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
-                        client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
+                        client.from('trades').select('total_amount, admin_note').eq('user_id', user.id).eq('status', 'Pending')
                     ]);
 
                     const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
                     const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
                     const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
 
+                    // RECONCILIATION: Extract real outstanding debt from trade notes
+                    const realOutstanding = (pT.data || [])
+                        .filter(t => (t.admin_note || "").startsWith('OUTSTANDING'))
+                        .reduce((sum, t) => {
+                            const total = parseFloat(t.total_amount) || 0;
+                            const note = t.admin_note || "";
+                            let paid = 0;
+                            if (note.startsWith('OUTSTANDING:')) {
+                                paid = parseFloat(note.split(':')[1]) || 0;
+                            } else {
+                                paid = total * 0.85;
+                            }
+                            return sum + (total - paid);
+                        }, 0);
+
                     let effectiveBalance = (parseFloat(dbUser.balance) || 0) + lockedDeposits - lockedWithdrawals - lockedTrades;
                     if (effectiveBalance < 0) effectiveBalance = 0;
 
-                    const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+                    const balEl = document.getElementById('accDisplayBal');
+                    if (balEl) balEl.textContent = fmt(effectiveBalance);
 
-                    // Update UI
-                    const balDisplay = document.querySelector('.account-info p');
-                    if (balDisplay) balDisplay.textContent = fmt(effectiveBalance);
+                    // 2. Handle Outstanding Balance Display
+                    const outstanding = realOutstanding; // Use the verified calculated value as source of truth
+                    const warnBox = document.getElementById('outstandingWarning');
+                    const errorMsg = document.getElementById('withdrawErrorMsg');
+                    const submitBtn = document.getElementById('withdrawSubmitBtn');
 
-                    // Update the warning box balance tag if it exists
-                    const warningBal = document.querySelector('.balance-tag span:last-child');
-                    if (warningBal) warningBal.textContent = '• ' + fmt(effectiveBalance);
+                    // Silently sync DB if mismatch detected
+                    if (Math.abs(realOutstanding - (parseFloat(dbUser.outstanding) || 0)) > 1) {
+                        window.DB.getClient().from('users').update({ outstanding: realOutstanding }).eq('id', dbUser.id).then(() => { });
+                    }
 
-                    // If balance is > 0 and no outstanding (mock condition for now), enable button?
-                    // Actually let's just keep it as per the mock for now but show correct balance.
+                    const accId = 'INR' + (dbUser.mobile ? dbUser.mobile.slice(-5) : 'XXXXX');
+                    if (document.getElementById('accDisplayId')) document.getElementById('accDisplayId').textContent = accId;
+
+                    if (outstanding > 0) {
+                        if (warnBox) warnBox.style.display = 'block';
+                        if (errorMsg) errorMsg.style.display = 'block';
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.style.background = '#93c5fd';
+                            submitBtn.style.cursor = 'not-allowed';
+                        }
+
+                        const wAcc = document.getElementById('wAccountNum');
+                        const wAmt = document.getElementById('wAmount');
+                        if (wAcc) wAcc.textContent = accId + ' - INR';
+                        if (wAmt) wAmt.textContent = '• ' + fmt(outstanding);
+                    } else {
+                        if (warnBox) warnBox.style.display = 'none';
+                        if (errorMsg) errorMsg.style.display = 'none';
+
+                        // Enable button if balance > 0
+                        if (submitBtn) {
+                            if (effectiveBalance > 0) {
+                                submitBtn.disabled = false;
+                                submitBtn.style.background = '#1e56a0';
+                                submitBtn.style.cursor = 'pointer';
+                                submitBtn.onclick = () => alert("Withdrawal system maintenance. Please try again later.");
+                            } else {
+                                submitBtn.disabled = true;
+                                submitBtn.style.background = '#93c5fd';
+                                submitBtn.style.cursor = 'not-allowed';
+                            }
+                        }
+                    }
                 }
             } catch (e) {
                 console.error("Sync Withdrawal Page Error:", e);

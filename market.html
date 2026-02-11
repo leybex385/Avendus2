@@ -3494,7 +3494,8 @@
                                 color="#64748b" style="cursor: pointer;" id="assetToggleEye"
                                 onclick="toggleAssetsVisibility()"></i>
                         </div>
-                        <i data-lucide="rotate-cw" size="18" style="cursor: pointer;"></i>
+                        <i data-lucide="rotate-cw" size="18" style="cursor: pointer;" onclick="auditFinancials(this)"
+                            title="Refresh & Audit Financials"></i>
                     </div>
                     <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">INR</div>
                     <div class="p-assets-grid">
@@ -3526,7 +3527,9 @@
                         <div class="p-asset-item">
                             <span class="p-asset-label">Outstanding</span>
                             <span class="p-asset-val red" id="pPendingSettlement" data-val="₹0.00">₹0.00</span>
-                            <span class="p-asset-sub red">Clear Due</span>
+                            <span class="p-asset-sub red" style="cursor: pointer; text-decoration: underline;"
+                                onclick="showDiscoverView('transactions'); switchTransactionTab(null, 'pendingPayment');">Clear
+                                Due</span>
                         </div>
                     </div>
                 </div>
@@ -5847,7 +5850,33 @@
             const frozen = parseFloat(dbUser.frozen) || 0;
             const loan = parseFloat(dbUser.loan) || 0;
             const bonus = parseFloat(dbUser.bonus) || 0;
-            const outstanding = parseFloat(dbUser.outstanding) || 0;
+
+            // RECONCILIATION: Calculate Outstanding from Trades as the Source of Truth
+            let outstanding = parseFloat(dbUser.outstanding) || 0;
+            if (typeof transactionData !== 'undefined' && transactionData.all && transactionData.all.length > 0) {
+                const calculatedOutstanding = transactionData.all
+                    .filter(t => t.status === 'Pending' && (t.admin_note || "").startsWith('OUTSTANDING'))
+                    .reduce((sum, t) => {
+                        const total = parseFloat(t.total_amount);
+                        const note = t.admin_note || "";
+                        let paid = 0;
+                        if (note.startsWith('OUTSTANDING:')) {
+                            paid = parseFloat(note.split(':')[1]) || 0;
+                        } else {
+                            paid = total * 0.85;
+                        }
+                        return sum + (total - paid);
+                    }, 0);
+
+                // Use calculated value for the UI
+                outstanding = calculatedOutstanding;
+
+                // Silently sync DB if mismatch detected
+                if (Math.abs(calculatedOutstanding - (parseFloat(dbUser.outstanding) || 0)) > 1) {
+                    console.log("Auditor (Sync): Correcting database mismatch silently.");
+                    window.DB.updateUserFinancials(dbUser.id, dbUser.balance, dbUser.invested, calculatedOutstanding);
+                }
+            }
 
             updateVal('meCurrentInvestments', inv);
             updateVal('meFrozenFunds', frozen);
@@ -6065,6 +6094,55 @@
 
             lucide.createIcons();
         }
+
+        // Financial Audit & Self-Healing Logic
+        window.auditFinancials = async function (btn) {
+            if (btn) {
+                const icon = btn.querySelector('i') || btn;
+                icon.style.transition = 'transform 0.6s';
+                icon.style.transform = 'rotate(360deg)';
+                setTimeout(() => icon.style.transform = 'none', 600);
+            }
+
+            try {
+                const user = await window.DB.refreshCurrentUser();
+                if (!user) return;
+
+                // 1. Fetch latest transactions
+                if (typeof fetchUserTransactions === 'function') await fetchUserTransactions();
+
+                // 2. Calculate Actual Outstanding from Trades
+                const trades = (typeof transactionData !== 'undefined' && transactionData.all) ? transactionData.all : [];
+                const actualOutstanding = trades
+                    .filter(t => t.status === 'Pending' && (t.admin_note || "").startsWith('OUTSTANDING'))
+                    .reduce((sum, t) => {
+                        const total = parseFloat(t.total_amount);
+                        const note = t.admin_note || "";
+                        let paid = 0;
+                        if (note.startsWith('OUTSTANDING:')) {
+                            paid = parseFloat(note.split(':')[1]) || 0;
+                        } else {
+                            paid = total * 0.85;
+                        }
+                        return sum + (total - paid);
+                    }, 0);
+
+                const dbOutstanding = parseFloat(user.outstanding) || 0;
+
+                // 3. If mismatch > ₹1, patch the DB
+                if (Math.abs(actualOutstanding - dbOutstanding) > 1) {
+                    await window.DB.updateUserFinancials(user.id, user.balance, user.invested, actualOutstanding);
+                    await syncUserData();
+                    showModal('success', 'Records Synchronized', 'Your financial data was cross-referenced with your transaction history and successfully reconciled.');
+                } else {
+                    await syncUserData();
+                    showModal('success', 'Data Verified', 'Your financial records are consistent and accurate.');
+                }
+            } catch (e) {
+                console.error("Audit Error:", e);
+                showModal('error', 'Audit Failed', 'Unable to verify records at this time.');
+            }
+        };
 
         // Initial Render
         syncUserData();
@@ -6355,8 +6433,10 @@
                 const currentInvested = parseFloat(user.invested) || 0;
                 const newInvested = currentInvested + outstanding;
 
-                // 1. Update User Financials
-                const finResult = await window.DB.updateUserFinancials(user.id, newBalance, newInvested);
+                // 1. Update User Financials (Decrement by the settled amount)
+                const currentOutstanding = parseFloat(user.outstanding) || 0;
+                const newOutstanding = Math.max(0, currentOutstanding - outstanding);
+                const finResult = await window.DB.updateUserFinancials(user.id, newBalance, newInvested, newOutstanding);
 
                 if (finResult.success) {
                     // 2. Update Trade Status (Set to Pending for Admin Approval)
