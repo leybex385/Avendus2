@@ -90,8 +90,33 @@
             this.otc = OTC_DATA;
             this.ipo = IPO_DATA;
             this.indices = INDICES_DATA;
+            this.dbProducts = []; // Cache for database products
             this.listeners = [];
             this.startSimulation();
+            this.syncFromDB();
+        }
+
+        async syncFromDB() {
+            if (window.DB && window.DB.getProducts) {
+                try {
+                    const data = await window.DB.getProducts();
+                    this.dbProducts = data.map(p => ({
+                        symbol: p.name.split(' ')[0].toUpperCase() + '-IPO',
+                        name: p.name,
+                        price: parseFloat(p.price) || 0,
+                        yield: p.profit || 'TBD',
+                        subDate: p.start_date || 'TBD',
+                        deadline: p.end_date || 'TBD',
+                        listingDate: p.listing_date || 'TBD',
+                        level: (parseFloat(p.min_invest) > 100000) ? 'Lv ≥ 2' : 'Lv ≥ 1',
+                        type: p.type || 'IPO',
+                        change: 0
+                    }));
+                    this.notifyListeners();
+                } catch (e) {
+                    console.error("Failed to sync products from DB:", e);
+                }
+            }
         }
 
         startSimulation() {
@@ -150,20 +175,7 @@
         getAllStocks() { return this.stocks; }
         getOTC() { return this.otc; }
         getIPO() {
-            const localProducts = JSON.parse(localStorage.getItem('vsl_products') || '[]');
-            const mapped = localProducts.map(p => ({
-                symbol: p.name.split(' ')[0].toUpperCase() + '-IPO',
-                name: p.name,
-                price: parseFloat(p.price) || 0,
-                yield: p.profit || 'TBD',
-                subDate: p.start || 'TBD',
-                deadline: p.end || 'TBD',
-                listingDate: p.listing || 'TBD',
-                level: (parseFloat(p.min) > 100000) ? 'Lv ≥ 2' : 'Lv ≥ 1',
-                type: 'IPO',
-                change: 0
-            }));
-            return [...this.ipo, ...mapped];
+            return [...this.ipo, ...this.dbProducts];
         }
 
         getProduct(symbol) {

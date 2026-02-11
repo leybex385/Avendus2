@@ -4343,13 +4343,27 @@
             lucide.createIcons();
         }
 
-        function switchTradesTab(el, type) {
+        async function switchTradesTab(el, type) {
             // Update active state
             document.querySelectorAll('.discover-tabs .d-tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
 
             const listContainer = document.getElementById('tradesList');
             let data = [];
+
+            // MAINTENANCE CHECK for Institutional Stocks
+            if (type === 'stocks' || type === 'all') {
+                const config = await window.DB.getPlatformSettings('institutional_config');
+                if (config && config.status === 'Maintenance' && type === 'stocks') {
+                    listContainer.innerHTML = `
+                        <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 2rem; border-radius: 12px; text-align: center; margin-top: 1rem;">
+                            <div style="color: #9a3412; font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem;">Terminal Under Maintenance</div>
+                            <div style="color: #c2410c; font-size: 0.9rem;">The Institutional Trading terminal (057) is currently undergoing scheduled maintenance. Please try again later.</div>
+                        </div>
+                    `;
+                    return;
+                }
+            }
 
             if (type === 'all') {
                 data = [
@@ -4561,6 +4575,21 @@
             if (!calc || calc.qty <= 0) {
                 alert("Please enter a valid quantity.");
                 return;
+            }
+
+            // Institutional Limit Check
+            if (type === 'stock') {
+                const config = await window.DB.getPlatformSettings('institutional_config');
+                if (config) {
+                    if (config.status === 'Maintenance') {
+                        alert("The Institutional terminal is currently under maintenance. Please try again later.");
+                        return;
+                    }
+                    if (calc.qty > config.max_qty) {
+                        alert(`Institutional Limit Exceeded: Maximum allowed quantity for this product is ${config.max_qty.toLocaleString()}.`);
+                        return;
+                    }
+                }
             }
 
             const originalText = btn.innerText;

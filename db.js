@@ -445,5 +445,77 @@ window.DB = {
         }
 
         return { success: !error, data, error };
+    },
+
+    // --- PRODUCT MANAGEMENT ---
+    async getProducts() {
+        const client = this.getClient();
+        if (!client) return [];
+        const { data, error } = await client
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching products:", error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async saveProduct(productData) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database not connected' };
+
+        let result;
+        if (productData.id && !productData.id.toString().startsWith('local_')) {
+            // Update existing
+            result = await client
+                .from('products')
+                .update(productData)
+                .eq('id', productData.id);
+        } else {
+            // Insert new (remove local ID if any)
+            const { id, ...saveData } = productData;
+            result = await client
+                .from('products')
+                .insert([saveData]);
+        }
+
+        return { success: !result.error, error: result.error };
+    },
+
+    async deleteProduct(id) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { error } = await client.from('products').delete().eq('id', id);
+        return { success: !error, error };
+    },
+
+    // --- PLATFORM SETTINGS ---
+    async getPlatformSettings(key) {
+        const client = this.getClient();
+        if (!client) return null;
+        const { data, error } = await client
+            .from('platform_settings')
+            .select('value')
+            .eq('key', key)
+            .single();
+
+        if (error) {
+            console.error(`Error fetching setting ${key}:`, error);
+            return null;
+        }
+        return data ? data.value : null;
+    },
+
+    async updatePlatformSettings(key, value) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { error } = await client
+            .from('platform_settings')
+            .upsert({ key, value, updated_at: new Date().toISOString() });
+
+        return { success: !error, error };
     }
 };
