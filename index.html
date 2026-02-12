@@ -8,13 +8,122 @@
     <meta name="description"
         content="Access real-time market summaries, breaking news, and personalized stock recommendations on our premium financial dashboard.">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="settings-panel-fix.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="db.js"></script>
     <script src="market_data.js"></script>
+    <style>
+        /* Indices styling */
+        .index-mini-card {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .index-mini-card.active {
+            border-color: var(--gold-primary, #d4af37) !important;
+            background: rgba(212, 175, 55, 0.05) !important;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Chart specific */
+        .mini-tf-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1a1a1a;
+            font-size: 11px;
+            font-weight: 800;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .mini-tf-btn.active {
+            background: var(--gold-primary, #d4af37);
+            color: #000;
+            border-color: var(--gold-primary, #d4af37);
+        }
+
+        .mini-tf-btn:hover:not(.active) {
+            border-color: #666;
+            color: #fff;
+        }
+
+        /* Sector cards */
+        .sector-card {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sector-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold-primary, #d4af37);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Exchange tabs for Gainers/Losers */
+        .exchange-tab {
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 6px;
+            color: #666;
+            font-weight: 800;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .exchange-tab.active {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold-primary, #d4af37);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        /* Layout modifications */
+        .market-content-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 1.5rem;
+            padding: 0 0 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .market-content-grid {
+                grid-template-columns: 1fr 320px;
+            }
+
+            .left-col {
+                display: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .market-content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .right-col {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -107,115 +216,72 @@
             </div>
         </div>
 
-        <!-- Market Summary (Full Width Header) -->
-        <section class="card market-summary" style="margin-bottom: 2rem;">
-            <div class="card-header">
-                <div class="header-icon"><i data-lucide="activity"></i></div>
-                <h2>Market Summary</h2>
-            </div>
-
-            <div class="market-cards-grid"
-                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding-bottom: 1.5rem;">
-                <div class="stock-card">
-                    <div class="stock-info">
-                        <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
-                        <span class="stock-name">SENSEX</span>
-                        <span class="stock-ticker">ININ</span>
-                    </div>
-                    <div class="stock-value">83,710.26</div>
-                    <div class="stock-change positive">+396.33 (+0.48%)</div>
-                </div>
-                <div class="stock-card">
-                    <div class="stock-info">
-                        <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
-                        <span class="stock-name">NIFTY 50</span>
-                        <span class="stock-ticker">ININ</span>
-                    </div>
-                    <div class="stock-value">25,619.54</div>
-                    <div class="stock-change negative">-156.46 (-0.61%)</div>
-                </div>
-                <div class="stock-card">
-                    <div class="stock-info">
-                        <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
-                        <span class="stock-name">NIFTY BANK</span>
-                        <span class="stock-ticker">ININ</span>
-                    </div>
-                    <div class="stock-value">60,120.55</div>
-                    <div class="stock-change negative">-563 (-0.09%)</div>
-                </div>
-                <div class="stock-card">
-                    <div class="stock-info">
-                        <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
-                        <span class="stock-name">NIFTY SMLCAP</span>
-                        <span class="stock-ticker">ININ</span>
-                    </div>
-                    <div class="stock-value">16,938.65</div>
-                    <div class="stock-change negative">-45.53 (-0.27%)</div>
-                </div>
-                <div class="stock-card">
-                    <div class="stock-info">
-                        <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
-                        <span class="stock-name">NIFTY MIDCAP</span>
-                        <span class="stock-ticker">ININ</span>
-                    </div>
-                    <div class="stock-value">59,502.7</div>
-                    <div class="stock-change negative">-144 (-0.02%)</div>
-                </div>
-                <div class="stock-card">
-                    <div class="stock-info">
-                        <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
-                        <span class="stock-name">VIX</span>
-                        <span class="stock-ticker">ININ</span>
-                    </div>
-                    <div class="stock-value">15.1</div>
-                    <div class="stock-change positive">+1.46 (+10.73%)</div>
-                </div>
-            </div>
-
-            <!-- Stocks Sector -->
-            <div class="stocks-sector-header"
-                style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; margin-bottom: 1rem;">
-                <h3 style="font-size: 1rem; color: #1e293b; font-weight: 700;">Stocks Sector</h3>
-                <a href="market.html" style="font-size: 0.85rem; color: #3b82f6; text-decoration: none;">View All</a>
-            </div>
-            <div class="sector-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                <div class="stock-card"
-                    style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1rem;">
-                    <div
-                        style="background: rgba(16, 185, 129, 0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
-                        <i data-lucide="cpu" color="#10b981"></i>
-                    </div>
-                    <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b;">Electronic equipment</div>
-                    <div style="font-size: 0.8rem; color: #10b981;">+7.29%</div>
-                </div>
-                <div class="stock-card"
-                    style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1rem;">
-                    <div
-                        style="background: rgba(59, 130, 246, 0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
-                        <i data-lucide="shopping-bag" color="#3b82f6"></i>
-                    </div>
-                    <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b;">Home improvement</div>
-                    <div style="font-size: 0.8rem; color: #3b82f6;">+5.88%</div>
-                </div>
-                <div class="stock-card"
-                    style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1rem;">
-                    <div
-                        style="background: rgba(236, 72, 153, 0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem;">
-                        <i data-lucide="leaf" color="#ec4899"></i>
-                    </div>
-                    <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b;">Tobacco</div>
-                    <div style="font-size: 0.8rem; color: #ec4899;">+5.43%</div>
-                </div>
-            </div>
-        </section>
 
         <!-- Main Content -->
-        <main class="main-grid">
-            <!-- Left Column Container -->
-            <div>
-                <!-- Left Column Content -->
+        <main class="main-grid" style="display: block; padding: 1.5rem; max-width: 1400px; margin: 0 auto;">
 
-                <!-- About Us Section -->
+            <!-- Market Summary - Full Width Grid -->
+            <section class="card market-summary" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div class="header-icon"><i data-lucide="activity"></i></div>
+                    <h2>Market Summary</h2>
+                </div>
+                <div class="market-cards-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div class="stock-card">
+                        <div class="stock-info">
+                            <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
+                            <span class="stock-name">SENSEX</span>
+                        </div>
+                        <div class="stock-value">83,580.40</div>
+                        <div class="stock-change green">+266.47 (+0.32%)</div>
+                    </div>
+                    <div class="stock-card">
+                        <div class="stock-info">
+                            <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
+                            <span class="stock-name">NIFTY 50</span>
+                        </div>
+                        <div class="stock-value">25,627.1</div>
+                        <div class="stock-change negative">-148.9 (-0.58%)</div>
+                    </div>
+                    <div class="stock-card">
+                        <div class="stock-info">
+                            <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
+                            <span class="stock-name">NIFTY BANK</span>
+                        </div>
+                        <div class="stock-value">60,023.4</div>
+                        <div class="stock-change negative">-214.75 (-0.36%)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stocks Sector - Full Width -->
+            <section class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div class="header-icon"><i data-lucide="layers"></i></div>
+                    <h2>Stocks Sector</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1rem;">
+                    <div class="stock-card" style="text-align: center;">
+                        <div style="margin-bottom: 0.5rem;"><i data-lucide="cpu" size="32" color="#3b82f6"></i></div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Electronic equipment</div>
+                        <div class="stock-change green">+7.29%</div>
+                    </div>
+                    <div class="stock-card" style="text-align: center;">
+                        <div style="margin-bottom: 0.5rem;"><i data-lucide="home" size="32" color="#10b981"></i></div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Home improvement</div>
+                        <div class="stock-change green">+5.88%</div>
+                    </div>
+                    <div class="stock-card" style="text-align: center;">
+                        <div style="margin-bottom: 0.5rem;"><i data-lucide="leaf" size="32" color="#ef4444"></i></div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">Tobacco</div>
+                        <div class="stock-change negative">-6.43%</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About + Breaking News - 2 Column Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <!-- About Us Section (Left) -->
                 <section class="card about-us-section">
                     <div class="card-header">
                         <div class="header-icon"><i data-lucide="info"></i></div>
@@ -223,454 +289,70 @@
                     </div>
                     <div class="about-content" style="padding: 1.5rem; color: #64748b; line-height: 1.6;">
                         <p>Avendus Capital is a leading financial institution dedicated to providing premium trading and
-                            investment solutions. With a focus on innovation and client success, we offer a
-                            comprehensive
-                            suite of tools and services designed to empower traders in the global markets. Our platform
-                            combines advanced technology with institutional-grade security to ensure your trading
-                            journey is
-                            seamless and successful.</p>
-                    </div>
-                </section>
-            </div><!-- End Left Column Container -->
-
-            <!-- Right Column: News & Recommendation -->
-            <div class="sidebar">
-                <section class="card breaking-news">
-                    <div class="card-header">
-                        <div class="header-icon blue"><i data-lucide="newspaper"></i></div>
-                        <h2>Breaking News</h2>
-                    </div>
-                    <div class="news-carousel" id="newsCarousel">
-                        <!-- Slide 1 -->
-                        <div class="news-slide active"
-                            data-url="news-detail.html?title=Palantir%20Technologies%20Inc.%20%24PLTR%20is%20IQ%20EQ%20FUND%20MANAGEMENT%20IRELAND%20Ltd%27s%204th%20Largest%20Position&author=Sarita%20Garza&date=Feb%206%2C%202026%2C%2010%3A46%20PM&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1551288049-bebda4e38f71%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200&content=IQ%20EQ%20FUND%20MANAGEMENT%20IRELAND%20Ltd%20boosted%20its%20position%20in%20shares%20of%20Palantir%20Technologies%20Inc.%20(NASDAQ%3APLTR)%20by%2095.8%25%20during%20the%20third%20quarter%2C%20according%20to%20its%20most%20recent%20Form%2013F%20filing%20with%20the%20Securities%20and%20Exchange%20Commission%20(SEC).%20The%20firm%20owned%20204%2C471%20shares%20of%20the%20company%27s%20stock%20after%20purchasing%20an%20additional%20100%2C042%20shares%20during%20the%20period.%20Palantir%20Technologies%20makes%20up%202.5%25%20of%20IQ%20EQ%20FUND%20MANAGEMENT%20IRELAND%20Ltd%27s%20holdings%2C%20making%20the%20stock%20its%204th%20biggest%20holding.%20The%20holdings%20were%20worth%20%2437%2C300%2C000%20at%20the%20end%20of%20the%20most%20recent%20quarter.%20Several%20other%20hedge%20funds%20have%20also%20made%20changes%20to%20their%20positions.%20Briaud%20Financial%20Planning%20Inc%20acquired%20a%20new%20position%20in%20shares%20of%20Palantir%20Technologies%20in%20the%202nd%20quarter%20valued%20at%20%2427%2C000.%20LFA%20Lugano%20Financial%20Advisors%20SA%20purchased%20a%20new%20stake%20valued%20at%20%2427%2C000.%20Frazier%20Financial%20Advisors%20LLC%20acquired%20a%20new%20position%20valued%20at%20about%20%2428%2C000.%20Delos%20Wealth%20Advisors%20LLC%20acquired%20a%20new%20stake%20worth%20about%20%2429%2C000.%20Zeit%20Capital%20LLC%20acquired%20a%20new%20position%20valued%20at%20approximately%20%2430%2C000.%20Hedge%20funds%20and%20other%20institutional%20investors%20own%2045.65%25%20of%20the%20company%27s%20stock.">
-                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800"
-                                alt="Palantir">
-                            <div class="news-slide-overlay">
-                                <span class="news-time">8m ago</span>
-                                <h3>Palantir Technologies Inc. $PLTR is IQ EQ FUND MANAGEMENT IRELAND Ltd's 4th
-                                    Largest
-                                    Position</h3>
-                            </div>
-                        </div>
-                        <!-- Slide 2 -->
-                        <div class="news-slide"
-                            data-url="news-detail.html?title=SENSEX%20Hits%20Record%20High%20of%2084%2C000%20Points%20Amid%20Strong%20FII%20Inflows&author=Rajesh%20Kumar&date=Feb%206%2C%202026%2C%209%3A30%20PM&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1590283603385-17ffb3a7f29f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200&content=The%20BSE%20SENSEX%20index%20surged%20to%20an%20all-time%20high%20of%2084%2C000%20points%20today%2C%20driven%20by%20strong%20foreign%20institutional%20investor%20(FII)%20inflows%20and%20positive%20global%20cues.%20Banking%20and%20IT%20stocks%20led%20the%20rally%2C%20with%20HDFC%20Bank%20and%20Infosys%20gaining%20over%203%25%20each.%20Market%20analysts%20attribute%20the%20bullish%20sentiment%20to%20expectations%20of%20a%20rate%20cut%20by%20the%20Reserve%20Bank%20of%20India%20in%20its%20upcoming%20monetary%20policy%20meeting.%20The%20NIFTY%2050%20also%20touched%20a%20new%20peak%20of%2025%2C800%20points%2C%20with%20broad-based%20buying%20across%20all%20sectors.%20The%20market%20capitalization%20of%20BSE-listed%20companies%20crossed%20%E2%82%B9450%20lakh%20crore%20for%20the%20first%20time.%20Foreign%20portfolio%20investors%20(FPIs)%20have%20pumped%20in%20over%20%E2%82%B925%2C000%20crore%20in%20the%20last%20month%20alone%2C%20making%20it%20one%20of%20the%20strongest%20FII%20buying%20periods%20in%20recent%20history.%20Domestic%20institutional%20investors%20(DIIs)%20also%20continued%20their%20buying%20spree%2C%20adding%20%E2%82%B98%2C500%20crore%20worth%20of%20equities.%20Investors%20are%20advised%20to%20maintain%20a%20diversified%20portfolio%20given%20the%20current%20market%20volatility%20and%20global%20geopolitical%20uncertainties.">
-                            <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=800"
-                                alt="SENSEX">
-                            <div class="news-slide-overlay">
-                                <span class="news-time">1h ago</span>
-                                <h3>SENSEX Hits Record High of 84,000 Points Amid Strong FII Inflows</h3>
-                            </div>
-                        </div>
-                        <!-- Slide 3 -->
-                        <div class="news-slide"
-                            data-url="news-detail.html?title=Federal%20Reserve%20Signals%20Potential%20Rate%20Cuts%20in%20Q2%202026&author=Michael%20Chen&date=Feb%206%2C%202026%2C%208%3A15%20PM&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1611974765270-ca1258634369%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200&content=The%20Federal%20Reserve%20maintained%20its%20benchmark%20interest%20rate%20unchanged%20at%204.5%25-4.75%25%20but%20signaled%20potential%20rate%20cuts%20in%20the%20second%20quarter%20of%202026.%20Fed%20Chair%20Jerome%20Powell%20stated%20that%20inflation%20has%20shown%20consistent%20progress%20toward%20the%202%25%20target%2C%20with%20core%20PCE%20declining%20to%202.3%25.%20The%20decision%20was%20unanimous%20among%20all%20voting%20members%20of%20the%20Federal%20Open%20Market%20Committee%20(FOMC).%20Bond%20markets%20reacted%20positively%2C%20with%20the%2010-year%20Treasury%20yield%20falling%20to%203.8%25%20from%204.1%25.%20Equity%20markets%20rallied%20on%20the%20dovish%20tone%2C%20with%20the%20S%26P%20500%20gaining%201.5%25%20and%20the%20Nasdaq%20Composite%20rising%202.1%25%20in%20after-hours%20trading.%20Powell%20emphasized%20that%20the%20labor%20market%20remains%20strong%20with%20unemployment%20at%203.7%25%2C%20while%20wage%20growth%20has%20moderated%20to%20sustainable%20levels.%20The%20Fed%27s%20updated%20dot%20plot%20suggests%20three%20rate%20cuts%20in%202026%2C%20totaling%2075%20basis%20points.%20Market%20participants%20now%20expect%20the%20first%20cut%20in%20April%202026%2C%20with%20a%2078%25%20probability%20priced%20into%20futures%20markets.">
-                            <img src="https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&q=80&w=800"
-                                alt="Fed">
-                            <div class="news-slide-overlay">
-                                <span class="news-time">2h ago</span>
-                                <h3>Federal Reserve Signals Potential Rate Cuts in Q2 2026</h3>
-                            </div>
-                        </div>
-                        <!-- Slide 4 -->
-                        <div class="news-slide"
-                            data-url="news-detail.html?title=Bitcoin%20Surges%20Past%20%24105%2C000%20as%20Major%20Banks%20Announce%20Crypto%20Custody%20Services&author=Elena%20Rodriguez&date=Feb%206%2C%202026%2C%206%3A45%20PM&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1518546305927-5a555bb7020d%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200&content=Bitcoin%20reached%20a%20new%20all-time%20high%20of%20%24105%2C000%20today%20after%20JPMorgan%20Chase%20and%20Goldman%20Sachs%20announced%20the%20launch%20of%20cryptocurrency%20custody%20services%20for%20institutional%20clients.%20The%20move%20marks%20a%20significant%20shift%20in%20Wall%20Street%27s%20approach%20to%20digital%20assets%2C%20signaling%20mainstream%20acceptance%20of%20cryptocurrencies%20as%20a%20legitimate%20asset%20class.%20Ethereum%20also%20gained%208%25%2C%20trading%20at%20%245%2C200%2C%20while%20other%20major%20altcoins%20including%20Solana%20and%20Cardano%20saw%20double-digit%20gains.%20The%20total%20cryptocurrency%20market%20cap%20now%20exceeds%20%244%20trillion%20for%20the%20first%20time%20in%20history.%20BlackRock%27s%20Bitcoin%20ETF%20(IBIT)%20recorded%20its%20largest%20single-day%20inflow%20of%20%241.2%20billion%2C%20bringing%20total%20assets%20under%20management%20to%20over%20%2445%20billion.%20Analysts%20predict%20continued%20institutional%20adoption%20will%20drive%20prices%20higher%2C%20with%20some%20forecasting%20Bitcoin%20at%20%24150%2C000%20by%20year-end.%20The%20approval%20of%20spot%20Ethereum%20ETFs%20is%20also%20expected%20within%20the%20next%20quarter%2C%20which%20could%20further%20boost%20the%20crypto%20market.">
-                            <img src="https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=800"
-                                alt="Bitcoin">
-                            <div class="news-slide-overlay">
-                                <span class="news-time">4h ago</span>
-                                <h3>Bitcoin Surges Past $105,000 as Major Banks Announce Crypto Custody</h3>
-                            </div>
-                        </div>
-                        <!-- Slide 5 -->
-                        <div class="news-slide"
-                            data-url="news-detail.html?title=NIFTY%20Bank%20Index%20Outperforms%20as%20RBI%20Eases%20Liquidity%20Norms&author=Priya%20Sharma&date=Feb%206%2C%202026%2C%205%3A30%20PM&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1560472354-b33ff0c44a43%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200&content=The%20NIFTY%20Bank%20index%20jumped%204.2%25%20today%20after%20the%20Reserve%20Bank%20of%20India%20announced%20relaxed%20liquidity%20coverage%20ratio%20(LCR)%20requirements%20for%20commercial%20banks.%20The%20move%20is%20expected%20to%20free%20up%20approximately%20%E2%82%B93%20lakh%20crore%20in%20lending%20capacity%20for%20the%20banking%20sector.%20HDFC%20Bank%2C%20ICICI%20Bank%2C%20and%20State%20Bank%20of%20India%20led%20the%20gains%2C%20each%20rising%20over%205%25%20during%20the%20trading%20session.%20The%20RBI%20also%20announced%20a%2025%20basis%20point%20cut%20in%20the%20Cash%20Reserve%20Ratio%20(CRR)%2C%20injecting%20additional%20liquidity%20into%20the%20system.%20Banking%20analysts%20view%20this%20as%20a%20positive%20step%20to%20boost%20credit%20growth%20and%20support%20economic%20expansion.%20The%20policy%20changes%20will%20take%20effect%20from%20April%201%2C%202026.%20Private%20sector%20banks%20are%20expected%20to%20benefit%20the%20most%20from%20these%20changes%2C%20with%20improved%20net%20interest%20margins%20and%20higher%20loan%20disbursements.%20Kotak%20Mahindra%20Bank%20and%20Axis%20Bank%20also%20gained%20over%204%25%20each.%20The%20banking%20sector%20is%20now%20up%2018%25%20year-to-date%2C%20outperforming%20the%20broader%20market%20by%20a%20significant%20margin.">
-                            <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?auto=format&fit=crop&q=80&w=800"
-                                alt="NIFTY Bank">
-                            <div class="news-slide-overlay">
-                                <span class="news-time">5h ago</span>
-                                <h3>NIFTY Bank Index Outperforms as RBI Eases Liquidity Norms</h3>
-                            </div>
-                        </div>
-                        <!-- Arrow Controls -->
-                        <button class="carousel-arrow carousel-prev" onclick="changeSlide(-1)"><i
-                                data-lucide="chevron-left"></i></button>
-                        <button class="carousel-arrow carousel-next" onclick="changeSlide(1)"><i
-                                data-lucide="chevron-right"></i></button>
-                        <!-- Dots -->
-                        <div class="carousel-dots">
-                            <span class="carousel-dot active" onclick="goToSlide(0)"></span>
-                            <span class="carousel-dot" onclick="goToSlide(1)"></span>
-                            <span class="carousel-dot" onclick="goToSlide(2)"></span>
-                            <span class="carousel-dot" onclick="goToSlide(3)"></span>
-                            <span class="carousel-dot" onclick="goToSlide(4)"></span>
-                        </div>
+                            investment solutions. We offer a comprehensive suite of tools designed to empower traders
+                            globally.</p>
                     </div>
                 </section>
 
-                <section class="card recommendation">
-                    <div class="card-header" id="recommendationHeader"
-                        style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div class="header-icon blue"><i data-lucide="thumbs-up"></i></div>
-                            <h2>Recommendation</h2>
+                <!-- Breaking News + Recommendation (Right) -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <section class="card breaking-news">
+                        <div class="card-header">
+                            <div class="header-icon blue"><i data-lucide="newspaper"></i></div>
+                            <h2>Breaking News</h2>
                         </div>
-                        <i data-lucide="chevron-down" id="recommendationChevron"
-                            style="transition: transform 0.3s ease;"></i>
-                    </div>
-                    <div class="recommendation-list" id="recommendationList"
-                        style="display: none; max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out;">
-                        <!-- Item 1: Market Trends -->
-                        <a href="news-detail.html?title=Global%20Market%20Trends%3A%202026%20Outlook&author=Sarah%20Jenkins&date=Feb%206%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1460925895917-afdab827c52f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
+                        <div class="news-carousel" id="newsCarousel">
+                            <div class="news-slide active">
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800"
+                                    alt="News">
+                                <div class="news-slide-overlay">
+                                    <span class="news-time">Just Now</span>
+                                    <h3>Market Hits New Milestone Amid Global Optimism</h3>
+                                </div>
+                            </div>
+                            <!-- Arrow Controls -->
+                            <button class="carousel-prev" onclick="changeSlide(-1)"><i
+                                    data-lucide="chevron-left"></i></button>
+                            <button class="carousel-next" onclick="changeSlide(1)"><i
+                                    data-lucide="chevron-right"></i></button>
+                        </div>
+                    </section>
+
+                    <section class="card recommendation">
+                        <div class="card-header" id="recommendationHeader" style="cursor: pointer;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="header-icon blue"><i data-lucide="thumbs-up"></i></div>
+                                <h2>Recommendation</h2>
+                            </div>
+                            <i data-lucide="chevron-down" id="recommendationChevron"></i>
+                        </div>
+                        <div class="recommendation-list" id="recommendationList"
+                            style="display: none; max-height: 0; overflow: hidden;">
                             <div class="rec-item">
                                 <img class="rec-thumb"
                                     src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=200"
-                                    alt="Market">
+                                    alt="Rec">
                                 <div class="rec-content">
-                                    <h3>Global Market Trends: 2026 Outlook</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Sarah Jenkins</span>
-                                        <span class="date">Feb 6, 2026</span>
-                                    </div>
+                                    <h3>2026 Financial Outlook</h3>
+                                    <p>Latest trends and predictions.</p>
                                 </div>
                             </div>
-                        </a>
-                        <!-- Item 2: Trading App -->
-                        <a href="news-detail.html?title=Trading%20Apps%20Revolutionize%20retail%20investing&author=Mike%20Ross&date=Feb%206%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1590283603385-17ffb3a7f29f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=200"
-                                    alt="Trading Platform">
-                                <div class="rec-content">
-                                    <h3>Trading Apps Revolutionize retail investing</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Mike Ross</span>
-                                        <span class="date">Feb 6, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 3: Crypto -->
-                        <a href="news-detail.html?title=Crypto%20Regulation%3A%20What%20Investors%20Need%20to%20Know&author=Elena%20Fisher&date=Feb%205%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1518546305927-5a555bb7020d%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=200"
-                                    alt="Crypto">
-                                <div class="rec-content">
-                                    <h3>Crypto Regulation: What Investors Need to Know</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Elena Fisher</span>
-                                        <span class="date">Feb 5, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 4: Green Bonds -->
-                        <a href="news-detail.html?title=Sustainable%20Investing%3A%20The%20Green%20Bond%20Boom&author=David%20Chen&date=Feb%205%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1532601224476-15c79f2f7a51%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?auto=format&fit=crop&q=80&w=200"
-                                    alt="Green Bonds">
-                                <div class="rec-content">
-                                    <h3>Sustainable Investing: The Green Bond Boom</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">David Chen</span>
-                                        <span class="date">Feb 5, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 5: Oil Prices -->
-                        <a href="news-detail.html?title=Oil%20Prices%20Volatile%20Amid%20Geopolitical%20Tensions&author=Amanda%20Waller&date=Feb%204%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1518546305927-5a555bb7020d%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&q=80&w=200"
-                                    alt="Oil Trading">
-                                <div class="rec-content">
-                                    <h3>Oil Prices Volatile Amid Geopolitical Tensions</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Amanda Waller</span>
-                                        <span class="date">Feb 4, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 6: Fintech -->
-                        <a href="news-detail.html?title=Fintech%20Innovation%3A%20The%20End%20of%20Traditional%20Banking%3F&author=James%20Holden&date=Feb%204%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1620714223084-8fcacc6dfd8d%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?auto=format&fit=crop&q=80&w=200"
-                                    alt="Fintech Trading">
-                                <div class="rec-content">
-                                    <h3>Fintech Innovation: The End of Traditional Banking?</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">James Holden</span>
-                                        <span class="date">Feb 4, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 7: IPO -->
-                        <a href="news-detail.html?title=Top%205%20IPOs%20to%20Watch%20in%20Q1%202026&author=Priya%20Patel&date=Feb%203%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1559589689-577aabd1db4f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1559589689-577aabd1db4f?auto=format&fit=crop&q=80&w=200"
-                                    alt="IPO">
-                                <div class="rec-content">
-                                    <h3>Top 5 IPOs to Watch in Q1 2026</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Priya Patel</span>
-                                        <span class="date">Feb 3, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 8: Real Estate -->
-                        <a href="news-detail.html?title=Real%20Estate%20Market%3A%20Commercial%20vs%20Residential&author=Robert%20Stark&date=Feb%203%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1582407947304-fd86f028f716%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&q=80&w=200"
-                                    alt="Real Estate">
-                                <div class="rec-content">
-                                    <h3>Real Estate Market: Commercial vs Residential</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Robert Stark</span>
-                                        <span class="date">Feb 3, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 9: Central Bank -->
-                        <a href="news-detail.html?title=Central%20Banks%20Signal%20Interest%20Rate%20Cuts&author=Maria%20Gonzalez&date=Feb%202%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1552664730-d307ca884978%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=200"
-                                    alt="Central Bank">
-                                <div class="rec-content">
-                                    <h3>Central Banks Signal Interest Rate Cuts</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Maria Gonzalez</span>
-                                        <span class="date">Feb 2, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 10: Forex -->
-                        <a href="news-detail.html?title=Forex%20Trading%20Strategies%20for%20Beginners&author=Kenji%20Sato&date=Feb%202%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1580519542036-c47de6196ba5%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&q=80&w=200"
-                                    alt="Forex">
-                                <div class="rec-content">
-                                    <h3>Forex Trading Strategies for Beginners</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Kenji Sato</span>
-                                        <span class="date">Feb 2, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 11: Emerging Markets -->
-                        <a href="news-detail.html?title=Emerging%20Markets%3A%20High%20Risk%2C%20High%20Reward%3F&author=Lara%20Croft&date=Feb%201%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1480714378408-67cf0d13bc1b%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=80&w=200"
-                                    alt="Emerging Markets">
-                                <div class="rec-content">
-                                    <h3>Emerging Markets: High Risk, High Reward?</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Lara Croft</span>
-                                        <span class="date">Feb 1, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 12: Blue Chip -->
-                        <a href="news-detail.html?title=Blue%20Chip%20Dividends%3A%20Safe%20Havens&author=Bruce%20Wayne&date=Feb%201%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1590283603385-17ffb3a7f29f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=200"
-                                    alt="Blue Chip Trading">
-                                <div class="rec-content">
-                                    <h3>Blue Chip Dividends: Safe Havens</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Bruce Wayne</span>
-                                        <span class="date">Feb 1, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 13: Tech Sector -->
-                        <a href="news-detail.html?title=ETF%20Performance%20Review%3A%20Tech%20Sector%20Dominates&author=Clark%20Kent&date=Jan%2031%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1519389950473-47ba0277781c%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=200"
-                                    alt="Tech Sector">
-                                <div class="rec-content">
-                                    <h3>ETF Performance Review: Tech Sector Dominates</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Clark Kent</span>
-                                        <span class="date">Jan 31, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 14: Corporate Mergers -->
-                        <a href="news-detail.html?title=Corporate%20Mergers%3A%20What%20It%20Means%20for%20Shareholders&author=Pepper%20Potts&date=Jan%2030%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1560518883-ce09059eeffa%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=200"
-                                    alt="Mergers">
-                                <div class="rec-content">
-                                    <h3>Corporate Mergers: What It Means for Shareholders</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Pepper Potts</span>
-                                        <span class="date">Jan 30, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 15: Inflation Data -->
-                        <a href="news-detail.html?title=Inflation%20Data%3A%20Analyzing%20the%20CPI%20Report&author=Tony%20Stark&date=Jan%2029%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1554224155-6726b3ff858f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=200"
-                                    alt="Inflation Analysis">
-                                <div class="rec-content">
-                                    <h3>Inflation Data: Analyzing the CPI Report</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Tony Stark</span>
-                                        <span class="date">Jan 29, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 16: Supply Chain -->
-                        <a href="news-detail.html?title=Supply%20Chain%20Resilience%20in%20a%20Post-Pandemic%20World&author=Natasha%20Romanoff&date=Jan%2028%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1460925895917-afdab827c52f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=200"
-                                    alt="Supply Chain">
-                                <div class="rec-content">
-                                    <h3>Supply Chain Resilience in a Post-Pandemic World</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Natasha Romanoff</span>
-                                        <span class="date">Jan 28, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 17: DeFi -->
-                        <a href="news-detail.html?title=The%20Rise%20of%20Decentralized%20Finance%20(DeFi)&author=Steve%20Rogers&date=Jan%2027%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1559526324-4b87b5e36e44%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&q=80&w=200"
-                                    alt="DeFi">
-                                <div class="rec-content">
-                                    <h3>The Rise of Decentralized Finance (DeFi)</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Steve Rogers</span>
-                                        <span class="date">Jan 27, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 18: Green Energy -->
-                        <a href="news-detail.html?title=Green%20Energy%20Stocks%3A%20A%20Bright%20Future%3F&author=Bruce%20Banner&date=Jan%2026%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1473341304170-971dccb5ac1e%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&q=80&w=200"
-                                    alt="Green Energy">
-                                <div class="rec-content">
-                                    <h3>Green Energy Stocks: A Bright Future?</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Bruce Banner</span>
-                                        <span class="date">Jan 26, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 19: Consumer Sentiment -->
-                        <a href="news-detail.html?title=Consumer%20Sentiment%20Index%20Drops%20to%20Low&author=Clint%20Barton&date=Jan%2025%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1573855619003-97b4799dcd8b%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1573855619003-97b4799dcd8b?auto=format&fit=crop&q=80&w=200"
-                                    alt="Consumer Sentiment">
-                                <div class="rec-content">
-                                    <h3>Consumer Sentiment Index Drops to Low</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Clint Barton</span>
-                                        <span class="date">Jan 25, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        <!-- Item 20: Hedging -->
-                        <a href="news-detail.html?title=Hedging%20Strategies%20for%20Volatile%20Markets&author=Wanda%20Maximoff&date=Jan%2024%2C%202026&img=https%3A%2F%2Fimages.unsplash.com%2Fphoto-1590283603385-17ffb3a7f29f%3Fauto%3Dformat%26fit%3Dcrop%26q%3D80%26w%3D1200"
-                            class="rec-item-link">
-                            <div class="rec-item">
-                                <img class="rec-thumb"
-                                    src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=200"
-                                    alt="Hedging">
-                                <div class="rec-content">
-                                    <h3>Hedging Strategies for Volatile Markets</h3>
-                                    <div class="rec-meta">
-                                        <span class="category">Business</span>
-                                        <span class="author">Wanda Maximoff</span>
-                                        <span class="date">Jan 24, 2026</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                </section>
+                        </div>
+                    </section>
+                </div>
             </div>
 
+            <!-- Recommendation Alert (for guests) -->
+            <div class="market-auth-prompt" id="marketAuthPrompt" style="margin-bottom: 1.5rem;">
+                <p>Please log in to view more premium insights</p>
+                <a href="login.html" class="login-btn-small">Login to Continue</a>
+            </div>
         </main>
 
         <!-- Exclusive Offers Section -->
-        <section class="exclusive-offers-section">
+        <section class="exclusive-offers-section" style="padding: 1.5rem; max-width: 1400px; margin: 0 auto;">
             <div class="card-header"
-                style="padding-left: 0.5rem; background: transparent; border: none; margin-bottom: 0.5rem;">
+                style="padding-left: 0.5rem; background: transparent; border: none; margin-bottom: 1rem;">
                 <div class="header-icon blue" style="background: #e0f2fe; color: #0ea5e9;">
                     <i data-lucide="sparkles"></i>
                 </div>
@@ -678,7 +360,7 @@
                     Exclusive
                     Offers</h2>
             </div>
-            <div class="offers-grid">
+            <div class="offers-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
                 <div class="offer-card">
                     <div class="offer-img-wrapper">
                         <img src="https://images.pexels.com/photos/6770610/pexels-photo-6770610.jpeg?auto=compress&cs=tinysrgb&w=600"
@@ -742,11 +424,6 @@
             </div>
         </section>
 
-        <!-- Recommendation Alert -->
-        <div class="market-auth-prompt" id="marketAuthPrompt">
-            <p>Please log in to view more</p>
-            <a href="login.html" class="login-btn-small">Please log in to continue</a>
-        </div>
 
 
         <!-- Footer -->
@@ -812,10 +489,11 @@
         <div class="settings-content">
             <button class="settings-close" onclick="closeSettings()"><i data-lucide="x" size="24"></i></button>
             <div class="settings-header">
-                <div class="avatar-circle">U</div>
-                <div class="settings-name"
+                <div class="avatar-circle" id="settingsAvatar">U</div>
+                <div class="settings-name" id="settingsName"
                     style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 0.5rem;">User Name</div>
-                <div class="settings-phone" style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
+                <div class="settings-phone" id="settingsPhone"
+                    style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
                 <div class="badge-row">
                     <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
                     <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
@@ -832,6 +510,9 @@
                         style="transition: transform 0.2s;"></i>
                 </div>
                 <div id="userProfileSubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openEditNameModal()">
+                        <i data-lucide="edit-3" size="18"></i> Update Name
+                    </div>
                     <div class="submenu-item" onclick="openAvatarModal()">
                         <i data-lucide="image" size="18"></i> Update Avatar
                     </div>
@@ -1000,462 +681,328 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Avatar Modal -->
-        <div id="avatarModal" class="center-popup-modal">
-            <div class="center-popup-content avatar-form" style="max-width: 400px;">
-                <div class="popup-header"
-                    style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
-                    <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
+    <!-- Avatar Modal -->
+    <div id="avatarModal" class="center-popup-modal">
+        <div class="center-popup-content avatar-form" style="max-width: 400px;">
+            <div class="popup-header"
+                style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
+                <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
+                <div class="avatar-preview-lg" id="avatarPreviewContainer"
+                    onclick="document.getElementById('avatarInput').click()">
+                    <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
+                    <img id="avatarPreviewImg" src="" style="display:none;">
+                    <div class="avatar-change-overlay">Change Image</div>
                 </div>
-                <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
-                    <div class="avatar-preview-lg" id="avatarPreviewContainer"
-                        onclick="document.getElementById('avatarInput').click()">
-                        <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
-                        <img id="avatarPreviewImg" src="" style="display:none;">
-                        <div class="avatar-change-overlay">Change Image</div>
-                    </div>
-                    <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
-                    <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                        <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
-                        <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
-                    </div>
+                <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
+                <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
+                    <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- KYC Modal -->
-        <div id="kycModal" class="center-popup-modal">
-            <div class="center-popup-content">
-                <div class="popup-header">
-                    <h2>View KYC</h2>
-                    <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+    <!-- KYC Modal -->
+    <div id="kycModal" class="center-popup-modal">
+        <div class="center-popup-content">
+            <div class="popup-header">
+                <h2>View KYC</h2>
+                <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="popup-body">
+                <div class="kyc-form-grid">
+                    <div class="kyc-field-label">Full Name</div>
+                    <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
+                    <div class="kyc-field-label">Mobile Number</div>
+                    <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
+                    <div class="kyc-field-label">ID Number</div>
+                    <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
+                    <div class="kyc-field-label">Submitted On</div>
+                    <input type="text" id="kycSubmitted" class="kyc-field-input" readonly style="background: #f8fafc;">
+                    <div class="kyc-field-label">Approval Status</div>
+                    <input type="text" id="kycApproved" class="kyc-field-input" readonly style="background: #f8fafc;">
                 </div>
-                <div class="popup-body">
-                    <div class="kyc-form-grid">
-                        <div class="kyc-field-label">Full Name</div>
-                        <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
-                        <div class="kyc-field-label">Mobile Number</div>
-                        <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
-                        <div class="kyc-field-label">ID Number</div>
-                        <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
-                        <div class="kyc-field-label">Submitted On</div>
-                        <input type="text" id="kycSubmitted" class="kyc-field-input" readonly
-                            style="background: #f8fafc;">
-                        <div class="kyc-field-label">Approval Status</div>
-                        <input type="text" id="kycApproved" class="kyc-field-input" readonly
-                            style="background: #f8fafc;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                    <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
+                        <div class="plus-icon">+ Front</div>
+                        <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                        <input type="file" id="kycFrontInput" hidden
+                            onchange="previewKYCImage(this, 'kycFrontPreview')">
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
-                        <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
-                            <div class="plus-icon">+ Front</div>
-                            <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
-                            <input type="file" id="kycFrontInput" hidden
-                                onchange="previewKYCImage(this, 'kycFrontPreview')">
-                        </div>
-                        <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
-                            <div class="plus-icon">+ Back</div>
-                            <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
-                            <input type="file" id="kycBackInput" hidden
-                                onchange="previewKYCImage(this, 'kycBackPreview')">
-                        </div>
+                    <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
+                        <div class="plus-icon">+ Back</div>
+                        <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                        <input type="file" id="kycBackInput" hidden onchange="previewKYCImage(this, 'kycBackPreview')">
                     </div>
-                    <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
-                        Verification</button>
                 </div>
+                <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
+                    Verification</button>
             </div>
         </div>
+    </div>
 
-        <script src="script.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                lucide.createIcons();
-                if (typeof initCarousel === 'function') initCarousel();
-                checkAuthState();
-                syncUserData();
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            if (typeof initCarousel === 'function') initCarousel();
+            checkAuthState();
+            syncUserData();
 
-                // Recommendation Toggle
-                const recHeader = document.getElementById('recommendationHeader');
-                const recList = document.getElementById('recommendationList');
-                const recChevron = document.getElementById('recommendationChevron');
-                if (recHeader && recList) {
-                    recHeader.addEventListener('click', () => {
-                        const isHidden = recList.style.display === 'none';
-                        if (isHidden) {
-                            recList.style.display = 'block';
-                            setTimeout(() => {
-                                recList.style.maxHeight = '2000px';
-                                if (recChevron) recChevron.style.transform = 'rotate(180deg)';
-                            }, 10);
-                        } else {
-                            recList.style.maxHeight = '0';
-                            if (recChevron) recChevron.style.transform = 'rotate(0deg)';
-                            setTimeout(() => recList.style.display = 'none', 400);
-                        }
-                    });
-                }
-
-                // Persist CS Modal State
-                if (localStorage.getItem('avendus_cs_open') === 'true') {
-                    window.openCS();
-                }
-
-                // Auto-refresh data when user switches back to this tab
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        console.log("Tab visible, syncing user data...");
-                        syncUserData();
+            // Recommendation Toggle
+            const recHeader = document.getElementById('recommendationHeader');
+            const recList = document.getElementById('recommendationList');
+            const recChevron = document.getElementById('recommendationChevron');
+            if (recHeader && recList) {
+                recHeader.addEventListener('click', () => {
+                    const isHidden = recList.style.display === 'none';
+                    if (isHidden) {
+                        recList.style.display = 'block';
+                        setTimeout(() => {
+                            recList.style.maxHeight = '2000px';
+                            if (recChevron) recChevron.style.transform = 'rotate(180deg)';
+                        }, 10);
+                    } else {
+                        recList.style.maxHeight = '0';
+                        if (recChevron) recChevron.style.transform = 'rotate(0deg)';
+                        setTimeout(() => recList.style.display = 'none', 400);
                     }
                 });
-                window.addEventListener('focus', () => {
-                    console.log("Window focused, syncing user data...");
+            }
+
+            // Persist CS Modal State
+            if (localStorage.getItem('avendus_cs_open') === 'true') {
+                window.openCS();
+            }
+
+            // Auto-refresh data when user switches back to this tab
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    console.log("Tab visible, syncing user data...");
                     syncUserData();
-                });
+                }
+            });
+            window.addEventListener('focus', () => {
+                console.log("Window focused, syncing user data...");
+                syncUserData();
+            });
+        });
+
+        function checkAuthState() {
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+            const loggedIn = !!user;
+
+            // Header & Hero
+            const portBar = document.getElementById('portfolioBar');
+            if (portBar) portBar.style.display = loggedIn ? 'flex' : 'none';
+            const promo = document.getElementById('promoActions');
+            if (promo) promo.style.display = loggedIn ? 'none' : 'flex';
+
+            // Sidebar Auth Prompt
+            const authPrompt = document.getElementById('marketAuthPrompt');
+            if (authPrompt) authPrompt.style.display = loggedIn ? 'none' : 'block';
+
+            // Feature Locks
+            const assetsLock = document.getElementById('assetsLockOverlay');
+            if (assetsLock) assetsLock.style.display = loggedIn ? 'none' : 'flex';
+
+            const chartLock = document.querySelector('.auth-lock-overlay');
+            if (chartLock) chartLock.style.display = loggedIn ? 'none' : 'flex';
+
+            // Stock Lists (Gainers/Losers)
+            document.querySelectorAll('.auth-locked-content').forEach(el => {
+                if (el.closest('.auth-locked-container')) return; // handled by parent overlay if exists
+                // We handle these by only calling switchExchange if logged in or showing placeholders
             });
 
-            function checkAuthState() {
-                const user = DB.getCurrentUser();
-                const loggedIn = !!user;
-                const portBar = document.getElementById('portfolioBar');
-                if (portBar) portBar.style.display = loggedIn ? 'flex' : 'none';
-                const promo = document.getElementById('promoActions');
-                if (promo) promo.style.display = loggedIn ? 'none' : 'flex';
+            if (loggedIn) {
+                if (typeof syncUserData === 'function') syncUserData();
+                setTimeout(() => {
+                    if (typeof startChatListener === 'function') startChatListener();
+                    updateCSRVisibility();
+                }, 1000);
+            }
+        }
 
-                if (loggedIn) {
-                    syncUserData(); // Initial sync on load
-                    // Ensure interaction has happened for audio
-                    setTimeout(() => {
-                        startChatListener();
-                        updateCSRVisibility();
-                    }, 1000);
+        function playNotificationSound() {
+            try {
+                // More reliable notification sound
+                const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+                audio.volume = 0.5;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => console.log("Audio blocked. Interact with page first."));
                 }
-            }
+            } catch (e) { }
+        }
 
-            function playNotificationSound() {
-                try {
-                    // More reliable notification sound
-                    const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
-                    audio.volume = 0.5;
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(e => console.log("Audio blocked. Interact with page first."));
-                    }
-                } catch (e) { }
-            }
-
-            window.openSettings = () => {
-                const sm = document.getElementById('settingsModal');
-                if (sm) sm.style.display = 'flex';
-                lucide.createIcons();
+        // Page specific initialization
+        window.addEventListener('load', () => {
+            const updateCSRVisibility = () => {
+                const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+                const btn = document.getElementById('floatingCSR');
+                if (btn) btn.style.display = user ? 'flex' : 'none';
             };
-            window.closeSettings = () => {
-                const sm = document.getElementById('settingsModal');
-                if (sm) sm.style.display = 'none';
-            };
+            updateCSRVisibility();
+            if (typeof syncUserData === 'function') syncUserData();
 
-            window.syncUserData = async function () {
-                const user = DB.getCurrentUser();
-                if (!user) return;
+            // Initialize Market Components
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            loadWidget('BSE:SENSEX');
+            switchExchange('gainers', 'NSE');
+            switchExchange('losers', 'NSE');
+        });
 
-                const setName = document.querySelector('.settings-name');
-                const greetingName = document.querySelector('.user-text h3');
-                const setPhone = document.querySelector('.settings-phone');
-                const setVip = document.querySelector('.s-badge.vip');
-                const setCredit = document.querySelector('.s-badge.credit');
+        // --- MARKET DATA & CHART LOGIC (GLOBAL SCOPE) ---
+        let currentWidget = null;
+        let currentActiveSymbol = 'BSE:SENSEX';
+        let currentInterval = 'D';
 
-                if (setName) setName.textContent = user.full_name || 'Set Name';
-                if (greetingName) greetingName.textContent = user.full_name || user.mobile;
-                if (setPhone) setPhone.textContent = user.mobile;
-
-                const avatars = document.querySelectorAll('.user-avatar, .avatar-circle');
-                const renderAvatar = (url) => {
-                    avatars.forEach(av => {
-                        if (url) av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-                        else av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
-                    });
-                };
-                if (user.avatar_url) renderAvatar(user.avatar_url);
-
-                const client = DB.getClient();
-                if (client) {
-                    try {
-                        const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
-                        if (dbUser) {
-                            let changed = false;
-                            if (dbUser.avatar_url && dbUser.avatar_url !== user.avatar_url) { user.avatar_url = dbUser.avatar_url; changed = true; }
-                            if (dbUser.full_name && dbUser.full_name !== user.full_name) { user.full_name = dbUser.full_name; changed = true; }
-
-                            if (changed) {
-                                localStorage.setItem('avendus_current_user', JSON.stringify(user));
-                                renderAvatar(user.avatar_url);
-                                if (setName) setName.textContent = user.full_name;
-                                if (greetingName) greetingName.textContent = user.full_name;
-                            }
-
-                            if (setVip) setVip.innerHTML = `<i data-lucide="shield-check" size="18"></i> VIP: ${dbUser.vip || 0}`;
-
-                            let creditScore = dbUser.credit_score;
-                            if (creditScore === undefined || creditScore === null || creditScore === 'undefined') creditScore = 100;
-                            if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
-
-                            const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
-
-                            // --- USER REQUEST: "Available Balance" must visually deduct PENDING transactions ---
-                            // We fetch pending withdrawals and pending trades to subtract them from the display.
-                            // We also ADD Pending deposits as "reflected" balance.
-                            let effectiveBalance = parseFloat(dbUser.balance || 0);
-
-                            // Fetch Pending Deposits
-                            const { data: pendingD } = await client.from('deposits')
-                                .select('amount')
-                                .eq('user_id', user.id)
-                                .eq('status', 'Pending');
-                            const lockedDeposits = (pendingD || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-
-                            // Fetch Pending Withdrawals
-                            const { data: pendingW } = await client.from('withdrawals')
-                                .select('amount')
-                                .eq('user_id', user.id)
-                                .eq('status', 'Pending');
-
-                            const lockedWithdrawals = (pendingW || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
-
-                            // Fetch Pending Trades (Buy/Subscription)
-                            const { data: pendingT } = await client.from('trades')
-                                .select('total_amount')
-                                .eq('user_id', user.id)
-                                .eq('status', 'Pending'); // Assuming 'Pending'
-
-                            const lockedTrades = (pendingT || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
-
-                            effectiveBalance = effectiveBalance + lockedDeposits - lockedWithdrawals - lockedTrades;
-                            if (effectiveBalance < 0) effectiveBalance = 0; // Should not happen ideally but safe guard
-
-                            // Update UI
-                            const homePortfolioValue = document.getElementById('homePortfolioValue');
-                            if (homePortfolioValue) {
-                                homePortfolioValue.textContent = fmt(effectiveBalance);
-                            } else {
-                                const balanceEls = document.querySelectorAll('.stat-value.green');
-                                if (balanceEls.length > 0) balanceEls[0].textContent = fmt(effectiveBalance);
-                            }
-                            const investedEls = document.querySelectorAll('.stat-value.blue');
-                            // For invested, we might want to include Pending Buys? 
-                            // User request only mentioned "Available Balance" deducting.
-                            if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
-
-                            lucide.createIcons();
-                        }
-                    } catch (e) {
-                        console.error("Sync Error:", e);
-                    }
-                }
-            };
-
-            // Customer Service
-            let isChatSubscribed = false;
-            window.openCS = () => {
-                closeSettings();
-                const modal = document.getElementById('csModal');
-                if (modal) modal.style.display = 'flex';
-                localStorage.setItem('avendus_cs_open', 'true');
-                loadCSMessages();
-            };
-            window.closeCS = () => {
-                document.getElementById('csModal').style.display = 'none';
-                localStorage.setItem('avendus_cs_open', 'false');
-            };
-
-            async function loadCSMessages() {
-                const user = DB.getCurrentUser();
-                const targetBox = document.getElementById('chatBox');
-                if (!user || !targetBox) return;
-
-                const msgs = await DB.getMessages(user.id);
-                renderMessages(msgs);
-
-                // Clear badges when chat is opened
-                const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
-                badges.forEach(b => {
-                    if (b) {
-                        b.style.display = 'none';
-                        b.textContent = '0';
-                    }
-                });
-
-                targetBox.scrollTop = targetBox.scrollHeight;
+        const indexData = {
+            'BSE:SENSEX': {
+                price: 83580.40, basePrice: 83313.93, low: 83250.27, high: 83784.17, open: 83757.54, close: 83817.69, sym: "SENSEX",
+                cardValId: 'valSensexCard', cardChgId: 'chgSensexCard'
+            },
+            'NSE:NIFTY': {
+                price: 25641.65, basePrice: 25776.00, low: 25600.00, high: 25800.00, open: 25750.00, close: 25776.00, sym: "NIFTY 50",
+                cardValId: 'valNiftyCard', cardChgId: 'chgNiftyCard'
+            },
+            'NSE:NIFTYBANK': {
+                price: 51234.75, basePrice: 50822.45, low: 50700.00, high: 51500.00, open: 50900.00, close: 50822.45, sym: "BANK NIFTY",
+                cardValId: 'valBankNiftyCard', cardChgId: 'chgBankNiftyCard'
             }
+        };
 
-            async function startChatListener() {
-                const user = DB.getCurrentUser();
-                if (!user || isChatSubscribed) return;
-
-                const client = DB.getClient();
-                if (!client) return;
-
-                client.channel('public:messages')
-                    .on('postgres_changes', {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'messages',
-                        filter: `user_id=eq.${user.id}`
-                    }, payload => {
-                        const m = payload.new;
-                        const isUser = m.sender === 'User' || m.sender === 'user';
-
-                        // Always append if modal is open
-                        const modal = document.getElementById('csModal');
-                        if (modal && modal.style.display === 'flex') {
-                            appendSingleMessage(m);
-                        }
-
-                        // Notify if from Support
-                        if (!isUser) {
-                            playNotificationSound();
-                            const badges = [document.getElementById('csrMsgBadge'), document.getElementById('csrHeaderBadge')];
-                            badges.forEach(badge => {
-                                if (badge && (modal && modal.style.display !== 'flex')) {
-                                    const count = parseInt(badge.textContent || '0') + 1;
-                                    badge.textContent = count;
-                                    badge.style.display = 'block';
-                                }
-                            });
-                        }
-                    }).subscribe();
-
-                isChatSubscribed = true;
+        const stockData = {
+            gainers: {
+                NSE: [
+                    { t: 'NIRAJISPAT', n: 'Niraj Ispat Industries', p: '₹257.41', c: '+20.00%' },
+                    { t: 'PRESSTONIC', n: 'Presstonic Engineering', p: '₹53.20', c: '+19.82%' },
+                    { t: 'IZMO', n: 'IZMO Limited', p: '₹841.45', c: '+18.48%' }
+                ],
+                BSE: [
+                    { t: 'HDFCBANK', n: 'HDFC Bank Ltd', p: '₹1,540.20', c: '+2.45%' },
+                    { t: 'RELIANCE', n: 'Reliance Industries', p: '₹2,985.40', c: '+1.80%' }
+                ]
+            },
+            losers: {
+                NSE: [
+                    { t: 'DHARIWAL', n: 'Dhariwalcorp Limited', p: '₹78.70', c: '-79.61%' },
+                    { t: 'CLEDUCATE', n: 'CL Educate Limited', p: '₹59.08', c: '-20.00%' }
+                ],
+                BSE: [
+                    { t: 'ZOMATO', n: 'Zomato Limited', p: '₹255.40', c: '-4.20%' },
+                    { t: 'PAYTM', n: 'One 97 Communications', p: '₹712.10', c: '-3.15%' }
+                ]
             }
+        };
 
-            function renderMessages(msgs) {
-                const targetBox = document.getElementById('chatBox');
-                targetBox.innerHTML = '';
-                msgs.forEach(m => appendSingleMessage(m));
-            }
+        function loadWidget(symbol) {
+            const container = document.getElementById('tradingview_widget');
+            if (container) container.innerHTML = '';
+            if (typeof TradingView === 'undefined') return;
 
-            function appendSingleMessage(m) {
-                const targetBox = document.getElementById('chatBox');
-                if (!targetBox) return;
+            currentWidget = new TradingView.widget({
+                "autosize": true,
+                "symbol": symbol,
+                "interval": currentInterval,
+                "timezone": "Asia/Kolkata",
+                "theme": "dark",
+                "style": "1",
+                "locale": "in",
+                "toolbar_bg": "#000000",
+                "enable_publishing": false,
+                "allow_symbol_change": false,
+                "hide_top_toolbar": true,
+                "container_id": "tradingview_widget",
+                "hide_side_toolbar": true,
+                "overrides": {
+                    "paneProperties.background": "#000000",
+                    "paneProperties.gridLines": "#1a1a1a",
+                    "mainSeriesProperties.candleStyle.upColor": "#00ff88",
+                    "mainSeriesProperties.candleStyle.downColor": "#ff3b3b",
+                    "mainSeriesProperties.candleStyle.borderUpColor": "#00ff88",
+                    "mainSeriesProperties.candleStyle.borderDownColor": "#ff3b3b",
+                    "mainSeriesProperties.candleStyle.wickUpColor": "#00ff88",
+                    "mainSeriesProperties.candleStyle.wickDownColor": "#ff3b3b"
+                },
+                "disabled_features": [
+                    "header_symbol_search", "header_compare", "header_settings",
+                    "header_indicators", "header_chart_type", "header_resolutions",
+                    "left_toolbar", "context_menus"
+                ]
+            });
+        }
 
-                const div = document.createElement('div');
-                const isUser = m.sender === 'User' || m.sender === 'user';
+        function updateChart(symbol, title) {
+            if (!indexData[symbol]) return;
+            currentActiveSymbol = symbol;
 
-                div.className = `chat-bubble ${isUser ? 'user' : 'support'}`;
-
-                // Handle JSON messages if admin sends structured data
-                let content = m.message;
-                try {
-                    if (content.startsWith('{')) {
-                        const parsed = JSON.parse(content);
-                        content = `<strong>${parsed.title || ''}</strong><br>${parsed.body || parsed.message || ''}`;
-                    }
-                } catch (e) { }
-
-                div.innerHTML = `
-                <div class="message-text">${content}</div>
-                <div class="message-time">${new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-            `;
-
-                targetBox.appendChild(div);
-                targetBox.scrollTop = targetBox.scrollHeight;
-            }
-
-            window.sendCSMessage = async () => {
-                const input = document.getElementById('csInput');
-                const text = input.value.trim();
-                const user = DB.getCurrentUser();
-                if (!text || !user) return;
-
-                input.value = '';
-                const { success, error } = await DB.sendMessage(user.id, text, 'User');
-                if (!success) {
-                    console.error("Chat Error:", error);
-                    alert("Message failed to send. Please try again.");
-                }
-            };
-
-            // Allow 'Enter' key to send message
-            document.getElementById('csInput')?.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') window.sendCSMessage();
+            document.querySelectorAll('.index-mini-card').forEach(c => {
+                c.classList.toggle('active', c.innerText.includes(title));
             });
 
-            window.handleGuestClick = (url) => {
-                if (DB.getCurrentUser()) { if (url && url !== '#') window.location.href = url; }
-                else showAlert();
-            };
+            const d = indexData[symbol];
+            const diff = d.price - d.basePrice;
+            const pct = (diff / d.basePrice) * 100;
+            const isUp = diff >= 0;
 
-            window.handleGuestTabClick = (type) => {
-                const user = DB.getCurrentUser();
-                if (!user) {
-                    showAlert();
-                    return;
-                }
-                if (type === 'me') {
-                    window.location.href = 'market.html?view=me';
-                } else if (type === 'portfolio') {
-                    window.location.href = 'market.html?view=portfolio';
-                }
-            };
+            if (document.getElementById('indexPrice')) document.getElementById('indexPrice').innerText = d.price.toLocaleString('en-IN');
+            if (document.getElementById('valSymbol')) document.getElementById('valSymbol').innerText = d.sym;
 
-            function showAlert() {
-                const container = document.getElementById('topAlertContainer');
-                if (container) {
-                    container.style.display = 'block';
-                    setTimeout(() => container.style.display = 'none', 5000);
-                }
+            const hChg = document.getElementById('heroChange');
+            if (hChg) {
+                hChg.innerText = `${isUp ? '+' : ''}${diff.toFixed(2)} (${isUp ? '+' : ''}${pct.toFixed(2)}%)`;
+                hChg.className = `index-chg ${isUp ? 'green' : 'red'}`;
             }
 
-            window.previewKYCImage = (input, previewId) => {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.getElementById(previewId);
-                        img.src = e.target.result;
-                        img.style.display = 'block';
-                        img.parentElement.classList.add('has-image');
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
-            };
+            loadWidget(symbol);
+        }
 
-            // Note: openAvatarModal, closeAvatarModal, toggleUserProfile, openKYCModal, etc. 
-            // are handled by script.js. No need to redefine them here unless specific behavior is needed.
-            // If they are missing from script.js, add them there or define here.
+        function updateChartInterval(interval, btn) {
+            currentInterval = interval;
+            document.querySelectorAll('.mini-tf-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            loadWidget(currentActiveSymbol);
+        }
 
-        </script>
-        <!-- Message Center Modal -->
-        <div id="messageCenterOverlay" onclick="toggleMessageCenter()"
-            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2999;">
-        </div>
-        <div id="messageCenter" class="cs-content"
-            style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.9); opacity:0; transition: all 0.3s; z-index:3000; display:none; flex-direction:column; background:white; width:400px; height:600px; border-radius:16px;">
-            <div class="cs-header"
-                style="background:#1e56a0; color:white; padding:1.25rem; display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-weight:700; display:flex; gap:10px; align-items:center;"><i data-lucide="bell"
-                        size="20"></i> Notifications</div>
-                <button onclick="toggleMessageCenter()"
-                    style="background:transparent; border:none; color:white; cursor:pointer;"><i data-lucide="x"
-                        size="20"></i></button>
-            </div>
-            <div class="cs-body" id="mcList"
-                style="flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:1rem;">
-                <!-- Messages go here -->
-            </div>
-            <div style="padding:1rem; border-top:1px solid #eee; display:flex; justify-content:space-between;"
-                id="mcFooter">
-                <button onclick="makeAllRead()"
-                    style="background:#f1f5f9; border:none; padding:8px 16px; border-radius:6px; font-size:0.8rem; cursor:pointer; color:#64748b;">Mark
-                    all read</button>
-                <button onclick="deleteAllMessages()"
-                    style="background:#fee2e2; border:none; padding:8px 16px; border-radius:6px; font-size:0.8rem; cursor:pointer; color:#ef4444;">Delete
-                    all</button>
-            </div>
-        </div>
+        function switchExchange(type, exchange) {
+            const listId = type === 'gainers' ? 'gainersList' : 'losersList';
+            const listContainer = document.querySelector(`#${listId} .auth-locked-content`);
+            if (!listContainer) return;
+            const data = stockData[type][exchange];
 
-        <!--Notification Bell Floating Button-- >
+            const section = listContainer.closest('.card');
+            section.querySelectorAll('.exchange-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.innerText === exchange);
+            });
+
+            listContainer.innerHTML = data.map(s => `
+                <div class="stock-row" style="display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">${s.t}</div>
+                        <div style="font-size: 0.75rem; color: #666;">${s.n}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">${s.p}</div>
+                        <div class="index-chg ${type === 'gainers' ? 'green' : 'red'}" style="font-size: 0.8rem; font-weight: 700; color: ${type === 'gainers' ? '#00ff88' : '#ff3b3b'};">${s.c}</div>
+                    </div>
+                </div>
+            `).join('');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    </script>
+
+    <!-- Notification Bell Floating Button -->
     <div class="cs-floating-tab" onclick="toggleMessageCenter()"
         style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; background: #fff; border: 1px solid #e2e8f0; color: #64748b; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;">
-        <div style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+        <div
+            style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
             <i data-lucide="bell" size="24" color="#1e56a0"></i>
             <div id="msgBadge"
                 style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
@@ -1464,21 +1011,827 @@
     </div>
 
     <!-- Floating CSR Button -->
-        <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: none;">
-            <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
-            <i data-lucide="headset"></i>
-            <span>Support</span>
+    <div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: none;">
+        <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
+        <i data-lucide="headset"></i>
+        <span>Support</span>
+    </div>
+
+
+    <div id="editNameModal" class="center-popup-modal">
+        <div class="center-popup-content" style="max-width: 400px;">
+            <div class="popup-header">
+                <h2>Update Name</h2>
+                <button class="popup-close" onclick="closeEditNameModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body">
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                        Name</label>
+                    <input type="text" id="editNameInput" class="reg-input" placeholder="Enter your name"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="logout-btn" id="saveNameBtn" style="background: #3b82f6;" onclick="saveName()">Save
+                        Name</button>
+                    <button class="logout-btn" style="background: #f1f5f9; color: #64748b;"
+                        onclick="closeEditNameModal()">Cancel</button>
+                </div>
+            </div>
         </div>
-        <script>
-            // Update CSR visibility based on login
-            const updateCSRVisibility = () => {
-                const user = DB.getCurrentUser();
-                const btn = document.getElementById('floatingCSR');
-                if (btn) btn.style.display = user ? 'flex' : 'none';
-            };
-            // Initial check
-            updateCSRVisibility();
-        </script>
+    </div>
+</body>
+
+</html><!-- Main Content -->
+<main class="main-grid">
+    <!-- Left Column: Market Summary -->
+    <section class="card market-summary">
+        <div class="card-header">
+            <div class="header-icon"><i data-lucide="activity"></i></div>
+            <h2>Market Summary</h2>
+        </div>
+        <div class="market-cards-grid">
+            <div class="stock-card">
+                <div class="stock-info">
+                    <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
+                    <span class="stock-name">SENSEX</span>
+                </div>
+                <div class="stock-value">83,580.40</div>
+                <div class="stock-change green">+266.47 (+0.32%)</div>
+            </div>
+            <div class="stock-card">
+                <div class="stock-info">
+                    <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
+                    <span class="stock-name">NIFTY 50</span>
+                </div>
+                <div class="stock-value">25,627.1</div>
+                <div class="stock-change negative">-148.9 (-0.58%)</div>
+            </div>
+            <div class="stock-card">
+                <div class="stock-info">
+                    <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon">
+                    <span class="stock-name">NIFTY BANK</span>
+                </div>
+                <div class="stock-value">60,023.4</div>
+                <div class="stock-change negative">-214.75 (-0.36%)</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section class="card about-us-section">
+        <div class="card-header">
+            <div class="header-icon"><i data-lucide="info"></i></div>
+            <h2>About Avendus Capital</h2>
+        </div>
+        <div class="about-content" style="padding: 1.5rem; color: #64748b; line-height: 1.6;">
+            <p>Avendus Capital is a leading financial institution dedicated to providing premium trading and
+                investment solutions. We offer a comprehensive suite of tools designed to empower traders
+                globally.</p>
+        </div>
+    </section>
+
+    <!-- Recommendation Alert (for guests) -->
+    <div class="market-auth-prompt" id="marketAuthPrompt">
+        <p>Please log in to view more premium insights</p>
+        <a href="login.html" class="login-btn-small">Login to Continue</a>
+    </div>
+
+    <!-- Right Column: News & Recommendation -->
+    <div class="sidebar">
+        <section class="card breaking-news">
+            <div class="card-header">
+                <div class="header-icon blue"><i data-lucide="newspaper"></i></div>
+                <h2>Breaking News</h2>
+            </div>
+            <div class="news-carousel" id="newsCarousel">
+                <div class="news-slide active">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800"
+                        alt="News">
+                    <div class="news-slide-overlay">
+                        <span class="news-time">Just Now</span>
+                        <h3>Market Hits New Milestone Amid Global Optimism</h3>
+                    </div>
+                </div>
+                <!-- Arrow Controls -->
+                <button class="carousel-prev" onclick="changeSlide(-1)"><i data-lucide="chevron-left"></i></button>
+                <button class="carousel-next" onclick="changeSlide(1)"><i data-lucide="chevron-right"></i></button>
+            </div>
+        </section>
+
+        <section class="card recommendation">
+            <div class="card-header" id="recommendationHeader" style="cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="header-icon blue"><i data-lucide="thumbs-up"></i></div>
+                    <h2>Recommendation</h2>
+                </div>
+                <i data-lucide="chevron-down" id="recommendationChevron"></i>
+            </div>
+            <div class="recommendation-list" id="recommendationList"
+                style="display: none; max-height: 0; overflow: hidden;">
+                <div class="rec-item">
+                    <img class="rec-thumb"
+                        src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=200"
+                        alt="Rec">
+                    <div class="rec-content">
+                        <h3>2026 Financial Outlook</h3>
+                        <p>Latest trends and predictions.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<!-- Exclusive Offers Section -->
+<section class="exclusive-offers-section">
+    <div class="card-header"
+        style="padding-left: 0.5rem; background: transparent; border: none; margin-bottom: 0.5rem;">
+        <div class="header-icon blue" style="background: #e0f2fe; color: #0ea5e9;">
+            <i data-lucide="sparkles"></i>
+        </div>
+        <h2 style="font-size: 1.3rem; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">
+            Exclusive
+            Offers</h2>
+    </div>
+    <div class="offers-grid">
+        <div class="offer-card">
+            <div class="offer-img-wrapper">
+                <img src="https://images.pexels.com/photos/6770610/pexels-photo-6770610.jpeg?auto=compress&cs=tinysrgb&w=600"
+                    alt="Equity Trading">
+            </div>
+            <div class="offer-info">
+                <h3>Equity Trading</h3>
+                <p>Invest in leading companies and grow with the stock market.</p>
+            </div>
+        </div>
+        <div class="offer-card">
+            <div class="offer-img-wrapper">
+                <img src="https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=600"
+                    alt="Robo Advisory">
+            </div>
+            <div class="offer-info">
+                <h3>Robo Advisory</h3>
+                <p>AI-powered, personalised investment strategies made simple.</p>
+            </div>
+        </div>
+        <div class="offer-card">
+            <div class="offer-img-wrapper">
+                <img src="https://images.pexels.com/photos/164501/pexels-photo-164501.jpeg?auto=compress&cs=tinysrgb&w=600"
+                    alt="Mutual Funds">
+            </div>
+            <div class="offer-info">
+                <h3>Mutual Funds</h3>
+                <p>Diversify your portfolio with professionally managed fund options.</p>
+            </div>
+        </div>
+        <div class="offer-card">
+            <div class="offer-img-wrapper">
+                <img src="https://images.pexels.com/photos/6801874/pexels-photo-6801874.jpeg?auto=compress&cs=tinysrgb&w=600"
+                    alt="Online Trading Experience">
+            </div>
+            <div class="offer-info">
+                <h3>Online Trading Experience</h3>
+                <p>Online Trading Experience</p>
+            </div>
+        </div>
+        <div class="offer-card">
+            <div class="offer-img-wrapper">
+                <img src="https://images.pexels.com/photos/6780824/pexels-photo-6780824.jpeg?auto=compress&cs=tinysrgb&w=600"
+                    alt="Exchange Traded Funds">
+            </div>
+            <div class="offer-info">
+                <h3>Exchange Traded Funds</h3>
+                <p>Trade diversified baskets of assets at low cost.</p>
+            </div>
+        </div>
+        <div class="offer-card">
+            <div class="offer-img-wrapper">
+                <img src="https://images.pexels.com/photos/7788009/pexels-photo-7788009.jpeg?auto=compress&cs=tinysrgb&w=600"
+                    alt="Bonds & Debt">
+            </div>
+            <div class="offer-info">
+                <h3>Bonds & Debt</h3>
+                <p>Earn stable returns with safe, fixed-income instruments.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-left">
+        © 2025. Reserved. | <a href="admin_kyc.html" style="color: inherit; text-decoration: none;">Admin</a>
+    </div>
+    <div class="footer-right">
+        <span class="timezone">
+            <img src="https://flagcdn.com/w40/in.png" width="20" alt="India" class="flag-icon"> 12:51:09
+            GMT+5:30
+        </span>
+        <a href="#" class="cookie-pref">Cookie Preference</a>
+    </div>
+</footer>
+</div>
+
+<!-- Modals -->
+<div id="topAlertContainer" class="top-alert-container">
+    <div class="top-alert">
+        <i data-lucide="alert-circle"></i>
+        <span>Please sign in to continue.</span>
+        <i data-lucide="x" class="close-alert" onclick="closeAlert()"></i>
+    </div>
+</div>
+
+<div id="messageCenterOverlay" class="message-center-overlay" onclick="toggleMessageCenter()"></div>
+<div id="messageCenter" class="message-center-modal">
+    <div class="mc-header">
+        <div class="mc-title-row">
+            <span class="mc-title">Notifications</span>
+            <span class="mc-subtitle" id="msgCount">10 Messages</span>
+        </div>
+        <button class="mc-close" onclick="toggleMessageCenter()"><i data-lucide="x" size="24"></i></button>
+    </div>
+    <div class="mc-actions">
+        <button class="mc-btn" onclick="makeAllRead()">Make all read</button>
+        <button class="mc-btn delete-all" onclick="deleteAllMessages()">Delete all</button>
+    </div>
+    <div class="mc-list" id="mcList">
+        <div class="mc-item">
+            <div class="mc-dot unread"></div>
+            <div class="mc-content">
+                <div class="mc-msg-title">IPO Announcement – Armour Security IPO（QIB）</div>
+                <div class="mc-time">14-01-2026 15:10:23</div>
+                <div class="mc-tag">IPO:NEW</div>
+                <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
+            </div>
+        </div>
+        <div class="mc-item">
+            <div class="mc-dot unread"></div>
+            <div class="mc-content">
+                <div class="mc-msg-title">Important Notice</div>
+                <div class="mc-time">12-01-2026 09:32:02</div>
+                <div class="mc-tag">TEXT</div>
+                <button class="mc-delete-item" onclick="deleteMessage(this)">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="settingsModal" class="settings-modal" onclick="if(event.target == this) closeSettings()">
+    <div class="settings-content">
+        <button class="settings-close" onclick="closeSettings()"><i data-lucide="x" size="24"></i></button>
+        <div class="settings-header">
+            <div class="avatar-circle" id="settingsAvatar">U</div>
+            <div class="settings-name" id="settingsName"
+                style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 0.5rem;">User Name</div>
+            <div class="settings-phone" id="settingsPhone"
+                style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
+            <div class="badge-row">
+                <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
+                <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
+            </div>
+        </div>
+        <div class="settings-list">
+            <div class="settings-item" onclick="toggleUserProfile()">
+                <div class="settings-item-icon"><i data-lucide="user" size="20"></i></div>
+                <div class="settings-item-info">
+                    <div class="settings-item-title">User Profile</div>
+                    <div class="settings-item-desc">Update your profile information.</div>
+                </div>
+                <i data-lucide="chevron-down" id="userProfileChevron" class="settings-chevron" size="18"
+                    style="transition: transform 0.2s;"></i>
+            </div>
+            <div id="userProfileSubmenu" class="settings-submenu">
+                <div class="submenu-item" onclick="openEditNameModal()">
+                    <i data-lucide="edit-3" size="18"></i> Update Name
+                </div>
+                <div class="submenu-item" onclick="openAvatarModal()">
+                    <i data-lucide="image" size="18"></i> Update Avatar
+                </div>
+                <div class="submenu-item" onclick="openKYCModal()">
+                    <i data-lucide="file-check" size="18"></i> View KYC
+                </div>
+            </div>
+            <div class="settings-item" onclick="toggleSecurityMenu()">
+                <div class="settings-item-icon"><i data-lucide="lock" size="20"></i></div>
+                <div class="settings-item-info">
+                    <div class="settings-item-title">Security</div>
+                    <div class="settings-item-desc">Update your system security settings.</div>
+                </div>
+                <i data-lucide="chevron-down" id="securityChevron" class="settings-chevron" size="18"
+                    style="transition: transform 0.2s;"></i>
+            </div>
+            <div id="securitySubmenu" class="settings-submenu">
+                <div class="submenu-item" onclick="openWithdrawalPinModal()">
+                    <i data-lucide="shield-check" size="18"></i> Withdrawal PIN
+                </div>
+                <div class="submenu-item" onclick="openResetPassword()">
+                    <i data-lucide="key" size="18"></i> Change Login Password
+                </div>
+            </div>
+            <div class="settings-item" onclick="window.location.href='bank_accounts.html'">
+                <div class="settings-item-icon"><i data-lucide="landmark" size="20"></i></div>
+                <div class="settings-item-info">
+                    <div class="settings-item-title">Bank Accounts</div>
+                    <div class="settings-item-desc">Manage bank accounts and info</div>
+                </div>
+                <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+            </div>
+            <div class="settings-item" onclick="openCS()">
+                <div class="settings-item-icon"><i data-lucide="headset" size="20"></i></div>
+                <div class="settings-item-info">
+                    <div class="settings-item-title">Customer Service</div>
+                    <div class="settings-item-desc">Contact customer service</div>
+                </div>
+                <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+            </div>
+
+        </div>
+        <div class="logout-btn-container">
+            <button class="logout-btn" onclick="DB.logout()">Logout</button>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Service Modal -->
+<div id="csModal" class="settings-modal" onclick="if(event.target == this) closeCS()">
+    <div class="settings-content" style="max-width: 500px; height: 600px; display: flex; flex-direction: column;">
+        <button class="settings-close" onclick="closeCS()"><i data-lucide="x" size="24"></i></button>
+        <div class="settings-header" style="margin-bottom: 1rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 700;">Customer Service</h2>
+        </div>
+        <div id="chatBox"
+            style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="csInput" placeholder="Type a message..."
+                style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+            <button onclick="sendCSMessage()"
+                style="background: #3b82f6; color: white; border: none; padding: 0 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Send</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal (Logged-In) -->
+<div id="resetPasswordModal" class="center-popup-modal" onclick="if(event.target == this) closeResetPassword()">
+    <div class="center-popup-content" style="max-width: 450px;">
+        <div class="popup-header">
+            <h2>Reset Password</h2>
+            <button class="popup-close" onclick="closeResetPassword()"><i data-lucide="x" size="24"></i></button>
+        </div>
+        <div class="popup-body">
+            <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Current
+                    Password</label>
+                <div class="reg-password-wrapper" style="position: relative;">
+                    <input type="password" id="currentPass" class="reg-input"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    <i data-lucide="eye-off"
+                        style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                        onclick="toggleInternalPass('currentPass', this)"></i>
+                </div>
+            </div>
+            <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                    Password</label>
+                <div class="reg-password-wrapper" style="position: relative;">
+                    <input type="password" id="newPassInternal" class="reg-input"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    <i data-lucide="eye-off"
+                        style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                        onclick="toggleInternalPass('newPassInternal', this)"></i>
+                </div>
+            </div>
+            <div class="reg-input-group" style="margin-bottom: 2rem;">
+                <label
+                    style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Confirm
+                    New Password</label>
+                <div class="reg-password-wrapper" style="position: relative;">
+                    <input type="password" id="confirmPassInternal" class="reg-input"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                    <i data-lucide="eye-off"
+                        style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                        onclick="toggleInternalPass('confirmPassInternal', this)"></i>
+                </div>
+            </div>
+            <button class="logout-btn" style="background: #3b82f6;" onclick="handleInternalReset()">Update
+                Password</button>
+            <button class="logout-btn" style="background: #f1f5f9; color: #64748b; margin-top: 1rem;"
+                onclick="closeResetPassword()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Withdrawal PIN Modal -->
+<div id="withdrawalPinModal" class="center-popup-modal" onclick="if(event.target == this) closeWithdrawalPinModal()">
+    <div class="center-popup-content" style="max-width: 450px;">
+        <div class="popup-header">
+            <h2 id="wpModalTitle">Withdrawal PIN</h2>
+            <button class="popup-close" onclick="closeWithdrawalPinModal()"><i data-lucide="x" size="24"></i></button>
+        </div>
+        <div class="popup-body">
+            <p id="wpModalDesc" style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">Set or update your
+                4-6 digit withdrawal PIN.</p>
+            <div style="padding: 1rem 0;">
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                        Withdrawal PIN (4-6 digits)</label>
+                    <input type="password" id="wpNewPin" class="reg-input" maxlength="6" pattern="\d*"
+                        inputmode="numeric" placeholder="Enter New PIN"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Confirm
+                        New PIN</label>
+                    <input type="password" id="wpConfirmPin" class="reg-input" maxlength="6" pattern="\d*"
+                        inputmode="numeric" placeholder="Confirm New PIN"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div class="reg-input-group" style="margin-bottom: 2rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Verify
+                        Login Password</label>
+                    <div class="reg-password-wrapper" style="position: relative;">
+                        <input type="password" id="wpLoginPass" class="reg-input" placeholder="Enter Login Password"
+                            style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                        <i data-lucide="eye-off"
+                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                            onclick="toggleInternalPass('wpLoginPass', this)"></i>
+                    </div>
+                </div>
+                <button id="wpSubmitBtn" class="logout-btn" style="background: #fb923c;"
+                    onclick="handleWithdrawalPinSubmit()">Update
+                    Withdrawal PIN</button>
+                <button class="logout-btn" style="background: #f1f5f9; color: #64748b; margin-top: 1rem;"
+                    onclick="closeWithdrawalPinModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Modal -->
+<div id="avatarModal" class="center-popup-modal">
+    <div class="center-popup-content avatar-form" style="max-width: 400px;">
+        <div class="popup-header"
+            style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
+            <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
+        </div>
+        <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
+            <div class="avatar-preview-lg" id="avatarPreviewContainer"
+                onclick="document.getElementById('avatarInput').click()">
+                <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
+                <img id="avatarPreviewImg" src="" style="display:none;">
+                <div class="avatar-change-overlay">Change Image</div>
+            </div>
+            <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
+            <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
+                <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KYC Modal -->
+<div id="kycModal" class="center-popup-modal">
+    <div class="center-popup-content">
+        <div class="popup-header">
+            <h2>View KYC</h2>
+            <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="popup-body">
+            <div class="kyc-form-grid">
+                <div class="kyc-field-label">Full Name</div>
+                <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
+                <div class="kyc-field-label">Mobile Number</div>
+                <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
+                <div class="kyc-field-label">ID Number</div>
+                <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
+                <div class="kyc-field-label">Submitted On</div>
+                <input type="text" id="kycSubmitted" class="kyc-field-input" readonly style="background: #f8fafc;">
+                <div class="kyc-field-label">Approval Status</div>
+                <input type="text" id="kycApproved" class="kyc-field-input" readonly style="background: #f8fafc;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
+                    <div class="plus-icon">+ Front</div>
+                    <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                    <input type="file" id="kycFrontInput" hidden onchange="previewKYCImage(this, 'kycFrontPreview')">
+                </div>
+                <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
+                    <div class="plus-icon">+ Back</div>
+                    <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                    <input type="file" id="kycBackInput" hidden onchange="previewKYCImage(this, 'kycBackPreview')">
+                </div>
+            </div>
+            <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
+                Verification</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        if (typeof initCarousel === 'function') initCarousel();
+        checkAuthState();
+        syncUserData();
+
+        // Recommendation Toggle
+        const recHeader = document.getElementById('recommendationHeader');
+        const recList = document.getElementById('recommendationList');
+        const recChevron = document.getElementById('recommendationChevron');
+        if (recHeader && recList) {
+            recHeader.addEventListener('click', () => {
+                const isHidden = recList.style.display === 'none';
+                if (isHidden) {
+                    recList.style.display = 'block';
+                    setTimeout(() => {
+                        recList.style.maxHeight = '2000px';
+                        if (recChevron) recChevron.style.transform = 'rotate(180deg)';
+                    }, 10);
+                } else {
+                    recList.style.maxHeight = '0';
+                    if (recChevron) recChevron.style.transform = 'rotate(0deg)';
+                    setTimeout(() => recList.style.display = 'none', 400);
+                }
+            });
+        }
+
+        // Persist CS Modal State
+        if (localStorage.getItem('avendus_cs_open') === 'true') {
+            window.openCS();
+        }
+
+        // Auto-refresh data when user switches back to this tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log("Tab visible, syncing user data...");
+                syncUserData();
+            }
+        });
+        window.addEventListener('focus', () => {
+            console.log("Window focused, syncing user data...");
+            syncUserData();
+        });
+    });
+
+    function checkAuthState() {
+        const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+        const loggedIn = !!user;
+
+        // Header & Hero
+        const portBar = document.getElementById('portfolioBar');
+        if (portBar) portBar.style.display = loggedIn ? 'flex' : 'none';
+        const promo = document.getElementById('promoActions');
+        if (promo) promo.style.display = loggedIn ? 'none' : 'flex';
+
+        // Sidebar Auth Prompt
+        const authPrompt = document.getElementById('marketAuthPrompt');
+        if (authPrompt) authPrompt.style.display = loggedIn ? 'none' : 'block';
+
+        // Feature Locks
+        const assetsLock = document.getElementById('assetsLockOverlay');
+        if (assetsLock) assetsLock.style.display = loggedIn ? 'none' : 'flex';
+
+        const chartLock = document.querySelector('.auth-lock-overlay');
+        if (chartLock) chartLock.style.display = loggedIn ? 'none' : 'flex';
+
+        // Stock Lists (Gainers/Losers)
+        document.querySelectorAll('.auth-locked-content').forEach(el => {
+            if (el.closest('.auth-locked-container')) return; // handled by parent overlay if exists
+            // We handle these by only calling switchExchange if logged in or showing placeholders
+        });
+
+        if (loggedIn) {
+            if (typeof syncUserData === 'function') syncUserData();
+            setTimeout(() => {
+                if (typeof startChatListener === 'function') startChatListener();
+                updateCSRVisibility();
+            }, 1000);
+        }
+    }
+
+    function playNotificationSound() {
+        try {
+            // More reliable notification sound
+            const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+            audio.volume = 0.5;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.log("Audio blocked. Interact with page first."));
+            }
+        } catch (e) { }
+    }
+
+    // Page specific initialization
+    window.addEventListener('load', () => {
+        const updateCSRVisibility = () => {
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+            const btn = document.getElementById('floatingCSR');
+            if (btn) btn.style.display = user ? 'flex' : 'none';
+        };
+        updateCSRVisibility();
+        if (typeof syncUserData === 'function') syncUserData();
+
+        // Initialize Market Components
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        loadWidget('BSE:SENSEX');
+        switchExchange('gainers', 'NSE');
+        switchExchange('losers', 'NSE');
+    });
+
+    // --- MARKET DATA & CHART LOGIC (GLOBAL SCOPE) ---
+    let currentWidget = null;
+    let currentActiveSymbol = 'BSE:SENSEX';
+    let currentInterval = 'D';
+
+    const indexData = {
+        'BSE:SENSEX': {
+            price: 83580.40, basePrice: 83313.93, low: 83250.27, high: 83784.17, open: 83757.54, close: 83817.69, sym: "SENSEX",
+            cardValId: 'valSensexCard', cardChgId: 'chgSensexCard'
+        },
+        'NSE:NIFTY': {
+            price: 25641.65, basePrice: 25776.00, low: 25600.00, high: 25800.00, open: 25750.00, close: 25776.00, sym: "NIFTY 50",
+            cardValId: 'valNiftyCard', cardChgId: 'chgNiftyCard'
+        },
+        'NSE:NIFTYBANK': {
+            price: 51234.75, basePrice: 50822.45, low: 50700.00, high: 51500.00, open: 50900.00, close: 50822.45, sym: "BANK NIFTY",
+            cardValId: 'valBankNiftyCard', cardChgId: 'chgBankNiftyCard'
+        }
+    };
+
+    const stockData = {
+        gainers: {
+            NSE: [
+                { t: 'NIRAJISPAT', n: 'Niraj Ispat Industries', p: '₹257.41', c: '+20.00%' },
+                { t: 'PRESSTONIC', n: 'Presstonic Engineering', p: '₹53.20', c: '+19.82%' },
+                { t: 'IZMO', n: 'IZMO Limited', p: '₹841.45', c: '+18.48%' }
+            ],
+            BSE: [
+                { t: 'HDFCBANK', n: 'HDFC Bank Ltd', p: '₹1,540.20', c: '+2.45%' },
+                { t: 'RELIANCE', n: 'Reliance Industries', p: '₹2,985.40', c: '+1.80%' }
+            ]
+        },
+        losers: {
+            NSE: [
+                { t: 'DHARIWAL', n: 'Dhariwalcorp Limited', p: '₹78.70', c: '-79.61%' },
+                { t: 'CLEDUCATE', n: 'CL Educate Limited', p: '₹59.08', c: '-20.00%' }
+            ],
+            BSE: [
+                { t: 'ZOMATO', n: 'Zomato Limited', p: '₹255.40', c: '-4.20%' },
+                { t: 'PAYTM', n: 'One 97 Communications', p: '₹712.10', c: '-3.15%' }
+            ]
+        }
+    };
+
+    function loadWidget(symbol) {
+        const container = document.getElementById('tradingview_widget');
+        if (container) container.innerHTML = '';
+        if (typeof TradingView === 'undefined') return;
+
+        currentWidget = new TradingView.widget({
+            "autosize": true,
+            "symbol": symbol,
+            "interval": currentInterval,
+            "timezone": "Asia/Kolkata",
+            "theme": "dark",
+            "style": "1",
+            "locale": "in",
+            "toolbar_bg": "#000000",
+            "enable_publishing": false,
+            "allow_symbol_change": false,
+            "hide_top_toolbar": true,
+            "container_id": "tradingview_widget",
+            "hide_side_toolbar": true,
+            "overrides": {
+                "paneProperties.background": "#000000",
+                "paneProperties.gridLines": "#1a1a1a",
+                "mainSeriesProperties.candleStyle.upColor": "#00ff88",
+                "mainSeriesProperties.candleStyle.downColor": "#ff3b3b",
+                "mainSeriesProperties.candleStyle.borderUpColor": "#00ff88",
+                "mainSeriesProperties.candleStyle.borderDownColor": "#ff3b3b",
+                "mainSeriesProperties.candleStyle.wickUpColor": "#00ff88",
+                "mainSeriesProperties.candleStyle.wickDownColor": "#ff3b3b"
+            },
+            "disabled_features": [
+                "header_symbol_search", "header_compare", "header_settings",
+                "header_indicators", "header_chart_type", "header_resolutions",
+                "left_toolbar", "context_menus"
+            ]
+        });
+    }
+
+    function updateChart(symbol, title) {
+        if (!indexData[symbol]) return;
+        currentActiveSymbol = symbol;
+
+        document.querySelectorAll('.index-mini-card').forEach(c => {
+            c.classList.toggle('active', c.innerText.includes(title));
+        });
+
+        const d = indexData[symbol];
+        const diff = d.price - d.basePrice;
+        const pct = (diff / d.basePrice) * 100;
+        const isUp = diff >= 0;
+
+        if (document.getElementById('indexPrice')) document.getElementById('indexPrice').innerText = d.price.toLocaleString('en-IN');
+        if (document.getElementById('valSymbol')) document.getElementById('valSymbol').innerText = d.sym;
+
+        const hChg = document.getElementById('heroChange');
+        if (hChg) {
+            hChg.innerText = `${isUp ? '+' : ''}${diff.toFixed(2)} (${isUp ? '+' : ''}${pct.toFixed(2)}%)`;
+            hChg.className = `index-chg ${isUp ? 'green' : 'red'}`;
+        }
+
+        loadWidget(symbol);
+    }
+
+    function updateChartInterval(interval, btn) {
+        currentInterval = interval;
+        document.querySelectorAll('.mini-tf-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        loadWidget(currentActiveSymbol);
+    }
+
+    function switchExchange(type, exchange) {
+        const listId = type === 'gainers' ? 'gainersList' : 'losersList';
+        const listContainer = document.querySelector(`#${listId} .auth-locked-content`);
+        if (!listContainer) return;
+        const data = stockData[type][exchange];
+
+        const section = listContainer.closest('.card');
+        section.querySelectorAll('.exchange-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.innerText === exchange);
+        });
+
+        listContainer.innerHTML = data.map(s => `
+                <div class="stock-row" style="display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">${s.t}</div>
+                        <div style="font-size: 0.75rem; color: #666;">${s.n}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">${s.p}</div>
+                        <div class="index-chg ${type === 'gainers' ? 'green' : 'red'}" style="font-size: 0.8rem; font-weight: 700; color: ${type === 'gainers' ? '#00ff88' : '#ff3b3b'};">${s.c}</div>
+                    </div>
+                </div>
+            `).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+</script>
+
+<!-- Notification Bell Floating Button -->
+<div class="cs-floating-tab" onclick="toggleMessageCenter()"
+    style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; background: #fff; border: 1px solid #e2e8f0; color: #64748b; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;">
+    <div style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+        <i data-lucide="bell" size="24" color="#1e56a0"></i>
+        <div id="msgBadge"
+            style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
+        </div>
+    </div>
+</div>
+
+<!-- Floating CSR Button -->
+<div class="floating-csr" onclick="openCS()" id="floatingCSR" style="display: none;">
+    <div class="csr-badge" id="csrMsgBadge" style="display: none;"></div>
+    <i data-lucide="headset"></i>
+    <span>Support</span>
+</div>
+
+
+<div id="editNameModal" class="center-popup-modal">
+    <div class="center-popup-content" style="max-width: 400px;">
+        <div class="popup-header">
+            <h2>Update Name</h2>
+            <button class="popup-close" onclick="closeEditNameModal()"><i data-lucide="x" size="24"></i></button>
+        </div>
+        <div class="popup-body">
+            <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                    Name</label>
+                <input type="text" id="editNameInput" class="reg-input" placeholder="Enter your name"
+                    style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <button class="logout-btn" id="saveNameBtn" style="background: #3b82f6;" onclick="saveName()">Save
+                    Name</button>
+                <button class="logout-btn" style="background: #f1f5f9; color: #64748b;"
+                    onclick="closeEditNameModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 
 </html>

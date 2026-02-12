@@ -233,20 +233,72 @@
         <div class="settings-content">
             <button class="settings-close" onclick="closeSettings()"><i data-lucide="x"></i></button>
             <div class="settings-header">
-                <div class="avatar-circle" id="settingsAvatar">91</div>
+                <div class="avatar-circle" id="settingsAvatar">U</div>
+                <div class="settings-name" id="settingsName"
+                    style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 0.5rem;">User Name</div>
                 <div class="settings-phone" id="settingsPhone">User Access</div>
+                <div class="badge-row">
+                    <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
+                    <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
+                </div>
             </div>
             <div class="settings-list">
-                <div class="settings-item" onclick="toggleSettingsAccordion(this, 'userProfileSub')">
-                    <i data-lucide="user"></i> User Profile
+                <div class="settings-item" onclick="toggleUserProfile()">
+                    <div class="settings-item-icon"><i data-lucide="user" size="20"></i></div>
+                    <div class="settings-item-info">
+                        <div class="settings-item-title">User Profile</div>
+                        <div class="settings-item-desc">Update your profile information.</div>
+                    </div>
+                    <i data-lucide="chevron-down" id="userProfileChevron" class="settings-chevron" size="18"
+                        style="transition: transform 0.2s;"></i>
                 </div>
-                <div id="userProfileSub" class="sub-menu">
-                    <div class="sub-item" onclick="openUpdateAvatar()">Update Avatar</div>
-                    <div class="sub-item" onclick="location.href='admin_login.html?action=kyc'">View KYC</div>
+                <div id="userProfileSubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openEditNameModal()">
+                        <i data-lucide="edit-3" size="18"></i> Update Name
+                    </div>
+                    <div class="submenu-item" onclick="openAvatarModal()">
+                        <i data-lucide="image" size="18"></i> Update Avatar
+                    </div>
+                    <div class="submenu-item" onclick="openKYCModal()">
+                        <i data-lucide="file-check" size="18"></i> View KYC
+                    </div>
                 </div>
-                <div class="settings-item" onclick="openResetPassword()"><i data-lucide="key"></i> Change Password</div>
-                <div class="settings-item" onclick="openCS()"><i data-lucide="headset"></i> Support</div>
-                <div class="settings-item" onclick="DB.logout()"><i data-lucide="log-out"></i> Logout</div>
+                <div class="settings-item" onclick="toggleSecurityMenu()">
+                    <div class="settings-item-icon"><i data-lucide="lock" size="20"></i></div>
+                    <div class="settings-item-info">
+                        <div class="settings-item-title">Security</div>
+                        <div class="settings-item-desc">Update your system security settings.</div>
+                    </div>
+                    <i data-lucide="chevron-down" id="securityChevron" class="settings-chevron" size="18"
+                        style="transition: transform 0.2s;"></i>
+                </div>
+                <div id="securitySubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openWithdrawalPinModal()">
+                        <i data-lucide="shield-check" size="18"></i> Withdrawal PIN
+                    </div>
+                    <div class="submenu-item" onclick="openResetPassword()">
+                        <i data-lucide="key" size="18"></i> Change Login Password
+                    </div>
+                </div>
+                <div class="settings-item" onclick="window.location.href='bank_accounts.html'">
+                    <div class="settings-item-icon"><i data-lucide="landmark" size="20"></i></div>
+                    <div class="settings-item-info">
+                        <div class="settings-item-title">Bank Accounts</div>
+                        <div class="settings-item-desc">Manage bank accounts and info</div>
+                    </div>
+                    <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                </div>
+                <div class="settings-item" onclick="openCS()">
+                    <div class="settings-item-icon"><i data-lucide="headset" size="20"></i></div>
+                    <div class="settings-item-info">
+                        <div class="settings-item-title">Customer Service</div>
+                        <div class="settings-item-desc">Contact customer service</div>
+                    </div>
+                    <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                </div>
+            </div>
+            <div class="logout-btn-container">
+                <button class="logout-btn" onclick="DB.logout()">Logout</button>
             </div>
         </div>
     </div>
@@ -292,6 +344,138 @@
         </div>
     </div>
 
+    <div id="editNameModal" class="center-popup-modal">
+        <div class="center-popup-content" style="max-width: 400px;">
+            <div class="popup-header">
+                <h2>Update Name</h2>
+                <button class="popup-close" onclick="closeEditNameModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body">
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                        Name</label>
+                    <input type="text" id="editNameInput" class="reg-input" placeholder="Enter your name"
+                        style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="logout-btn" id="saveNameBtn" style="background: #3b82f6;" onclick="saveName()">Save
+                        Name</button>
+                    <button class="logout-btn" style="background: #f1f5f9; color: #64748b;"
+                        onclick="closeEditNameModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawal PIN Modal -->
+    <div id="withdrawalPinModal" class="center-popup-modal"
+        onclick="if(event.target == this) closeWithdrawalPinModal()">
+        <div class="center-popup-content" style="max-width: 450px;">
+            <div class="popup-header">
+                <h2 id="wpModalTitle">Withdrawal PIN</h2>
+                <button class="popup-close" onclick="closeWithdrawalPinModal()"><i data-lucide="x"
+                        size="24"></i></button>
+            </div>
+            <div class="popup-body">
+                <p id="wpModalDesc" style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">Set or update your
+                    4-6 digit withdrawal PIN.</p>
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">New
+                        Withdrawal PIN (4-6 digits)</label>
+                    <input type="password" id="wpNewPin" class="reg-input" maxlength="6" pattern="\d*"
+                        inputmode="numeric" placeholder="Enter New PIN">
+                </div>
+                <div class="reg-input-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Confirm
+                        New PIN</label>
+                    <input type="password" id="wpConfirmPin" class="reg-input" maxlength="6" pattern="\d*"
+                        inputmode="numeric" placeholder="Confirm New PIN">
+                </div>
+                <div class="reg-input-group" style="margin-bottom: 2rem;">
+                    <label
+                        style="display: block; font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Verify
+                        Login Password</label>
+                    <div class="reg-password-wrapper" style="position: relative;">
+                        <input type="password" id="wpLoginPass" class="reg-input" placeholder="Enter Login Password">
+                        <i data-lucide="eye-off"
+                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer;"
+                            onclick="toggleInternalPass('wpLoginPass', this)"></i>
+                    </div>
+                </div>
+                <button id="wpSubmitBtn" class="logout-btn" style="background: #fb923c;"
+                    onclick="handleWithdrawalPinSubmit()">Update Withdrawal PIN</button>
+                <button class="logout-btn" style="background: #f1f5f9; color: #64748b; margin-top: 1rem;"
+                    onclick="closeWithdrawalPinModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Modal -->
+    <div id="avatarModal" class="center-popup-modal">
+        <div class="center-popup-content avatar-form" style="max-width: 400px;">
+            <div class="popup-header"
+                style="width:100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.25rem; font-weight: 700;">Update Avatar</h2>
+                <button class="popup-close" onclick="closeAvatarModal()"><i data-lucide="x" size="24"></i></button>
+            </div>
+            <div class="popup-body" style="display:flex; flex-direction:column; align-items:center; width: 100%;">
+                <div class="avatar-preview-lg" id="avatarPreviewContainer"
+                    onclick="document.getElementById('avatarInput').click()">
+                    <i data-lucide="user" size="64" style="color:#cbd5e1;" id="avatarPlaceholderIcon"></i>
+                    <img id="avatarPreviewImg" src="" style="display:none;">
+                    <div class="avatar-change-overlay">Change Image</div>
+                </div>
+                <input type="file" id="avatarInput" hidden onchange="previewAvatar(this)" accept="image/*">
+                <div style="width: 100%; margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="btn-primary" onclick="uploadAvatar()">Save Changes</button>
+                    <button class="btn-secondary" onclick="closeAvatarModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Modal -->
+    <div id="kycModal" class="center-popup-modal">
+        <div class="center-popup-content">
+            <div class="popup-header">
+                <h2>View KYC</h2>
+                <button class="popup-close" onclick="closeKYCModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="popup-body">
+                <div class="kyc-form-grid">
+                    <div class="kyc-field-label">Full Name</div>
+                    <input type="text" id="kycName" class="kyc-field-input" placeholder="Enter Full Name">
+                    <div class="kyc-field-label">Mobile Number</div>
+                    <input type="text" id="kycMobile" class="kyc-field-input" readonly style="background: #f8fafc;">
+                    <div class="kyc-field-label">ID Number</div>
+                    <input type="text" id="kycIdNum" class="kyc-field-input" placeholder="Enter ID Number">
+                    <div class="kyc-field-label">Submitted On</div>
+                    <input type="text" id="kycSubmitted" class="kyc-field-input" readonly style="background: #f8fafc;">
+                    <div class="kyc-field-label">Approval Status</div>
+                    <input type="text" id="kycApproved" class="kyc-field-input" readonly style="background: #f8fafc;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                    <div class="kyc-upload-box" onclick="document.getElementById('kycFrontInput').click()">
+                        <div class="plus-icon">+ Front</div>
+                        <img id="kycFrontPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                        <input type="file" id="kycFrontInput" hidden
+                            onchange="previewKYCImage(this, 'kycFrontPreview')">
+                    </div>
+                    <div class="kyc-upload-box" onclick="document.getElementById('kycBackInput').click()">
+                        <div class="plus-icon">+ Back</div>
+                        <img id="kycBackPreview" style="display:none; width:100%; height:100%; object-fit:cover;">
+                        <input type="file" id="kycBackInput" hidden onchange="previewKYCImage(this, 'kycBackPreview')">
+                    </div>
+                </div>
+                <button class="btn-submit" onclick="submitKYC()" style="margin-top: 1.5rem; width: 100%;">Submit
+                    Verification</button>
+            </div>
+        </div>
+    </div>
+
     <div id="topAlertContainer" class="top-alert-container">
         Please login to access this feature.
     </div>
@@ -329,133 +513,6 @@
             }
         });
 
-        async function syncUserData() {
-            if (!currentUser) return;
-
-            // Local UI Sync
-            const greet = document.getElementById('topGreeting');
-            if (greet) greet.textContent = currentUser.full_name || currentUser.mobile;
-            const phone = document.getElementById('settingsPhone');
-            if (phone) phone.textContent = currentUser.mobile;
-
-            // Remote DB sync
-            const client = DB.getClient();
-            if (client) {
-                const { data: dbUser } = await client.from('users').select('*').eq('id', currentUser.id).single();
-                if (dbUser) {
-                    const fmt = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(v || 0);
-
-                    // --- USER REQUEST: "Available Balance" must visually deduct PENDING transactions ---
-                    let effectiveBalance = parseFloat(dbUser.balance || 0);
-
-                    // Fetch Pending Deposits
-                    const { data: pendingD } = await client.from('deposits').select('amount').eq('user_id', currentUser.id).eq('status', 'Pending');
-                    const lockedDeposits = (pendingD || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-
-                    // Fetch Pending Withdrawals
-                    const { data: pendingW } = await client.from('withdrawals').select('amount').eq('user_id', currentUser.id).eq('status', 'Pending');
-                    const lockedWithdrawals = (pendingW || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
-
-                    // Fetch Pending Trades
-                    const { data: pendingT } = await client.from('trades').select('total_amount').eq('user_id', currentUser.id).eq('status', 'Pending');
-                    const lockedTrades = (pendingT || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
-
-                    effectiveBalance = effectiveBalance + lockedDeposits - lockedWithdrawals - lockedTrades;
-                    if (effectiveBalance < 0) effectiveBalance = 0;
-
-                    const bEls = document.querySelectorAll('.stat-value.green');
-                    if (bEls.length) bEls[0].textContent = fmt(effectiveBalance);
-                    const homePortfolioValue = document.getElementById('homePortfolioValue');
-                    if (homePortfolioValue) {
-                        homePortfolioValue.textContent = fmt(effectiveBalance);
-                    }
-                    const iEls = document.querySelectorAll('.stat-value.blue');
-                    if (iEls.length) iEls[0].textContent = fmt(dbUser.invested);
-                }
-            }
-        }
-
-        // Customer Support & Chat
-        function openCS() {
-            document.getElementById('csModal').style.display = 'flex';
-            loadCSMessages();
-        }
-        function closeCS() { document.getElementById('csModal').style.display = 'none'; }
-
-        async function loadCSMessages() {
-            if (!currentUser) return;
-            const chatBody = document.getElementById('csBody');
-            const msgs = await DB.getMessages(currentUser.id);
-
-            chatBody.innerHTML = msgs.filter(m => {
-                try { const p = JSON.parse(m.message); return !p.title; } catch (e) { return true; }
-            }).map(m => {
-                const type = m.sender === 'User' ? 'user' : 'service';
-                const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return `<div class="cs-msg ${type}"><div class="cs-msg-bubble">${m.message}<div style="font-size:0.6rem; opacity:0.6; text-align:right;">${time}</div></div></div>`;
-            }).join('');
-            chatBody.scrollTop = chatBody.scrollHeight;
-
-            if (!isChatSubscribed) {
-                const client = DB.getClient();
-                client.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `user_id=eq.${currentUser.id}` }, payload => {
-                    const m = payload.new;
-                    addCSMessage(m.sender === 'User' ? 'user' : 'service', m.message);
-                }).subscribe();
-                isChatSubscribed = true;
-            }
-        }
-
-        function addCSMessage(type, text) {
-            const chatBody = document.getElementById('csBody');
-            const msg = document.createElement('div');
-            msg.className = `cs-msg ${type}`;
-            msg.innerHTML = `<div class="cs-msg-bubble">${text}</div>`;
-            chatBody.appendChild(msg);
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
-
-        async function sendCSMessage() {
-            const input = document.getElementById('csInput');
-            const msg = input.value.trim();
-            if (!msg || !currentUser) return;
-            addCSMessage('user', msg);
-            input.value = '';
-            await DB.sendMessage(currentUser.id, msg, 'User');
-        }
-
-        // Settings & Account
-        function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
-        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
-        function openResetPassword() { document.getElementById('resetPasswordModal').style.display = 'flex'; }
-        function closeResetPassword() { document.getElementById('resetPasswordModal').style.display = 'none'; }
-
-        async function handleInternalReset() {
-            const p1 = document.getElementById('newPassInternal').value;
-            const p2 = document.getElementById('confirmPassInternal').value;
-            if (!p1 || p1 !== p2) return alert('Passwords mismatch!');
-            const res = await DB.resetPassword(currentUser.mobile, p1);
-            if (res.success) { alert('Success!'); closeResetPassword(); } else alert('Error: ' + res.message);
-        }
-
-        function toggleSettingsAccordion(el, id) {
-            const sub = document.getElementById(id);
-            sub.classList.toggle('active');
-        }
-
-        // Navigation
-        function handleGuestClick(url) {
-            if (!currentUser) {
-                const alert = document.getElementById('topAlertContainer');
-                if (alert) {
-                    alert.style.display = 'block';
-                    setTimeout(() => alert.style.display = 'none', 3000);
-                }
-            } else if (url !== '#') {
-                window.location.href = url;
-            }
-        }
-
         // Recommendation Toggle
         const recHeader = document.getElementById('recommendationHeader');
         if (recHeader) {
@@ -470,8 +527,12 @@
         }
 
         function toggleMessageCenter() {
-            document.getElementById('messageCenter').classList.toggle('active');
-            document.getElementById('messageCenterOverlay').classList.toggle('active');
+            if (window.toggleMessageCenter) {
+                window.toggleMessageCenter();
+            } else {
+                document.getElementById('messageCenter').classList.toggle('active');
+                document.getElementById('messageCenterOverlay').classList.toggle('active');
+            }
         }
     </script>
 </body>

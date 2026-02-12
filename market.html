@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Market - Avendus Capital</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="settings-panel-fix.css">
+    <link rel="stylesheet" href="market-page-fix.css">
+    <link rel="stylesheet" href="market-summary.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -27,11 +30,31 @@
             display: grid;
             grid-template-columns: 280px 1fr 320px;
             gap: 1.5rem;
-            padding: 0 1.5rem 1.5rem;
+            padding: 1.5rem;
             flex: 1;
+            min-height: 0;
         }
 
         .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .main-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 0;
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .main-col {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -42,6 +65,15 @@
             border-radius: 16px;
             padding: 1.5rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Chart Section - Black Theme */
+        .main-index-view {
+            background: #000000 !important;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: none !important;
+            border: 1px solid #1a1a1a !important;
         }
 
         /* Assets Card */
@@ -171,16 +203,59 @@
         }
 
         .indices-list {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 20px !important;
+            align-items: stretch !important;
+            margin: 0 0 2rem 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+
+        .index-card {
+            min-width: 0 !important;
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 2px solid #f1f5f9;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .market-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tablet: 2 columns for indices */
+        @media (max-width: 768px) {
+            .indices-list {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        /* Mobile: 1 column for indices */
+        @media (max-width: 640px) {
+            .indices-list {
+                grid-template-columns: 1fr !important;
+            }
         }
 
         .index-card {
             background: white;
             border-radius: 20px;
             padding: 1.5rem;
-            flex: 1;
             border: 2px solid #f1f5f9;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -2279,6 +2354,109 @@
             color: #475569;
             font-style: italic;
         }
+
+        /* Discover Page - Gold Trade Now Buttons (All & Ins Stocks tabs only) */
+        #discoverPage .trade-card-btn,
+        #discoverPage button[onclick*="openTrade"],
+        #discoverPage .btn-trade,
+        .discover-view .trade-now-btn,
+        .discover-view button:contains("Trade Now"),
+        [data-view="discover"] .trade-btn,
+        [data-view="discover"] button[class*="trade"],
+        #discoverPage .stock-card button,
+        .discover-container .trade-action-btn {
+            background: #d4af37 !important;
+            color: #000000 !important;
+            border: none !important;
+            transition: all 0.3s ease !important;
+        }
+
+        #discoverPage .trade-card-btn:hover,
+        #discoverPage button[onclick*="openTrade"]:hover,
+        #discoverPage .btn-trade:hover,
+        .discover-view .trade-now-btn:hover,
+        [data-view="discover"] .trade-btn:hover,
+        [data-view="discover"] button[class*="trade"]:hover,
+        #discoverPage .stock-card button:hover,
+        .discover-container .trade-action-btn:hover {
+            background: #b8941f !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3) !important;
+        }
+
+        /* Me Page - Black Borders (Ultra-Aggressive Override) */
+        #mePage *,
+        #mePage *::before,
+        #mePage *::after,
+        .me-view *,
+        .me-view *::before,
+        .me-view *::after,
+        [data-view="me"] *,
+        [data-view="me"] *::before,
+        [data-view="me"] *::after {
+            border-color: #000000 !important;
+            border-top-color: #000000 !important;
+            border-right-color: #000000 !important;
+            border-bottom-color: #000000 !important;
+            border-left-color: #000000 !important;
+        }
+
+        /* Force black borders on specific elements */
+        #mePage .m-card,
+        #mePage .card,
+        #mePage section,
+        #mePage div,
+        .me-view .m-card,
+        .me-view .card,
+        .me-view section,
+        .me-view div,
+        [data-view="me"] .m-card,
+        [data-view="me"] .card,
+        [data-view="me"] section,
+        [data-view="me"] div {
+            border: 1px solid #000000 !important;
+            border-color: #000000 !important;
+        }
+
+        /* Override framework/library styles */
+        #mePage [class*="card"],
+        #mePage [class*="border"],
+        .me-view [class*="card"],
+        .me-view [class*="border"],
+        [data-view="me"] [class*="card"],
+        [data-view="me"] [class*="border"] {
+            border-color: #000000 !important;
+        }
+
+        /* Override inline styles */
+        #mePage [style],
+        .me-view [style],
+        [data-view="me"] [style] {
+            border-color: #000000 !important;
+        }
+
+        /* Specific overrides for common white/light border colors */
+        #mePage [style*="border: 1px solid #fff"],
+        #mePage [style*="border: 1px solid white"],
+        #mePage [style*="border-color: #fff"],
+        #mePage [style*="border-color: white"],
+        #mePage [style*="border-color: #e"],
+        #mePage [style*="border-color: #f"],
+        .me-view [style*="border: 1px solid #fff"],
+        .me-view [style*="border: 1px solid white"],
+        .me-view [style*="border-color: #fff"],
+        .me-view [style*="border-color: white"],
+        .me-view [style*="border-color: #e"],
+        .me-view [style*="border-color: #f"],
+        [data-view="me"] [style*="border: 1px solid #fff"],
+        [data-view="me"] [style*="border: 1px solid white"],
+        [data-view="me"] [style*="border-color: #fff"],
+        [data-view="me"] [style*="border-color: white"],
+        [data-view="me"] [style*="border-color: #e"],
+        [data-view="me"] [style*="border-color: #f"] {
+            border: 1px solid #000000 !important;
+            border-color: #000000 !important;
+        }
     </style>
 </head>
 
@@ -2334,182 +2512,110 @@
 
         <div id="mainDashboard">
             <main class="market-content">
-                <!-- Left Column -->
+                <!-- LEFT SIDEBAR -->
                 <div class="left-col">
-                    <!-- Assets Widget -->
+                    <!-- Assets Section -->
                     <section class="m-card auth-locked-container">
                         <div class="auth-lock-overlay">
                             <p>This section is only available to authenticated users.</p>
                             <a href="login.html" class="auth-lock-btn">Please log in to continue</a>
                         </div>
                         <div class="auth-locked-content">
-                            <div class="assets-header">
+                            <div class="assets-header" style="margin-bottom: 1rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
                                     <i data-lucide="wallet" size="20" color="#3b82f6"></i> Assets
-                                    <span id="toggleAssets"
-                                        style="cursor: pointer; display: flex; align-items: center;">
-                                        <i data-lucide="eye" size="16" color="#64748b" id="eyeIcon"></i>
-                                    </span>
                                 </div>
-                                <i data-lucide="rotate-cw" size="18" color="#64748b"></i>
                             </div>
-                            <div class="assets-grid" style="grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div class="assets-grid"
+                                style="grid-template-columns: 1fr 1fr; gap: 0.5rem; display: grid;">
                                 <div class="asset-mini-card">
                                     <div class="asset-label">Available</div>
-                                    <div class="asset-val"><span class="asset-amount">₹0.00</span></div>
-                                    <div class="asset-sub">Cash</div>
+                                    <div class="asset-val" id="valAvailable">₹0.00</div>
                                 </div>
                                 <div class="asset-mini-card">
                                     <div class="asset-label">Invested</div>
-                                    <div class="asset-val"><span class="asset-amount">₹0.00</span></div>
-                                    <div class="asset-sub">Invested</div>
+                                    <div class="asset-val" id="valInvested">₹0.00</div>
                                 </div>
                                 <div class="asset-mini-card">
                                     <div class="asset-label">Bonus</div>
-                                    <div class="asset-val"><span class="asset-amount">₹0.00</span></div>
-                                    <div class="asset-sub">Credit</div>
-                                </div>
-                                <div class="asset-mini-card">
-                                    <div class="asset-label">Frozen</div>
-                                    <div class="asset-val"><span class="asset-amount">₹0.00</span></div>
-                                    <div class="asset-sub">Pending</div>
-                                </div>
-                                <div class="asset-mini-card">
-                                    <div class="asset-label">Loan</div>
-                                    <div class="asset-val"><span class="asset-amount">₹0.00</span></div>
-                                    <div class="asset-sub">Funds</div>
+                                    <div class="asset-val" id="valBonus">₹0.00</div>
                                 </div>
                                 <div class="asset-mini-card">
                                     <div class="asset-label">Pending</div>
-                                    <div class="asset-val" style="color:#ef4444;"><span
-                                            class="asset-amount">₹0.00</span></div>
-                                    <div class="asset-sub">Settle</div>
+                                    <div class="asset-val" id="valPending">₹0.00</div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Stocks Sector -->
-                    <section class="m-card">
-                        <div class="section-title"
-                            style="font-weight: 700; margin-bottom: 1.25rem; font-size: 1.1rem; color: #1e293b;">Stocks
-                            Sector</div>
-                        <div class="sector-grid">
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(16, 185, 129, 0.1);">
-                                    <i data-lucide="sprout" size="20" color="#10b981"></i>
+                    <!-- Stocks Sector Section -->
+                    <section class="m-card" style="padding: 1.5rem;">
+                        <div
+                            style="font-weight: 800; margin-bottom: 1.25rem; font-size: 1rem; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase;">
+                            <i data-lucide="layers" size="20"></i> Stocks Sector
+                        </div>
+                        <div class="sector-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div class="sector-card"
+                                style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1rem; text-align: center;">
+                                <div
+                                    style="background: rgba(16, 185, 129, 0.1); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                    <i data-lucide="sprout" size="18" color="#00ff88"></i>
                                 </div>
-                                <div class="sector-name">Aluminum Industry</div>
-                                <div class="sector-pct down">-4.99%</div>
+                                <div
+                                    style="font-size: 0.8rem; font-weight: 700; color: #1e293b; height: 1.2rem; overflow: hidden; margin-bottom: 4px;">
+                                    Aluminum</div>
+                                <div style="font-size: 0.85rem; font-weight: 800; color: #ff3b3b;">-4.99%</div>
                             </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(59, 130, 246, 0.1);">
-                                    <i data-lucide="utensils" size="20" color="#3b82f6"></i>
+                            <div class="sector-card"
+                                style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1rem; text-align: center;">
+                                <div
+                                    style="background: rgba(59, 130, 246, 0.1); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                    <i data-lucide="utensils" size="18" color="#3b82f6"></i>
                                 </div>
-                                <div class="sector-name">Restaurants</div>
-                                <div class="sector-pct up">+1.90%</div>
+                                <div
+                                    style="font-size: 0.8rem; font-weight: 700; color: #1e293b; height: 1.2rem; overflow: hidden; margin-bottom: 4px;">
+                                    Restaurants</div>
+                                <div style="font-size: 0.85rem; font-weight: 800; color: #00ff88;">+1.90%</div>
                             </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(236, 72, 153, 0.1);">
-                                    <i data-lucide="cpu" size="20" color="#ec4899"></i>
-                                </div>
-                                <div class="sector-name">Electronics</div>
-                                <div class="sector-pct down">-1.49%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(245, 158, 11, 0.1);">
-                                    <i data-lucide="construction" size="20" color="#f59e0b"></i>
-                                </div>
-                                <div class="sector-name">Metal Fab</div>
-                                <div class="sector-pct down">-3.55%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(99, 102, 241, 0.1);">
-                                    <i data-lucide="wrench" size="20" color="#6366f1"></i>
-                                </div>
-                                <div class="sector-name">Tools & Hardware</div>
-                                <div class="sector-pct down">-3.29%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(16, 185, 129, 0.1);">
-                                    <i data-lucide="layout-grid" size="20" color="#10b981"></i>
-                                </div>
-                                <div class="sector-name">Specialty Retail</div>
-                                <div class="sector-pct up">+3.07%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(239, 68, 68, 0.1);">
-                                    <i data-lucide="zap" size="20" color="#ef4444"></i>
-                                </div>
-                                <div class="sector-name">Energy</div>
-                                <div class="sector-pct up">+1.12%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(168, 85, 247, 0.1);">
-                                    <i data-lucide="pill" size="20" color="#a855f7"></i>
-                                </div>
-                                <div class="sector-name">Pharma</div>
-                                <div class="sector-pct down">-0.45%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(14, 165, 233, 0.1);">
-                                    <i data-lucide="plane" size="20" color="#0ea5e9"></i>
-                                </div>
-                                <div class="sector-name">Aviation</div>
-                                <div class="sector-pct up">+2.30%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(249, 115, 22, 0.1);">
-                                    <i data-lucide="shopping-cart" size="20" color="#f97316"></i>
-                                </div>
-                                <div class="sector-name">E-Commerce</div>
-                                <div class="sector-pct up">+4.15%</div>
-                            </div>
-
                         </div>
                     </section>
 
-                    <!-- Commodities Widget -->
-                    <section class="m-card" style="margin-top: 1.5rem;">
-                        <div class="section-title"
-                            style="font-weight: 700; margin-bottom: 1.25rem; font-size: 1.1rem; color: #1e293b;">
-                            Commodities</div>
-                        <div class="sector-grid">
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(234, 179, 8, 0.1);">
-                                    <i data-lucide="coins" size="20" color="#eab308"></i>
+                    <!-- Commodities Section -->
+                    <section class="m-card" style="padding: 1.5rem;">
+                        <div
+                            style="font-weight: 800; margin-bottom: 1.25rem; font-size: 1rem; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase;">
+                            <i data-lucide="box" size="20"></i> Commodities
+                        </div>
+                        <div class="sector-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div class="sector-card"
+                                style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1rem; text-align: center;">
+                                <div
+                                    style="background: rgba(251, 191, 36, 0.1); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                    <i data-lucide="coins" size="18" color="#fbbf24"></i>
                                 </div>
-                                <div class="sector-name">Gold</div>
-                                <div class="sector-pct up">+0.85%</div>
+                                <div
+                                    style="font-size: 0.8rem; font-weight: 700; color: #1e293b; height: 1.2rem; overflow: hidden; margin-bottom: 4px;">
+                                    Gold</div>
+                                <div style="font-size: 0.85rem; font-weight: 800; color: #00ff88;">+2.15%</div>
                             </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(148, 163, 184, 0.1);">
-                                    <i data-lucide="disc" size="20" color="#94a3b8"></i>
+                            <div class="sector-card"
+                                style="background: #ffffff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 1rem; text-align: center;">
+                                <div
+                                    style="background: rgba(99, 102, 241, 0.1); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                                    <i data-lucide="droplet" size="18" color="#6366f1"></i>
                                 </div>
-                                <div class="sector-name">Silver</div>
-                                <div class="sector-pct down">-0.42%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(15, 23, 42, 0.1);">
-                                    <i data-lucide="droplet" size="20" color="#0f172a"></i>
-                                </div>
-                                <div class="sector-name">Crude Oil</div>
-                                <div class="sector-pct up">+1.20%</div>
-                            </div>
-                            <div class="sector-card">
-                                <div class="sector-icon-box" style="background: rgba(14, 165, 233, 0.1);">
-                                    <i data-lucide="wind" size="20" color="#0ea5e9"></i>
-                                </div>
-                                <div class="sector-name">Natural Gas</div>
-                                <div class="sector-pct down">-1.15%</div>
+                                <div
+                                    style="font-size: 0.8rem; font-weight: 700; color: #1e293b; height: 1.2rem; overflow: hidden; margin-bottom: 4px;">
+                                    Crude Oil</div>
+                                <div style="font-size: 0.85rem; font-weight: 800; color: #ff3b3b;">-1.32%</div>
                             </div>
                         </div>
                     </section>
                 </div>
 
-                <!-- Main Column -->
-                <div class="center-col">
-                    <div class="section-title indices">
+                <div class="main-col">
+                    <div class="section-title indices"
+                        style="color: #1e293b; display: flex; align-items: center; gap: 0.5rem; font-weight: 700;">
                         <i data-lucide="line-chart" size="20" color="#3b82f6"></i>
                         Major Indices
                     </div>
@@ -2550,230 +2656,213 @@
                                 </svg>
                             </div>
                         </div>
+                        <div class="index-card" id="cardBankNifty"
+                            onclick="updateChart('NSE:NIFTYBANK', 'NIFTY BANK (NSE Index Live)')">
+                            <div class="index-card-left">
+                                <div class="index-head">
+                                    <img src="https://flagcdn.com/w20/in.png" class="index-flag">
+                                    <span class="index-name">NIFTY BANK</span>
+                                </div>
+                                <div class="index-val" id="valBankNiftyCard">51,234.75</div>
+                                <div class="index-chg green" id="chgBankNiftyCard">+412.30 (+0.81%)</div>
+                            </div>
+                            <div class="sparkline-container">
+                                <svg class="sparkline-svg" id="sparkBankNifty" viewBox="0 0 100 40">
+                                    <path class="sparkline-path green"
+                                        d="M0 35 L10 32 L20 30 L30 28 L40 25 L50 22 L60 20 L70 18 L80 15 L90 12 L100 10">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="index-card" id="cardSmlcap"
+                            onclick="updateChart('NSE:NIFTYSMLCAP100', 'NIFTY SMLCAP (NSE Index Live)')">
+                            <div class="index-card-left">
+                                <div class="index-head">
+                                    <img src="https://flagcdn.com/w20/in.png" class="index-flag">
+                                    <span class="index-name">NIFTY SMLCAP</span>
+                                </div>
+                                <div class="index-val" id="valSmlcapCard">17,892.40</div>
+                                <div class="index-chg green" id="chgSmlcapCard">+156.20 (+0.88%)</div>
+                            </div>
+                            <div class="sparkline-container">
+                                <svg class="sparkline-svg" id="sparkSmlcap" viewBox="0 0 100 40">
+                                    <path class="sparkline-path green"
+                                        d="M0 38 L10 36 L20 33 L30 31 L40 28 L50 26 L60 23 L70 21 L80 18 L90 16 L100 14">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="index-card" id="cardMidcap"
+                            onclick="updateChart('NSE:NIFTYMIDCAP50', 'NIFTY MIDCAP (NSE Index Live)')">
+                            <div class="index-card-left">
+                                <div class="index-head">
+                                    <img src="https://flagcdn.com/w20/in.png" class="index-flag">
+                                    <span class="index-name">NIFTY MIDCAP</span>
+                                </div>
+                                <div class="index-val" id="valMidcapCard">54,678.90</div>
+                                <div class="index-chg red" id="chgMidcapCard">-234.50 (-0.43%)</div>
+                            </div>
+                            <div class="sparkline-container">
+                                <svg class="sparkline-svg" id="sparkMidcap" viewBox="0 0 100 40">
+                                    <path class="sparkline-path red"
+                                        d="M0 25 L10 27 L20 29 L30 32 L40 34 L50 36 L60 38 L70 40 L80 42 L90 44 L100 46">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="index-card" id="cardVix"
+                            onclick="updateChart('NSE:INDIAVIX', 'VIX (NSE Index Live)')">
+                            <div class="index-card-left">
+                                <div class="index-head">
+                                    <img src="https://flagcdn.com/w20/in.png" class="index-flag">
+                                    <span class="index-name">VIX</span>
+                                </div>
+                                <div class="index-val" id="valVixCard">14.25</div>
+                                <div class="index-chg green" id="chgVixCard">+0.75 (+5.56%)</div>
+                            </div>
+                            <div class="sparkline-container">
+                                <svg class="sparkline-svg" id="sparkVix" viewBox="0 0 100 40">
+                                    <path class="sparkline-path green"
+                                        d="M0 30 L10 28 L20 26 L30 24 L40 22 L50 20 L60 18 L70 16 L80 14 L90 12 L100 10">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="index-card" id="cardIt"
+                            onclick="updateChart('NSE:NIFTYIT', 'NIFTY IT (NSE Index Live)')">
+                            <div class="index-card-left">
+                                <div class="index-head">
+                                    <img src="https://flagcdn.com/w20/in.png" class="index-flag">
+                                    <span class="index-name">NIFTY IT</span>
+                                </div>
+                                <div class="index-val" id="valItCard">42,156.80</div>
+                                <div class="index-chg green" id="chgItCard">+298.40 (+0.71%)</div>
+                            </div>
+                            <div class="sparkline-container">
+                                <svg class="sparkline-svg" id="sparkIt" viewBox="0 0 100 40">
+                                    <path class="sparkline-path green"
+                                        d="M0 32 L10 30 L20 28 L30 26 L40 24 L50 22 L60 20 L70 18 L80 16 L90 14 L100 12">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
                     </section>
-
-                    <!-- Main Index View (Chart + Price Hero) -->
-                    <section class="main-index-view auth-locked-container" style="margin-top: 1.5rem;">
+                    <section class="main-index-view auth-locked-container">
                         <div class="auth-lock-overlay">
                             <p>This section is only available to authenticated users.</p>
                             <a href="login.html" class="auth-lock-btn">Please log in to continue</a>
                         </div>
                         <div class="auth-locked-content">
-                            <div class="market-main-container">
-                                <div class="market-left-col">
-                                    <div class="styled-chart-box"
-                                        style="background: white; border-radius: 16px; padding: 1.5rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
-                                        <!-- Real-time Price Header -->
-                                        <div class="chart-header-stylized" style="margin-bottom: 1.5rem;">
-                                            <div id="valSymbol"
-                                                style="font-size: 1rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">
-                                                SENSEX</div>
-                                            <div
-                                                style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
-                                                <h1 id="indexPrice"
-                                                    style="font-size: 2.8rem; font-weight: 800; color: #1e293b; margin: 0; line-height: 1;">
-                                                    84,065.75</h1>
-                                                <div id="heroChange" class="index-chg green"
-                                                    style="font-size: 1.2rem; font-weight: 700; background: #eefcf4; padding: 4px 12px; border-radius: 8px;">
-                                                    +485.35 (+0.58%)</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Day Range Bar -->
-                                        <div class="styled-range-container"
-                                            style="margin-bottom: 2rem; position: relative;">
-                                            <div class="range-labels"
-                                                style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 8px;">
-                                                <span id="dayLow" style="color: #ef4444;">83,580.42</span>
-                                                <span id="dayHigh" style="color: #10b981;">84,314.68</span>
-                                            </div>
-                                            <div class="range-track"
-                                                style="height: 6px; background: #f1f5f9; border-radius: 3px; position: relative;">
-                                                <div id="rangeProgress"
-                                                    style="position: absolute; left: 0; top: 0; height: 100%; width: 50%; background: linear-gradient(to right, #ef4444, #10b981); border-radius: 3px;">
-                                                </div>
-                                                <div id="sliderMarker" class="range-dot"
-                                                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: white; border: 3px solid #10b981; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2;">
-                                                </div>
-                                            </div>
-                                            <div class="range-stats"
-                                                style="display: flex; gap: 25px; margin-top: 10px; font-size: 11px; color: #94a3b8; font-weight: 600;">
-                                                <span>Symbol: <b id="valSymbolText"
-                                                        style="color: #475569;">SENSEX</b></span>
-                                                <span>Market: <b style="color: #475569;">ININ</b></span>
-                                                <span>Prev Close: <b id="gridClose"
-                                                        style="color: #475569;">83,580.4</b></span>
-                                                <span>Volume: <b id="valVol"
-                                                        style="color: #475569;">14,913,178</b></span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Chart Controls Row -->
-                                        <div class="chart-controls-row"
-                                            style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid #f1f5f9; margin-bottom: 10px;">
-                                            <div class="tf-group" style="display: flex; gap: 10px;">
-                                                <button class="mini-tf-btn active"
-                                                    onclick="updateChartInterval('D', this)">1D</button>
-                                                <button class="mini-tf-btn"
-                                                    onclick="updateChartInterval('W', this)">1W</button>
-                                                <button class="mini-tf-btn"
-                                                    onclick="updateChartInterval('M', this)">1M</button>
-                                            </div>
-                                            <div class="chart-legend"
-                                                style="display: flex; gap: 20px; font-size: 12px; font-weight: 700; color: #64748b;">
-                                                <span style="display: flex; align-items: center; gap: 6px;"><i
-                                                        style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%; display: inline-block;"></i>
-                                                    Stock</span>
-                                                <span style="display: flex; align-items: center; gap: 6px;"><i
-                                                        style="width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; display: inline-block;"></i>
-                                                    Volume</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Actual Chart -->
-                                        <div class="chart-container-realtime"
-                                            style="height: 600px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #f1f5f9;">
-                                            <div id="tradingview_widget" style="height:100%; width:100%;"></div>
-                                        </div>
+                            <div class="styled-chart-box"
+                                style="background: #000000; border-radius: 16px; padding: 1.5rem; border: 1px solid #1a1a1a; box-shadow: none;">
+                                <div class="chart-header-stylized" style="margin-bottom: 1.5rem;">
+                                    <div id="valSymbol"
+                                        style="font-size: 1rem; font-weight: 800; color: #d4af37; text-transform: uppercase; letter-spacing: 1px;">
+                                        SENSEX</div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
+                                        <h1 id="indexPrice"
+                                            style="font-size: 2.8rem; font-weight: 800; color: #ffffff; margin: 0; line-height: 1;">
+                                            84,065.75</h1>
+                                        <div id="heroChange" class="index-chg green"
+                                            style="font-size: 1.2rem; font-weight: 700; background: rgba(0, 255, 136, 0.15); color: #00ff88; padding: 4px 12px; border-radius: 8px;">
+                                            +485.35 (+0.58%)</div>
                                     </div>
-
-                                    <!-- Stock News & IPO (Red Box Area) -->
-                                    <div class="news-section m-card" style="padding: 1.5rem; margin-top: 1.25rem;">
-                                        <div class="side-list-title" style="margin-bottom: 1.25rem;">
-                                            <div
-                                                style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-                                                <i data-lucide="newspaper" size="18" color="#3b82f6"></i>
-                                                Stock News
-                                            </div>
-                                        </div>
-
-                                        <div class="news-item"
-                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                                            <div class="news-meta"
-                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
-                                                TECH • 3:45 PM</div>
-                                            <h4
-                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
-                                                Nifty IT Index Surges 3% as Powell Hints at Rate Cuts</h4>
-                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                                Powell hints at possible rate cuts later this year, boosting
-                                                sentiment...</p>
-                                        </div>
-
-                                        <div class="news-item"
-                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                                            <div class="news-meta"
-                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
-                                                RELIANCE • 3:05 PM</div>
-                                            <h4
-                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
-                                                Reliance Retail to Acquire Stake in VogueIndia</h4>
-                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                                RRVL set to acquire 51% stake in fashion tech startup...</p>
-                                        </div>
-
-                                        <div class="news-item"
-                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                                            <div class="news-meta"
-                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
-                                                SUNPHARMA • 2:35 PM</div>
-                                            <h4
-                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
-                                                USFDA Approval for Generic Diabetes Drug</h4>
-                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                                Sun Pharma received final approval for generic Sitagliptin tablets...
-                                            </p>
-                                        </div>
-
-                                        <div class="news-item"
-                                            style="margin-bottom: 1.25rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
-                                            <div class="news-meta"
-                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
-                                                HDFCBANK • 2:10 PM</div>
-                                            <h4
-                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
-                                                HDFC Bank Q3 Net Profit Jumps 18%</h4>
-                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                                Stellar growth in net profit for Q3, beating street estimates...</p>
-                                        </div>
-
-                                        <div class="news-item"
-                                            style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">
-                                            <div class="news-meta"
-                                                style="font-size: 0.65rem; color: #94a3b8; margin-bottom: 0.25rem; text-transform: uppercase;">
-                                                SENSEX • 1:45 PM</div>
-                                            <h4
-                                                style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.4; color: #1e293b;">
-                                                Sensex Crosses Historic 84,000 Mark</h4>
-                                            <p style="font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0;">
-                                                Driven by robust FII investments and positive global cues...</p>
-                                        </div>
-                                    </div>
-
-                                </div> <!-- End market-left-col -->
-                            </div> <!-- End market-main-container -->
-                        </div> <!-- End auth-locked-content -->
-                    </section> <!-- End main-index-view -->
-                </div> <!-- End center-col -->
-
-                <!-- Sidebar Content (Far Right Side) -->
-                <div class="right-col" style="display: flex; flex-direction: column; gap: 1.5rem;">
-
-                    <section class="m-card"
-                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
-                        <div class="auth-locked-content" style="display: block;">
-                            <div class="side-list-title">
-                                <div style="font-weight: 700;"><i data-lucide="star" size="18" color="#f59e0b"></i>
-                                    Watch List
                                 </div>
-                            </div>
-                            <div style="text-align: center; color: #94a3b8; padding: 1rem; font-size: 0.8rem;">No data.
+                                <div class="styled-range-container" style="margin-bottom: 2rem; position: relative;">
+                                    <div class="range-labels"
+                                        style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 8px;">
+                                        <span id="dayLow" style="color: #ef4444;">83,580.42</span>
+                                        <span id="dayHigh" style="color: #10b981;">84,314.68</span>
+                                    </div>
+                                    <div class="range-track"
+                                        style="height: 6px; background: #1a1a1a; border-radius: 3px; position: relative;">
+                                        <div id="rangeProgress"
+                                            style="position: absolute; left: 0; top: 0; height: 100%; width: 50%; background: linear-gradient(to right, #ef4444, #10b981); border-radius: 3px;">
+                                        </div>
+                                        <div id="sliderMarker" class="range-dot"
+                                            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: #000000; border: 3px solid #00ff88; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,255,136,0.3); z-index: 2;">
+                                        </div>
+                                    </div>
+                                    <div class="range-stats"
+                                        style="display: flex; gap: 25px; margin-top: 10px; font-size: 11px; color: #888888; font-weight: 600;">
+                                        <span>Symbol: <b id="valSymbolText" style="color: #cccccc;">SENSEX</b></span>
+                                        <span>Market: <b style="color: #cccccc;">ININ</b></span>
+                                        <span>Prev Close: <b id="gridClose" style="color: #cccccc;">83,580.4</b></span>
+                                        <span>Volume: <b id="valVol" style="color: #cccccc;">14,913,178</b></span>
+                                    </div>
+                                </div>
+                                <div class="chart-controls-row"
+                                    style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid #1a1a1a; margin-bottom: 10px;">
+                                    <div class="tf-group" style="display: flex; gap: 10px;">
+                                        <button class="mini-tf-btn active"
+                                            onclick="updateChartInterval('D', this)">1D</button>
+                                        <button class="mini-tf-btn" onclick="updateChartInterval('W', this)">1W</button>
+                                        <button class="mini-tf-btn" onclick="updateChartInterval('M', this)">1M</button>
+                                    </div>
+                                </div>
+                                <div class="chart-container-realtime"
+                                    style="height: 600px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #1a1a1a;">
+                                    <div id="tradingview_widget" style="height:100%; width:100%;"></div>
+                                </div>
                             </div>
                         </div>
                     </section>
-
-                    <section class="m-card"
-                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
-                        <div class="side-list-title">
-                            <div style="font-weight: 700;"><i data-lucide="trending-up" size="18" color="#10b981"></i>
-                                Top Gainer</div>
+                    <div class="news-section m-card" style="padding: 1.5rem;">
+                        <h4 style="font-weight: 700; margin-bottom: 1rem;"><i data-lucide="newspaper" size="18"
+                                color="#3b82f6"></i> Stock News</h4>
+                        <div class="news-item"
+                            style="margin-bottom: 1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem;">
+                            <div class="news-meta" style="font-size: 0.65rem; color: #94a3b8;">TECH • 3:45 PM</div>
+                            <h5 style="font-size: 0.95rem; font-weight: 700; margin: 0.4rem 0;">Nifty IT Index Surges 3%
+                                as Powell Hints at Rate Cuts</h5>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Sentiment boost across IT sector
+                                following global cues...</p>
+                        </div>
+                        <div class="news-item">
+                            <div class="news-meta" style="font-size: 0.65rem; color: #94a3b8;">BANKING • 2:15 PM</div>
+                            <h5 style="font-size: 0.95rem; font-weight: 700; margin: 0.4rem 0;">HDFC Bank Q3 Net Profit
+                                Jumps 18%</h5>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Stellar growth in net profit beats
+                                street estimates...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="right-col">
+                    <section class="m-card" style="padding: 1.25rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                            <div
+                                style="font-weight: 800; display: flex; align-items: center; gap: 0.5rem; color: #10b981; text-transform: uppercase; font-size: 0.85rem;">
+                                <i data-lucide="trending-up" size="18"></i> Top Gainer
+                            </div>
                             <div style="font-size: 0.65rem; display: flex; gap: 0.35rem;">
                                 <span class="exchange-tab active" onclick="switchExchange('gainers', 'NSE')">NSE</span>
                                 <span class="exchange-tab" onclick="switchExchange('gainers', 'BSE')">BSE</span>
                             </div>
                         </div>
-                        <div id="gainersList">
-                            <div class="auth-locked-content" style="display: block;">
-                                <!-- Dynamic content -->
-                            </div>
-                        </div>
+                        <div id="gainersList"></div>
                     </section>
-
-                    <section class="m-card"
-                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
-                        <div class="side-list-title">
-                            <div style="font-weight: 700;"><i data-lucide="trending-down" size="18" color="#ef4444"></i>
-                                Top Loser</div>
+                    <section class="m-card" style="padding: 1.25rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                            <div
+                                style="font-weight: 800; display: flex; align-items: center; gap: 0.5rem; color: #ef4444; text-transform: uppercase; font-size: 0.85rem;">
+                                <i data-lucide="trending-down" size="18"></i> Top Loser
+                            </div>
                             <div style="font-size: 0.65rem; display: flex; gap: 0.35rem;">
                                 <span class="exchange-tab active" onclick="switchExchange('losers', 'NSE')">NSE</span>
                                 <span class="exchange-tab" onclick="switchExchange('losers', 'BSE')">BSE</span>
                             </div>
                         </div>
-                        <div id="losersList">
-                            <div class="auth-locked-content" style="display: block;">
-                                <!-- Dynamic content -->
-                            </div>
-                        </div>
+                        <div id="losersList"></div>
                     </section>
-
-                    <!-- IPO Calendar (Moved below Top Loser) -->
-                    <section class="m-card"
-                        style="margin-top: 0; padding: 1.25rem; border: 1px solid #e2e8f0; box-shadow: none;">
-                        <div class="side-list-title">
-                            <div style="font-weight: 700;"><i data-lucide="calendar" size="18" color="#6366f1"></i>
-                                IPO Calendar</div>
+                    <section class="m-card" style="padding: 1.25rem;">
+                        <div
+                            style="font-weight: 800; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; color: #3b82f6; text-transform: uppercase; font-size: 0.85rem;">
+                            <i data-lucide="calendar" size="18"></i> IPO Calendar
                         </div>
-                        <div class="auth-locked-content" style="display: block;">
+                        <div id="ipoCalendar">
                             <div class="ipo-item"
                                 style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9;">
                                 <div>
@@ -2782,38 +2871,14 @@
                                 </div>
                                 <div
                                     style="background: #eff6ff; color: #3b82f6; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
-                                    Upcoming</div>
-                            </div>
-                            <div class="ipo-item"
-                                style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #f1f5f9;">
-                                <div>
-                                    <div style="font-weight: 600; font-size: 0.85rem;">TechNova Sol</div>
-                                    <div style="font-size: 0.7rem; color: #64748b;">20-22 Jan</div>
+                                    Upcoming
                                 </div>
-                                <div
-                                    style="background: #f0fdf4; color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
-                                    Open</div>
-                            </div>
-                            <div class="ipo-item"
-                                style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: none;">
-                                <div>
-                                    <div style="font-weight: 600; font-size: 0.85rem;">Global Infra Ltd</div>
-                                    <div style="font-size: 0.7rem; color: #64748b;">25-27 Jan</div>
-                                </div>
-                                <div
-                                    style="background: #fef3c7; color: #f59e0b; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;">
-                                    Soon</div>
                             </div>
                         </div>
                     </section>
                 </div>
             </main>
         </div>
-
-
-
-
-
         <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
         <script type="text/javascript">
             let currentWidget = null;
@@ -2829,68 +2894,121 @@
 
             const indexData = {
                 'BSE:SENSEX': {
-                    price: 83580.40,
-                    basePrice: 83313.93,
-                    low: 83250.27,
-                    high: 83784.17,
-                    open: 83757.54,
-                    close: 83817.69,
-                    vol: "14,913,178",
-                    sym: "SENSEX",
-                    cardValId: 'valSensexCard',
-                    cardChgId: 'chgSensexCard',
-                    sparkId: 'sparkSensex',
+                    price: 83580.40, basePrice: 83313.93, low: 83250.27, high: 83784.17, open: 83757.54, close: 83817.69, vol: "14,913,178", sym: "SENSEX",
+                    cardValId: 'valSensexCard', cardChgId: 'chgSensexCard', sparkId: 'sparkSensex',
                     history: [35, 38, 30, 32, 25, 28, 20, 22, 15, 18, 20]
                 },
                 'NSE:NIFTY': {
-                    price: 25641.65,
-                    basePrice: 25776.00,
-                    low: 25600.00,
-                    high: 25800.00,
-                    open: 25750.00,
-                    close: 25776.00,
-                    vol: "22,450,112",
-                    sym: "NIFTY 50",
-                    cardValId: 'valNiftyCard',
-                    cardChgId: 'chgNiftyCard',
-                    sparkId: 'sparkNifty',
+                    price: 25641.65, basePrice: 25776.00, low: 25600.00, high: 25800.00, open: 25750.00, close: 25776.00, vol: "22,450,112", sym: "NIFTY 50",
+                    cardValId: 'valNiftyCard', cardChgId: 'chgNiftyCard', sparkId: 'sparkNifty',
                     history: [30, 32, 35, 38, 36, 40, 38, 42, 40, 45, 42]
                 },
-                'NSE:BANKNIFTY': {
-                    price: 60045.35,
-                    basePrice: 60238.15,
-                    low: 59500.00,
-                    high: 60500.00,
-                    open: 60200.00,
-                    close: 60238.15,
-                    vol: "8,124,556",
-                    sym: "NIFTY BANK",
-                    cardValId: 'valBankNiftyCard',
-                    cardChgId: 'chgBankNiftyCard',
-                    sparkId: 'sparkBankNifty',
+                'NSE:NIFTYBANK': {
+                    price: 51234.75, basePrice: 50822.45, low: 50700.00, high: 51500.00, open: 50900.00, close: 50822.45, vol: "8,124,556", sym: "NIFTY BANK",
+                    cardValId: 'valBankNiftyCard', cardChgId: 'chgBankNiftyCard', sparkId: 'sparkBankNifty',
                     history: [20, 22, 25, 22, 28, 25, 30, 28, 35, 32, 38]
+                },
+                'NSE:NIFTYSMLCAP100': {
+                    price: 17892.40, basePrice: 17736.20, low: 17650.00, high: 18000.00, open: 17750.00, close: 17736.20, vol: "4,567,123", sym: "NIFTY SMLCAP",
+                    cardValId: 'valSmlcapCard', cardChgId: 'chgSmlcapCard', sparkId: 'sparkSmlcap',
+                    history: [38, 36, 33, 31, 28, 26, 23, 21, 18, 16, 14]
+                },
+                'NSE:NIFTYMIDCAP50': {
+                    price: 54678.90, basePrice: 54913.40, low: 54500.00, high: 55200.00, open: 55000.00, close: 54913.40, vol: "6,892,445", sym: "NIFTY MIDCAP",
+                    cardValId: 'valMidcapCard', cardChgId: 'chgMidcapCard', sparkId: 'sparkMidcap',
+                    history: [25, 27, 29, 32, 34, 36, 38, 40, 42, 44, 46]
+                },
+                'NSE:INDIAVIX': {
+                    price: 14.25, basePrice: 13.50, low: 13.00, high: 15.50, open: 13.75, close: 13.50, vol: "N/A", sym: "VIX",
+                    cardValId: 'valVixCard', cardChgId: 'chgVixCard', sparkId: 'sparkVix',
+                    history: [30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10]
+                },
+                'NSE:NIFTYIT': {
+                    price: 42156.80, basePrice: 41858.40, low: 41700.00, high: 42500.00, open: 41900.00, close: 41858.40, vol: "3,234,112", sym: "NIFTY IT",
+                    cardValId: 'valItCard', cardChgId: 'chgItCard', sparkId: 'sparkIt',
+                    history: [32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 12]
                 }
             };
 
             function loadWidget(symbol) {
+                // Validate symbol before loading to prevent TradingView default error screens
+                if (!indexData[symbol]) {
+                    console.warn("Unsupported symbol requested:", symbol);
+                    return;
+                }
+
+                // Explicitly clear the container to destroy any existing widget/iframe before re-creating
+                const container = document.getElementById('tradingview_widget');
+                if (container) container.innerHTML = '';
+
+                // Re-create widget with MAXIMUM UI restrictions and Premium Black/Gold Style
                 currentWidget = new TradingView.widget({
                     "autosize": true,
                     "symbol": symbol,
                     "interval": currentInterval,
                     "timezone": "Asia/Kolkata",
-                    "theme": "light",
+                    "theme": "dark",
                     "style": "1",
                     "locale": "in",
-                    "toolbar_bg": "#f1f3f6",
+                    "toolbar_bg": "#000000",
                     "enable_publishing": false,
-                    "allow_symbol_change": true,
+                    "allow_symbol_change": false,
+                    "hide_top_toolbar": true,
+                    "hide_legend": false,
+                    "save_image": false,
                     "container_id": "tradingview_widget",
                     "hide_side_toolbar": true,
                     "withdateranges": false,
-                    "save_image": false,
                     "details": false,
                     "hotlist": false,
                     "calendar": false,
+                    "show_popup_button": false,
+                    "symbol_search": false,
+                    "disabled_features": [
+                        "header_symbol_search",
+                        "header_compare",
+                        "header_settings",
+                        "header_indicators",
+                        "header_screenshot",
+                        "header_chart_type",
+                        "header_resolutions",
+                        "header_undo_redo",
+                        "header_widget",
+                        "symbol_search_hot_key",
+                        "display_market_status",
+                        "volume_force_overlay",
+                        "left_toolbar",
+                        "compare_symbol",
+                        "edit_buttons_in_legend",
+                        "context_menus",
+                        "go_to_date",
+                        "show_interval_dialog_on_key_press",
+                        "control_bar",
+                        "timeframes_toolbar"
+                    ],
+                    "enabled_features": [],
+                    "overrides": {
+                        "paneProperties.background": "#000000",
+                        "paneProperties.vertGridProperties.color": "#1a1a1a",
+                        "paneProperties.horzGridProperties.color": "#1a1a1a",
+                        "scalesProperties.textColor": "#ffffff",
+                        "scalesProperties.lineColor": "#d4af37",
+                        "mainSeriesProperties.candleStyle.upColor": "#00ff88",
+                        "mainSeriesProperties.candleStyle.downColor": "#ff3b3b",
+                        "mainSeriesProperties.candleStyle.drawWick": true,
+                        "mainSeriesProperties.candleStyle.drawBorder": true,
+                        "mainSeriesProperties.candleStyle.borderColor": "#00ff88",
+                        "mainSeriesProperties.candleStyle.borderUpColor": "#00ff88",
+                        "mainSeriesProperties.candleStyle.borderDownColor": "#ff3b3b",
+                        "mainSeriesProperties.candleStyle.wickUpColor": "#00ff88",
+                        "mainSeriesProperties.candleStyle.wickDownColor": "#ff3b3b",
+                        "mainSeriesProperties.priceLineColor": "#d4af37"
+                    },
+                    "studies_overrides": {
+                        "volume.volume.color.0": "#b8860b",
+                        "volume.volume.color.1": "#d4af37",
+                        "volume.volume.transparency": 70
+                    },
                     "studies": ["Volume@tv-basicstudies"]
                 });
             }
@@ -2903,13 +3021,22 @@
             }
 
             function updateChart(symbol, title) {
+                // Immediate validation: Stop execution if symbol is not in our verified list
+                if (!indexData[symbol]) {
+                    console.error("Invalid index selected: " + symbol);
+                    return;
+                }
+
                 currentActiveSymbol = symbol;
-                // Removed chartTitle update as it's now internal to the widget
                 document.querySelectorAll('.index-card').forEach(c => c.classList.remove('active'));
 
-                if (symbol === 'BSE:SENSEX') document.getElementById('cardSensex').classList.add('active');
-                else if (symbol === 'NSE:NIFTY') document.getElementById('cardNifty').classList.add('active');
-                else if (symbol === 'NSE:BANKNIFTY') document.getElementById('cardNiftyBank').classList.add('active');
+                if (symbol === 'BSE:SENSEX') document.getElementById('cardSensex')?.classList.add('active');
+                else if (symbol === 'NSE:NIFTY') document.getElementById('cardNifty')?.classList.add('active');
+                else if (symbol === 'NSE:NIFTYBANK') document.getElementById('cardBankNifty')?.classList.add('active');
+                else if (symbol === 'NSE:NIFTYSMLCAP100') document.getElementById('cardSmlcap')?.classList.add('active');
+                else if (symbol === 'NSE:NIFTYMIDCAP50') document.getElementById('cardMidcap')?.classList.add('active');
+                else if (symbol === 'NSE:INDIAVIX') document.getElementById('cardVix')?.classList.add('active');
+                else if (symbol === 'NSE:NIFTYIT') document.getElementById('cardIt')?.classList.add('active');
 
                 syncUI();
                 loadWidget(symbol);
@@ -3145,7 +3272,6 @@
                             sectEl.className = `sector-pct ${newVal >= 0 ? 'up' : 'down'}`;
                         }
                     }
-
                     syncUI();
                 }, 1000);
             }
@@ -3650,7 +3776,8 @@
                                         style="font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">
                                         Direct Profit</div>
                                     <div id="pTradesProfit"
-                                        style="font-weight: 800; font-size: 1.1rem; color: #10b981;">₹0.00</div>
+                                        style="font-weight: 800; font-size: 1.1rem; color: #10b981;">
+                                        ₹0.00</div>
                                 </div>
                             </div>
                         </div>
@@ -5674,60 +5801,8 @@
         }
 
         // Edit Name Modal Logic
-        function openEditNameModal() {
-            const user = DB.getCurrentUser();
-            if (!user) return;
-            document.getElementById('editNameInput').value = user.name || '';
-            document.getElementById('editNameModal').style.display = 'flex';
-            lucide.createIcons();
-        }
-
-        function closeEditNameModal() {
-            document.getElementById('editNameModal').style.display = 'none';
-        }
-
-        async function saveName() {
-            const newName = document.getElementById('editNameInput').value.trim();
-            if (!newName) {
-                alert('Please enter a name');
-                return;
-            }
-
-            const btn = document.getElementById('saveNameBtn');
-            btn.innerText = 'Saving...';
-            btn.disabled = true;
-
-            try {
-                const user = DB.getCurrentUser();
-                const result = await DB.updateUser(user.id, {
-                    full_name: newName,
-                    username: newName,
-                    name: newName
-                });
-                if (result.success) {
-                    // Update Local Storage immediately
-                    user.full_name = newName;
-                    user.username = newName;
-                    user.name = newName;
-                    localStorage.setItem(DB.CURRENT_USER_KEY, JSON.stringify(user));
-
-                    alert('Name updated successfully!');
-                    syncUserData(); // Update Me page immediately
-                    closeEditNameModal();
-                } else {
-                    alert('Error: ' + (result.error?.message || 'Failed to update name'));
-                }
-            } catch (e) {
-                console.error(e);
-                alert('An error occurred.');
-            } finally {
-                btn.innerText = 'Save Name';
-                btn.disabled = false;
-            }
-        }
-
         // Sync User Data to UI
-        async function syncUserData() {
+        window.syncUserData = async function () {
             const user = DB.getCurrentUser();
 
             // Toggle auth lock overlays instead of redirecting
@@ -6628,7 +6703,7 @@
                 console.error("Sell trade error:", e);
                 alert("Failed to close position: " + e.message);
             } finally {
-                btn.innerText = originalText;
+                btn.innerText = onalText;
                 btn.disabled = false;
             }
         }

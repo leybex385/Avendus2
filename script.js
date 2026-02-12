@@ -374,7 +374,7 @@ window.handleInternalReset = async function () {
 window.handleGuestClick = function (url) {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (user) {
-        window.location.href = url;
+        if (url && url !== '#') window.location.href = url;
     } else {
         // Show Top Alert
         const alertBox = document.querySelector('.top-alert-container');
@@ -384,6 +384,21 @@ window.handleGuestClick = function (url) {
         } else {
             alert("Please login to access this feature.");
         }
+    }
+};
+
+window.handleGuestTabClick = function (type) {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) {
+        window.handleGuestClick('#');
+        return;
+    }
+    if (type === 'me') {
+        window.location.href = 'market.html?view=me';
+    } else if (type === 'portfolio') {
+        window.location.href = 'market.html?view=portfolio';
+    } else if (type === 'market') {
+        window.location.href = 'market.html';
     }
 };
 
@@ -448,8 +463,10 @@ function showSlide(index) {
 
 // --- New User Profile Logic ---
 window.toggleUserProfile = function () {
-    const submenu = document.getElementById('userProfileSubmenu');
-    const chevron = document.getElementById('userProfileChevron');
+    const root = document.getElementById('settingsModal');
+    if (!root) return;
+    const submenu = root.querySelector('#userProfileSubmenu');
+    const chevron = root.querySelector('#userProfileChevron');
 
     if (submenu) {
         submenu.classList.toggle('open');
@@ -460,13 +477,74 @@ window.toggleUserProfile = function () {
 };
 
 window.toggleSecurityMenu = function () {
-    const submenu = document.getElementById('securitySubmenu');
-    const chevron = document.getElementById('securityChevron');
+    const root = document.getElementById('settingsModal');
+    if (!root) return;
+    const submenu = root.querySelector('#securitySubmenu');
+    const chevron = root.querySelector('#securityChevron');
 
     if (submenu) {
         submenu.classList.toggle('open');
         if (chevron) {
             chevron.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+    }
+};
+
+window.openEditNameModal = function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) return;
+    const input = document.getElementById('editNameInput');
+    if (input) input.value = user.full_name || user.username || '';
+    const modal = document.getElementById('editNameModal');
+    if (modal) modal.style.display = 'flex';
+    if (window.lucide) lucide.createIcons();
+};
+
+window.closeEditNameModal = function () {
+    const modal = document.getElementById('editNameModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.saveName = async function () {
+    const input = document.getElementById('editNameInput');
+    if (!input) return;
+    const newName = input.value.trim();
+    if (!newName) {
+        alert('Please enter a name');
+        return;
+    }
+
+    const btn = document.getElementById('saveNameBtn');
+    if (btn) {
+        btn.innerText = 'Saving...';
+        btn.disabled = true;
+    }
+
+    try {
+        const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+        if (!user) return;
+        const result = await window.DB.updateUser(user.id, {
+            full_name: newName,
+            username: newName
+        });
+        if (result.success) {
+            user.full_name = newName;
+            user.username = newName;
+            localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(user));
+
+            alert('Name updated successfully!');
+            if (window.syncUserData) window.syncUserData();
+            window.closeEditNameModal();
+        } else {
+            alert('Error: ' + (result.error?.message || 'Failed to update name'));
+        }
+    } catch (e) {
+        console.error(e);
+        alert('An error occurred.');
+    } finally {
+        if (btn) {
+            btn.innerText = 'Save Name';
+            btn.disabled = false;
         }
     }
 };
@@ -505,9 +583,12 @@ window.handleWithdrawalPinSubmit = async function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (!user) { alert("Please login first."); return; }
 
-    const loginPass = document.getElementById('wpLoginPass')?.value;
-    const newPin = document.getElementById('wpNewPin')?.value;
-    const confirmPin = document.getElementById('wpConfirmPin')?.value;
+    const modal = document.getElementById('withdrawalPinModal');
+    if (!modal) return;
+
+    const loginPass = modal.querySelector('#wpLoginPass')?.value;
+    const newPin = modal.querySelector('#wpNewPin')?.value;
+    const confirmPin = modal.querySelector('#wpConfirmPin')?.value;
 
     if (!loginPass || !newPin || !confirmPin) {
         alert("All fields are required.");
@@ -819,11 +900,12 @@ window.syncUserData = async function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (!user) return;
 
-    const setName = document.querySelector('.settings-name');
+    const settingsRoot = document.getElementById('settingsModal');
+    const setName = settingsRoot ? settingsRoot.querySelector('.settings-name') : null;
     const greetingName = document.querySelector('.user-text h3');
-    const setPhone = document.querySelector('.settings-phone');
-    const setVip = document.querySelector('.s-badge.vip');
-    const setCredit = document.querySelector('.s-badge.credit');
+    const setPhone = settingsRoot ? settingsRoot.querySelector('.settings-phone') : null;
+    const setVip = settingsRoot ? settingsRoot.querySelector('.s-badge.vip') : null;
+    const setCredit = settingsRoot ? settingsRoot.querySelector('.s-badge.credit') : null;
 
     if (setName) setName.textContent = user.full_name || 'Set Name';
     if (greetingName) greetingName.textContent = user.full_name || user.mobile;
@@ -832,8 +914,11 @@ window.syncUserData = async function () {
     const avatars = document.querySelectorAll('.user-avatar, .avatar-circle');
     const renderAvatar = (url) => {
         avatars.forEach(av => {
-            if (url) av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-            else av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
+            if (url) {
+                av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+            } else {
+                av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
+            }
         });
     };
     if (user.avatar_url) renderAvatar(user.avatar_url);
