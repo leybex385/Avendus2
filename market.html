@@ -4254,7 +4254,8 @@
             <div class="me-left-col">
                 <!-- Profile Card -->
                 <div class="me-card">
-                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18"></i></div>
+                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18" style="cursor: pointer;"
+                            onclick="refreshMeProfile(this)"></i></div>
                     <div class="me-title-row">
                         <i data-lucide="user-circle"></i> Your Profile
                     </div>
@@ -4289,42 +4290,45 @@
                 </div>
 
                 <!-- Assets Card -->
+                <!-- Assets Card -->
                 <div class="me-card">
-                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18"></i></div>
+                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18" style="cursor: pointer;"
+                            onclick="refreshMeAssets(this)"></i></div>
                     <div class="me-title-row">
-                        <i data-lucide="wallet"></i> Assets <i data-lucide="eye" size="14"
-                            style="margin-left: 5px;"></i>
+                        <i data-lucide="wallet"></i> Assets <i data-lucide="eye" size="14" id="meAssetsEye"
+                            style="margin-left: 5px; cursor: pointer;" onclick="toggleMeAssets()"></i>
                     </div>
                     <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem;">INR</div>
                     <div class="me-asset-grid">
                         <div class="me-as-card">
                             <div class="me-as-lbl">Available Balance</div>
-                            <div class="me-as-val" id="meAvailableBalance">₹0.00</div>
+                            <div class="me-as-val" id="meAvailableBalance"><span class="asset-value">₹0.00</span></div>
                             <div class="me-as-sub" style="color: #10b981;">Cash</div>
                         </div>
                         <div class="me-as-card">
                             <div class="me-as-lbl">Current Investments</div>
-                            <div class="me-as-val" id="meCurrentInvestments">₹0.00</div>
+                            <div class="me-as-val" id="meCurrentInvestments"><span class="asset-value">₹0.00</span>
+                            </div>
                             <div class="me-as-sub" style="color: #3b82f6;">Invested</div>
                         </div>
                         <div class="me-as-card">
                             <div class="me-as-lbl">Promotional Credits</div>
-                            <div class="me-as-val" id="meBonusCredits">₹0.00</div>
+                            <div class="me-as-val" id="meBonusCredits"><span class="asset-value">₹0.00</span></div>
                             <div class="me-as-sub" style="color: #db2777;">Bonus</div>
                         </div>
                         <div class="me-as-card">
                             <div class="me-as-lbl">Pending Funds</div>
-                            <div class="me-as-val" id="meFrozenFunds">₹0.00</div>
+                            <div class="me-as-val" id="meFrozenFunds"><span class="asset-value">₹0.00</span></div>
                             <div class="me-as-sub" style="color: #ef4444;">Frozen</div>
                         </div>
                         <div class="me-as-card">
                             <div class="me-as-lbl">Borrowed Funds</div>
-                            <div class="me-as-val" id="meBorrowedFunds">₹0.00</div>
+                            <div class="me-as-val" id="meBorrowedFunds"><span class="asset-value">₹0.00</span></div>
                             <div class="me-as-sub" style="color: #6366f1;">Loan</div>
                         </div>
                         <div class="me-as-card">
                             <div class="me-as-lbl">Pending Settlement</div>
-                            <div class="me-as-val" id="mePendingSettlement">₹0.00</div>
+                            <div class="me-as-val" id="mePendingSettlement"><span class="asset-value">₹0.00</span></div>
                             <div class="me-as-sub" style="color: #ef4444;">Outstanding</div>
                         </div>
                     </div>
@@ -4779,6 +4783,40 @@
                 pill.classList.add('active');
             });
         });
+
+        async function refreshMeProfile(btn) {
+            if (btn) {
+                btn.style.transition = 'transform 0.6s ease-in-out';
+                btn.style.transform = 'rotate(360deg)';
+                setTimeout(() => btn.style.transform = 'none', 600);
+            }
+            if (typeof syncUserData === 'function') await syncUserData();
+        }
+
+        let meAssetsHidden = false;
+        function toggleMeAssets() {
+            meAssetsHidden = !meAssetsHidden;
+            const eyeIcon = document.getElementById('meAssetsEye');
+            const assetsGrid = document.querySelector('.me-asset-grid');
+
+            if (meAssetsHidden) {
+                eyeIcon.setAttribute('data-lucide', 'eye-off');
+                assetsGrid.classList.add('hidden-balance');
+            } else {
+                eyeIcon.setAttribute('data-lucide', 'eye');
+                assetsGrid.classList.remove('hidden-balance');
+            }
+            lucide.createIcons();
+        }
+
+        async function refreshMeAssets(btn) {
+            if (btn) {
+                btn.style.transition = 'transform 1s';
+                btn.style.transform = 'rotate(360deg)';
+                setTimeout(() => btn.style.transform = 'none', 1000);
+            }
+            if (typeof syncUserData === 'function') await syncUserData();
+        }
 
         let portfolioAssetsHidden = false;
         function toggleAssetsVisibility() {

@@ -514,6 +514,36 @@
 
 /* Loan -> Gray */
 
+/* Smooth Asset Visibility Toggle (Me Page) */
+.me-page .me-as-val {
+    position: relative;
+    /* Ensure mask positioning context */
+}
+
+.me-page .asset-value {
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
+.me-page .hidden-balance .asset-value {
+    opacity: 0;
+}
+
+.me-page .me-as-val::after {
+    content: '********';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.me-page .hidden-balance .me-as-val::after {
+    opacity: 1;
+}
+
 /* Scores & Offers */
 .me-page .gauge-wrap .gauge-score-text {
     color: #ffffff !important;
