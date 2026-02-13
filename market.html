@@ -3817,32 +3817,38 @@
                     <div class="p-assets-grid">
                         <div class="p-asset-item">
                             <span class="p-asset-label">Available Balance</span>
-                            <span class="p-asset-val" id="pAvailableBalance" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pAvailableBalance" data-val="₹0.00"><span
+                                    class="asset-value">₹0.00</span></span>
                             <span class="p-asset-sub">Cash</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Current Investments</span>
-                            <span class="p-asset-val" id="pCurrentInvested" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pCurrentInvested" data-val="₹0.00"><span
+                                    class="asset-value">₹0.00</span></span>
                             <span class="p-asset-sub">Invested</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Promotional Credits</span>
-                            <span class="p-asset-val" id="pPromoCredits" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pPromoCredits" data-val="₹0.00"><span
+                                    class="asset-value">₹0.00</span></span>
                             <span class="p-asset-sub">Bonus</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Pending Funds</span>
-                            <span class="p-asset-val" id="pPendingFunds" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pPendingFunds" data-val="₹0.00"><span
+                                    class="asset-value">₹0.00</span></span>
                             <span class="p-asset-sub">Frozen</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Borrowed Funds</span>
-                            <span class="p-asset-val" id="pBorrowedFunds" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val" id="pBorrowedFunds" data-val="₹0.00"><span
+                                    class="asset-value">₹0.00</span></span>
                             <span class="p-asset-sub">Loan</span>
                         </div>
                         <div class="p-asset-item">
                             <span class="p-asset-label">Outstanding</span>
-                            <span class="p-asset-val red" id="pPendingSettlement" data-val="₹0.00">₹0.00</span>
+                            <span class="p-asset-val red" id="pPendingSettlement" data-val="₹0.00"><span
+                                    class="asset-value">₹0.00</span></span>
                             <span class="p-asset-sub red" style="cursor: pointer; text-decoration: underline;"
                                 onclick="showDiscoverView('transactions'); switchTransactionTab(null, 'pendingPayment');">Clear
                                 Due</span>
@@ -4778,18 +4784,14 @@
         function toggleAssetsVisibility() {
             portfolioAssetsHidden = !portfolioAssetsHidden;
             const eyeIcon = document.getElementById('assetToggleEye');
-            const assetValues = document.querySelectorAll('.p-asset-val');
+            const assetsGrid = document.querySelector('.p-assets-grid');
 
             if (portfolioAssetsHidden) {
                 eyeIcon.setAttribute('data-lucide', 'eye-off');
-                assetValues.forEach(el => {
-                    el.innerText = '********';
-                });
+                assetsGrid.classList.add('hidden-balance');
             } else {
                 eyeIcon.setAttribute('data-lucide', 'eye');
-                assetValues.forEach(el => {
-                    el.innerText = el.getAttribute('data-val');
-                });
+                assetsGrid.classList.remove('hidden-balance');
             }
             lucide.createIcons();
         }
@@ -6207,7 +6209,15 @@
 
             // Helper to safe-fit text
             const fitText = (el, text) => {
-                el.textContent = text;
+                const valSpan = el.querySelector('.asset-value');
+                if (valSpan) {
+                    valSpan.textContent = text;
+                    // Apply sizing to the wrapper if needed, or keeping it simple
+                    // Assuming .asset-value inherits styles or we style parents
+                } else {
+                    el.textContent = text;
+                }
+
                 el.setAttribute('data-val', text);
                 el.title = text; // Tooltip for full precision
 

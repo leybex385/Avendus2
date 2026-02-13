@@ -974,14 +974,22 @@ window.loadUserAssets = async function (userId) {
             else if (el.classList.contains('me-as-val') && window.meAssetsHidden) isHidden = true;
 
             const displayValue = isHidden ? '********' : text;
-            if (el.textContent !== displayValue) el.textContent = displayValue;
 
-            // Styling reset
+            const valSpan = el.querySelector('.asset-value');
+            if (valSpan) {
+                valSpan.textContent = displayValue;
+            } else {
+                el.textContent = displayValue;
+            }
+            if (!el.getAttribute('data-val')) el.setAttribute('data-val', text);
+            el.title = text;
+
             el.style.fontSize = '';
             el.style.whiteSpace = 'nowrap';
             el.style.overflow = 'hidden';
             el.style.textOverflow = 'ellipsis';
-            // Simple dynamic sizing
+            el.style.display = 'block';
+
             if (displayValue.length > 28) el.style.fontSize = '0.6rem';
             else if (displayValue.length > 22) el.style.fontSize = '0.7rem';
             else if (displayValue.length > 16) el.style.fontSize = '0.8rem';

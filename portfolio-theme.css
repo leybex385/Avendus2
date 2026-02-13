@@ -58,6 +58,33 @@
 
 .portfolio-page .p-asset-val {
     color: #ffffff !important;
+    position: relative;
+    /* Ensure mask positioning context */
+}
+
+/* Smooth Asset Visibility Toggle */
+.portfolio-page .asset-value {
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
+.portfolio-page .hidden-balance .asset-value {
+    opacity: 0;
+}
+
+.portfolio-page .p-asset-val::after {
+    content: '********';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.portfolio-page .hidden-balance .p-asset-val::after {
+    opacity: 1;
 }
 
 .portfolio-page .p-asset-sub {
