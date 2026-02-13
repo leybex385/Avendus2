@@ -386,3 +386,173 @@
     color: #ffffff !important;
     border-color: #d4af37 !important;
 }
+
+/* 
+   ---------------------------------------------------------------------------------
+   ME PAGE OVERRIDES (Matched to Black-Gold Theme)
+   Scoped strictly to .me-page container
+   ---------------------------------------------------------------------------------
+*/
+
+.me-page {
+    background-color: #0b0b0b !important;
+    color: #e5e5e5 !important;
+}
+
+/* Me Components */
+
+.me-page .me-card {
+    background: #111 !important;
+    border: 1px solid #222 !important;
+    color: #e5e5e5 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.me-page .me-card-tag {
+    background: #1a1a1a !important;
+    color: #d4af37 !important;
+    border: 1px solid #222 !important;
+}
+
+/* Headers & Icons */
+.me-page .me-title-row {
+    color: #d4af37 !important;
+}
+
+.me-page .me-title-row i {
+    color: #d4af37 !important;
+}
+
+/* Profile Section */
+.me-page .me-p-avatar {
+    background: #1a1a1a !important;
+    color: #d4af37 !important;
+    border: 2px solid #222 !important;
+}
+
+.me-page #meUserDisplayName {
+    color: #ffffff !important;
+}
+
+.me-page .me-p-info .kyc-approved {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #10b981 !important;
+}
+
+.me-page .me-p-info .kyc-pending {
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: #f59e0b !important;
+}
+
+.me-page .me-p-info .kyc-rejected {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+}
+
+.me-page .me-p-info .kyc-not-verified {
+    background: rgba(148, 163, 184, 0.1) !important;
+    color: #94a3b8 !important;
+}
+
+/* VIP Stats */
+.me-page .me-stat-item {
+    background: #1a1a1a !important;
+    border: 1px solid #222 !important;
+}
+
+.me-page .me-stat-val.blue {
+    color: #d4af37 !important;
+    /* Replaced Blue with Gold */
+}
+
+.me-page .me-stat-val.gold {
+    color: #d4af37 !important;
+}
+
+/* Buttons */
+.me-page .me-btn.deposit {
+    background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%) !important;
+    color: #000 !important;
+    border: none !important;
+}
+
+.me-page .me-btn.withdraw {
+    background: #111 !important;
+    color: #d4af37 !important;
+    border: 1px solid #d4af37 !important;
+}
+
+/* Assets Grid */
+.me-page .me-as-card {
+    background: #1a1a1a !important;
+    border: 1px solid #222 !important;
+    transition: transform 0.2s;
+}
+
+.me-page .me-as-lbl {
+    color: #94a3b8 !important;
+}
+
+.me-page .me-as-val {
+    color: #ffffff !important;
+}
+
+/* Sub-label colors adaptation */
+.me-page .me-as-sub[style*="color: #3b82f6"] {
+    color: #d4af37 !important;
+}
+
+/* Invested -> Gold */
+.me-page .me-as-sub[style*="color: #db2777"] {
+    color: #d4af37 !important;
+}
+
+/* Bonus -> Gold */
+.me-page .me-as-sub[style*="color: #6366f1"] {
+    color: #64748b !important;
+}
+
+/* Loan -> Gray */
+
+/* Scores & Offers */
+.me-page .gauge-wrap .gauge-score-text {
+    color: #ffffff !important;
+}
+
+.me-page .gauge-svg path[stroke="#f1f5f9"] {
+    stroke: #2a2a2a !important;
+}
+
+.me-page .score-info-box {
+    background: #161616 !important;
+    color: #94a3b8 !important;
+    border-left: 3px solid #d4af37 !important;
+}
+
+.me-page .me-card [style*="background: #f8fafc"] {
+    background: #161616 !important;
+    /* Offers bg */
+    border-color: #222 !important;
+}
+
+.me-page .me-card [style*="color: #1e293b"] {
+    color: #e5e5e5 !important;
+}
+
+/* Applications Pills */
+.me-page .app-pill {
+    background: #1a1a1a !important;
+    color: #94a3b8 !important;
+    border: 1px solid #222 !important;
+}
+
+.me-page .app-pill.active {
+    background: #d4af37 !important;
+    color: #000 !important;
+    font-weight: 700 !important;
+}
+
+/* No Data State */
+.me-page .no-data-wrap {
+    color: #64748b !important;
+}
