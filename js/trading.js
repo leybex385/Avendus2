@@ -266,12 +266,33 @@ document.addEventListener("click", function (e) {
     }
 });
 
+window.openStockTrade = function (product) {
+    const productId = typeof product === 'string' ? product : (product.symbol || product.id);
+    if (typeof window.openOTCSubscribeModal === "function") {
+        window.openOTCSubscribeModal(productId);
+    }
+};
+
+window.openOTCSubscribe = function (product) {
+    const productId = typeof product === 'string' ? product : (product.symbol || product.id);
+    if (typeof window.openOTCSubscribeModal === "function") {
+        window.openOTCSubscribeModal(productId);
+    }
+};
+
+window.openIPOSubscribe = function (product) {
+    const productId = typeof product === 'string' ? product : (product.symbol || product.id);
+    if (typeof window.openOTCSubscribeModal === "function") {
+        window.openOTCSubscribeModal(productId);
+    }
+};
+
 /**
  * Opens the subscription/detail view for OTC/IPO products
  */
 window.openOTCSubscribeModal = function (productId) {
     if (!productId) return;
-    console.log("Opening OTC Subscription for:", productId);
+    console.log("Opening Subscription/Trade for:", productId);
 
     const me = window.MarketEngine;
     if (!me) {
@@ -285,13 +306,10 @@ window.openOTCSubscribeModal = function (productId) {
         return;
     }
 
-    console.log("Product Data:", product);
-
     if (typeof window.openStockDetail === "function") {
         const exchange = product.symbol.includes('NSE') ? 'NSE' : 'BSE';
         const priceStr = '₹' + product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
-        // Handle yield/profit display
         let changeStr = '';
         if (product.type === 'IPO' || product.type === 'OTC') {
             changeStr = product.yield || 'Live';
@@ -303,7 +321,7 @@ window.openOTCSubscribeModal = function (productId) {
 
         window.openStockDetail(product.symbol, product.name, exchange, priceStr, changeStr, color, product.type);
     } else {
-        console.error("openStockDetail not defined");
+        console.error("openStockDetail not defined on this page");
     }
 };
 
