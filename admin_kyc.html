@@ -793,9 +793,21 @@
                     size="18"></i> Institutional Stock 057</div>
             <div class="menu-item" onclick="toggleSub('subFinancial')"><i data-lucide="wallet" size="18"></i> Financial
                 Management <i data-lucide="chevron-down" size="14" style="margin-left:auto;"></i></div>
-            <div class="sub-menu" id="subFinancial">
+            <div class="sub-menu" id="subFinancialSub">
                 <div class="sub-item" id="btn_deposits" onclick="switchPage('deposits')">Deposit records</div>
-                <div class="sub-item" id="btn_withdrawals" onclick="switchPage('withdrawals')">Withdrawal records</div>
+
+                <!-- New Withdrawals Management Section -->
+                <div class="sub-item" onclick="toggleSub('withdrawals')" style="color: #3b82f6; font-weight: 600;">
+                    <i data-lucide="external-link" size="14"></i> Withdrawals
+                    <i data-lucide="chevron-down" size="14" style="margin-left:auto;"></i>
+                </div>
+                <div class="sub-menu" id="withdrawalsSub" style="padding-left: 20px;">
+                    <div class="sub-item" id="btn_withdrawals" onclick="switchPage('withdrawals')"
+                        style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px; margin: 5px 0; color: #1d4ed8; font-weight: 700; justify-content: center;">
+                        Withdrawal Requests
+                    </div>
+                </div>
+
                 <div class="sub-item" id="btn_loans" onclick="switchPage('loans')">Loan records</div>
                 <div class="sub-item" id="btn_rewards" onclick="switchPage('rewards')">Bonus Points Record</div>
             </div>
@@ -1172,22 +1184,22 @@
                                 <tr style="background:#f8fafc; text-align:left;">
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
-                                        ID</th>
+                                        User ID</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
-                                        User</th>
+                                        Username</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
                                         Amount</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
-                                        Bank</th>
+                                        Bank Account</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
                                         Status</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
-                                        Time</th>
+                                        Date Submitted</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
                                         Operate</th>
@@ -1683,7 +1695,7 @@
 
         const PAGE_NAMES = {
             'home': 'front page', 'kyc': 'Real-name authentication', 'users': 'Customer Management',
-            'deposits': 'Deposit records', 'withdrawals': 'Withdrawal records', 'loans': 'Loan records',
+            'deposits': 'Deposit records', 'withdrawals': 'Withdrawal Requests', 'loans': 'Loan records',
             'rewards': 'Bonus Points Record', 'stock': 'Stock trading', 'bulk': 'Large transactions',
             'ipo': 'IPO', 'fund': 'Fund trading', 'quant': 'Quantitative Trading', 'messages': 'Notification Center',
             'livechat': 'Customer Service Support', 'products': 'Product Management', 'stock057': 'Institutional Stock 057'
@@ -1766,32 +1778,43 @@
                 });
 
                 // Load Withdrawals/Deposits
-                fetchSafe('withdrawals', '*, users(mobile,username)', 100).then(data => {
+                fetchSafe('withdrawals', '*, users(id,mobile,username)', 100).then(data => {
                     const list = document.getElementById('withList');
                     if (!list) return;
                     list.innerHTML = data.length ? data.map(x => {
                         const statusColors = {
-                            'Pending': 'background:#fef3c7; color:#92400e;',
                             'Approved': 'background:#dcfce7; color:#166534;',
-                            'Rejected': 'background:#fee2e2; color:#991b1b;'
+                            'Rejected': 'background:#fee2e2; color:#991b1b;',
+                            'Pending': 'background:#fef3c7; color:#92400e;'
                         };
-                        const sStyle = statusColors[x.status] || 'background:#f1f5f9; color:#64748b;';
+                        const rawStatus = x.status || 'Pending';
+                        const displayStatus = rawStatus.toUpperCase();
+                        const sStyle = statusColors[rawStatus] || statusColors[displayStatus.charAt(0) + displayStatus.slice(1).toLowerCase()] || 'background:#f1f5f9; color:#64748b;';
+                        const uName = x.users?.username || x.users?.mobile || 'User';
                         return `
                         <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.username || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.amount).toFixed(2)}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.bank_name || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; ${sStyle}">${x.status}</span></td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.user_id}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${uName}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-weight:700;">₹${parseFloat(x.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                <div style="font-size:0.8rem; font-weight:600;">${x.bank_name || '-'}</div>
+                                <div style="font-size:0.7rem; color:#64748b;">${x.account_number || ''}</div>
+                            </td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; text-transform:uppercase; ${sStyle}">${displayStatus}</span></td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(x.created_at).toLocaleString('en-IN')}</td>
                              <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openWithdrawalEdit(${x.id}, '${x.users?.mobile || 'User'}', ${x.amount}, '${x.status}', '${x.admin_note || ''}')"></i></div>
+                                <div style="display:flex; gap:8px;">
+                                    ${displayStatus === 'PENDING' ? `
+                                        <button class="vsl-btn green" onclick="quickActionWithdraw(${x.id}, 'Approved')" style="padding:4px 8px; font-size:0.65rem;">Approve</button>
+                                        <button class="vsl-btn" onclick="quickActionWithdraw(${x.id}, 'Rejected')" style="padding:4px 8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                    ` : `
+                                        <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openWithdrawalEdit(${x.id}, '${uName}', ${x.amount}, '${rawStatus}', '${x.admin_note || ''}')"></i></div>
+                                    `}
+                                </div>
                             </td>
                         </tr>
                     `;
-                    }).join('') : '<tr><td colspan="9" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
+                    }).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
                     lucide.createIcons();
                 });
 
@@ -2650,17 +2673,15 @@
             }
         }
 
-        async function submitWithdrawalEdit() {
-            const wdId = document.getElementById('wd_id').value;
-            const status = document.getElementById('wd_status').value;
-            const note = document.getElementById('wd_note').value;
+        async function quickActionWithdraw(id, status) {
+            if (!confirm(`Are you sure you want to ${status} this withdrawal?`)) return;
+            const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
+            await processWithdrawal(id, status, note);
+        }
 
-            if (!wdId) return;
-            if (!confirm(`Update withdrawal status to ${status}?`)) return;
-
+        async function processWithdrawal(wdId, status, note) {
             showLoader(true);
             const client = DB.getClient();
-
             try {
                 // 1. Get existing record
                 const { data: existing, error: getErr } = await client.from('withdrawals').select('*').eq('id', wdId).single();
@@ -2675,6 +2696,7 @@
                 }
 
                 // 3. Update withdrawal record
+                console.log("DB UPDATE: withdrawals.id=" + wdId + " | status=" + status);
                 const { error: upErr } = await client.from('withdrawals').update({
                     status: status,
                     admin_note: note,
@@ -2682,8 +2704,17 @@
                 }).eq('id', wdId);
                 if (upErr) throw upErr;
 
-                alert("Withdrawal updated successfully!");
-                closeWithdrawalModal();
+                // 4. Send Notification
+                try {
+                    const noticePacket = JSON.stringify({
+                        title: status === 'Approved' ? 'Withdrawal Approved' : 'Withdrawal Rejected',
+                        body: `Your withdrawal request for ₹${parseFloat(existing.amount).toFixed(2)} has been ${status.toLowerCase()}. ${status === 'Rejected' ? 'The amount has been credited back to your balance.' : ''}`,
+                        is_notification: true
+                    });
+                    await client.from('messages').insert({ user_id: existing.user_id, message: noticePacket, sender: 'Admin' });
+                } catch (ne) { console.error("Notice Error:", ne); }
+
+                alert("Withdrawal successfully updated!");
                 init();
             } catch (e) {
                 console.error(e);
@@ -2691,6 +2722,18 @@
             } finally {
                 showLoader(false);
             }
+        }
+
+        async function submitWithdrawalEdit() {
+            const wdId = document.getElementById('wd_id').value;
+            const status = document.getElementById('wd_status').value;
+            const note = document.getElementById('wd_note').value;
+
+            if (!wdId) return;
+            if (!confirm(`Update withdrawal status to ${status}?`)) return;
+
+            await processWithdrawal(wdId, status, note);
+            closeWithdrawalModal();
         }
 
         async function updateTradeStatus(id, newStatus) {

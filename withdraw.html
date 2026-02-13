@@ -887,6 +887,8 @@
                     full_name: bank ? (bank.first_name + ' ' + bank.last_name) : ''
                 };
 
+                console.log("DB INSERT: withdrawals | status=Pending");
+
                 const res = await window.DB.submitWithdrawal(withdrawalData);
 
                 if (res.success) {
@@ -925,7 +927,13 @@
                 let query = client.from('withdrawals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
 
                 if (statusFilter !== 'All') {
-                    query = query.eq('status', statusFilter);
+                    const statusMap = {
+                        'Success': 'Approved',
+                        'Pending': 'Pending',
+                        'Rejected': 'Rejected'
+                    };
+                    const mappedStatus = statusMap[statusFilter] || statusFilter;
+                    query = query.eq('status', mappedStatus);
                 }
 
                 const { data: withdrawals, error } = await query;
@@ -946,7 +954,7 @@
                             </div>
                             <div class="record-status" style="text-align: right;">
                                 <div class="record-amount">₹${parseFloat(w.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-                                <span class="status-badge ${w.status.toLowerCase()}">${w.status}</span>
+                                <span class="status-badge ${(w.status || '').toLowerCase()}">${w.status === 'Approved' ? 'Success' : w.status}</span>
                             </div>
                         </div>
                         ${w.admin_note ? `
