@@ -5916,574 +5916,209 @@
 
         let currentAvatarData = null;
 
-        function previewAvatar(input) {
-            const previewCircle = document.getElementById('avatarPreviewCircle');
-            const uploadBtn = document.getElementById('uploadAvatarBtn');
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    currentAvatarData = e.target.result;
-                    previewCircle.innerHTML = `< img src = "${e.target.result}" alt = "Avatar Preview" > `;
-                    uploadBtn.classList.add('active');
-                    uploadBtn.removeAttribute('disabled');
-                    uploadBtn.style.backgroundColor = '#6366f1';
-                    uploadBtn.style.cursor = 'pointer';
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function uploadAvatar() {
-            const btn = document.getElementById('uploadAvatarBtn');
-            if (!btn.classList.contains('active')) return;
-
-            btn.innerText = 'Uploading...';
-
-            setTimeout(() => {
-                // Update avatar in settings modal
-                const settingsAvatars = document.querySelectorAll('.avatar-circle');
-                settingsAvatars.forEach(av => {
-                    av.innerHTML = `< img src = "${currentAvatarData}" style = "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" > `;
-                });
-
-                // Also update any other user-avatar elements if present (e.g. Me view or Header if implemented)
-                const otherAvatars = document.querySelectorAll('.user-avatar');
-                otherAvatars.forEach(av => {
-                    av.innerHTML = `< img src = "${currentAvatarData}" style = "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" >`;
-                });
-
-                alert('Avatar updated successfully!');
-                btn.innerText = 'Upload Avatar';
-                closeUpdateAvatar();
-                openSettings(); // Re-open settings to show the updated avatar
-            }, 1000);
-        }
-
-
-        // Internal Reset Password Logic (Renamed to prevent conflict with any older logic)
-        function openInternalResetPassword() {
-            // Keep settings open behind
-            document.getElementById('resetPasswordModal').style.display = 'flex';
-            lucide.createIcons();
-        }
-
-        function closeInternalResetPassword() {
-            document.getElementById('resetPasswordModal').style.display = 'none';
-        }
-
-        function togglePassVisibility(inputId, iconElement) {
-            const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                iconElement.setAttribute('data-lucide', 'eye'); // Change logic if needed, but simple attribute switch works with re-render or just class
-                // Simpler: just changing icon class or reliable attribute
-                // For lucide, we might need to remove and re-add element or just rely on click
-                // Let's use a simpler approach for the icon if lucide doesn't auto-update on attr change without re-run
-                iconElement.style.color = '#3b82f6'; // highlight
-            } else {
-                input.type = "password";
-                iconElement.style.color = '#94a3b8';
-            }
-        }
-
-        function submitPasswordChange() {
-            const current = document.getElementById('cpCurrent').value;
-            const newP = document.getElementById('cpNew').value;
-            const confirmP = document.getElementById('cpConfirm').value;
-
-            if (!current || !newP || !confirmP) {
-                alert('Please fill all fields');
-                return;
-            }
-
-            if (newP !== confirmP) {
-                alert('New passwords do not match');
-                return;
-            }
-
-            const btn = document.getElementById('cpSubmitBtn');
-            btn.innerText = 'Updating...';
-
-            setTimeout(() => {
-                alert('Password Changed Successfully! Please login again.');
-                window.location.href = 'index.html'; // Logout user
-            }, 1500);
-        }
-
-        // KYC Logic
-        function openKYC() {
-            // Keep settings open behind
-            document.getElementById('kycModal').style.display = 'flex';
-            lucide.createIcons();
-        }
-
-        function closeKYC() {
-            document.getElementById('kycModal').style.display = 'none';
-        }
-
-        function previewKYCImage(input, previewId, iconId) {
-            const preview = document.getElementById(previewId);
-            const icon = document.getElementById(iconId);
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    icon.style.display = 'none';
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function submitKYC() {
-            const name = document.getElementById('kycName').value;
-            const idDoc = document.getElementById('kycID').value;
-            const mobile = document.getElementById('kycMobile').value;
-
-            if (!name || !idDoc || !mobile) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-
-            const btn = document.querySelector('.kyc-submit-btn');
-            btn.innerText = 'Submitting...';
-            btn.style.opacity = '0.7';
-
-            setTimeout(() => {
-                alert('KYC Document Submitted Successfully! Please wait for approval.');
-                btn.innerText = 'Submit';
-                btn.style.opacity = '1';
-                closeKYC();
-                syncUserData(); // Sync name change if any
-            }, 1500);
-        }
-
-        // Edit Name Modal Logic
-        function openEditNameModal() {
+        // Consolidate Page-Specific Sync with Global State
+        window.syncUserData = async function () {
             const user = DB.getCurrentUser();
             if (!user) return;
-            document.getElementById('editNameInput').value = user.name || '';
-            document.getElementById('editNameModal').style.display = 'flex';
-            lucide.createIcons();
-        }
 
-        function closeEditNameModal() {
-            document.getElementById('editNameModal').style.display = 'none';
-        }
+            // 1. Run Global Synchronization (Handles Avatar, Global Name, Balance, etc.)
+            if (window.loadUserAssets) await window.loadUserAssets(user.id);
 
-        async function saveName() {
-            const newName = document.getElementById('editNameInput').value.trim();
-            if (!newName) {
-                alert('Please enter a name');
-                return;
-            }
-
-            const btn = document.getElementById('saveNameBtn');
-            btn.innerText = 'Saving...';
-            btn.disabled = true;
-
-            try {
-                const user = DB.getCurrentUser();
-                const result = await DB.updateUser(user.id, {
-                    full_name: newName,
-                    username: newName,
-                    name: newName
-                });
-                if (result.success) {
-                    // Update Local Storage immediately
-                    user.full_name = newName;
-                    user.username = newName;
-                    user.name = newName;
-                    localStorage.setItem(DB.CURRENT_USER_KEY, JSON.stringify(user));
-
-                    alert('Name updated successfully!');
-                    syncUserData(); // Update Me page immediately
-                    closeEditNameModal();
-                } else {
-                    alert('Error: ' + (result.error?.message || 'Failed to update name'));
-                }
-            } catch (e) {
-                console.error(e);
-                alert('An error occurred.');
-            } finally {
-                btn.innerText = 'Save Name';
-                btn.disabled = false;
-            }
-        }
-
-        // Sync User Data to UI
-        async function syncUserData() {
-            const user = DB.getCurrentUser();
-
-            // Toggle auth lock overlays instead of redirecting
-            const lockedElements = document.querySelectorAll('.auth-locked-container');
-            if (!user) {
-                lockedElements.forEach(el => el.classList.add('is-locked'));
-                return;
-            } else {
-                lockedElements.forEach(el => el.classList.remove('is-locked'));
-            }
-
-            // Refresh transactions if on Transaction view or in background
-            if (typeof fetchUserTransactions === 'function') {
-                await fetchUserTransactions();
-                const activeTab = document.querySelector('#transactionTabs .d-tab-pill.active');
-                if (activeTab) {
-                    const tabName = activeTab.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-                    if (tabName) switchTransactionTab(activeTab, tabName);
-                }
-            }
-
-            // Remote DB sync for latest balance and pending items
-            const client = DB.getClient();
-            let dbUser = user;
-            let effectiveBalance = parseFloat(user.balance) || 0;
-
-            if (client) {
-                try {
-                    const { data: remoteUser } = await client.from('users').select('*').eq('id', user.id).single();
-                    if (remoteUser) {
-                        dbUser = remoteUser;
-                        effectiveBalance = parseFloat(remoteUser.balance) || 0;
-
-                        // Calculate Effective Balance
-                        const [pD, pW, pT] = await Promise.all([
-                            client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
-                            client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
-                            client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
-                        ]);
-
-                        const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-                        const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
-                        const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
-
-                        effectiveBalance = effectiveBalance + lockedDeposits - lockedWithdrawals - lockedTrades;
-                        if (effectiveBalance < 0) effectiveBalance = 0;
-                    }
-                } catch (e) {
-                    console.error("Market Sync Error:", e);
-                }
-            }
-
-            // Update Profile Section (Me View)
-            const meDisplayName = document.getElementById('meUserDisplayName');
-            const meFullName = document.getElementById('meFullName');
-            const meUsername = document.getElementById('meUsername');
-            const meAvatar = document.getElementById('meAvatarInitials');
-            const meCredit = document.getElementById('meCreditScore');
-            const meVip = document.getElementById('meVipLevel');
-
-            const displayName = dbUser.full_name || dbUser.name || dbUser.mobile || 'User';
-            if (meDisplayName) meDisplayName.textContent = displayName;
-            if (meFullName) meFullName.textContent = dbUser.full_name || dbUser.name || '-';
-            if (meUsername) meUsername.textContent = dbUser.username || dbUser.mobile || '-';
-
-            if (meAvatar) {
-                const firstChar = displayName.charAt(0).toUpperCase();
-                meAvatar.textContent = (isNaN(firstChar) ? firstChar : 'U');
-            }
-            if (meCredit) meCredit.textContent = dbUser.credit_score || 0;
-            if (meVip) meVip.textContent = dbUser.vip || 0;
-
-            // Update KYC Status Badge
-            const meKycBadge = document.getElementById('meKycStatusBadge');
-            if (meKycBadge) {
-                const status = dbUser.kyc || 'Not Verified';
-                meKycBadge.textContent = status;
-                meKycBadge.className = '';
-                if (status === 'Approved') meKycBadge.className = 'kyc-approved';
-                else if (status === 'Pending') meKycBadge.className = 'kyc-pending';
-                else if (status === 'Rejected') meKycBadge.className = 'kyc-rejected';
-                else meKycBadge.className = 'kyc-not-verified';
-            }
-
-            const formats = { minimumFractionDigits: 2 };
-            // FIX: Use RAW DB Balance everywhere for "Available Balance" display
-            // ignoring pending items so user sees exactly what Admin set.
+            // 2. Perform Discovery/Me Specific UI sync
+            const dbUser = DB.getCurrentUser(); // Latest state
             const rawBalance = parseFloat(dbUser.balance) || 0;
-
-            // Helper to safe-fit text
-            const fitText = (el, text) => {
-                el.textContent = text;
-                el.setAttribute('data-val', text);
-                el.title = text; // Tooltip for full precision
-
-                // Reset style
-                el.style.fontSize = '';
-                el.style.whiteSpace = 'nowrap';
-                el.style.overflow = 'hidden';
-                el.style.textOverflow = 'ellipsis';
-                el.style.display = 'block';
-
-                // Dynamic sizing based on length
-                if (text.length > 28) el.style.fontSize = '0.6rem';
-                else if (text.length > 22) el.style.fontSize = '0.7rem';
-                else if (text.length > 16) el.style.fontSize = '0.8rem';
-            };
-
-            const updateVal = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    const fmt = '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    fitText(el, fmt);
-                }
-            };
-
-            updateVal('meAvailableBalance', rawBalance);
-
             const inv = parseFloat(dbUser.invested) || 0;
             const frozen = parseFloat(dbUser.frozen) || 0;
             const loan = parseFloat(dbUser.loan) || 0;
             const bonus = parseFloat(dbUser.bonus) || 0;
 
-            // RECONCILIATION: Calculate Outstanding from Trades as the Source of Truth
-            let outstanding = parseFloat(dbUser.outstanding) || 0;
-            if (typeof transactionData !== 'undefined' && transactionData.all && transactionData.all.length > 0) {
-                const calculatedOutstanding = transactionData.all
-                    .filter(t => t.status === 'Pending' && (t.admin_note || "").startsWith('OUTSTANDING'))
-                    .reduce((sum, t) => {
-                        const total = parseFloat(t.total_amount);
-                        const note = t.admin_note || "";
-                        let paid = 0;
-                        if (note.startsWith('OUTSTANDING:')) {
-                            paid = parseFloat(note.split(':')[1]) || 0;
-                        } else {
-                            paid = total * 0.85;
-                        }
-                        return sum + (total - paid);
-                    }, 0);
-
-                // Use calculated value for the UI
-                outstanding = calculatedOutstanding;
-
-                // Silently sync DB if mismatch detected
-                if (Math.abs(calculatedOutstanding - (parseFloat(dbUser.outstanding) || 0)) > 1) {
-                    console.log("Auditor (Sync): Correcting database mismatch silently.");
-                    window.DB.updateUserFinancials(dbUser.id, dbUser.balance, dbUser.invested, calculatedOutstanding);
+            const updateVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
-            }
+            };
 
+            updateVal('meAvailableBalance', rawBalance);
             updateVal('meCurrentInvestments', inv);
             updateVal('meFrozenFunds', frozen);
             updateVal('meBorrowedFunds', loan);
             updateVal('meBonusCredits', bonus);
-            updateVal('mePendingSettlement', outstanding);
 
             // Update sidebar assets
             const assetAmounts = document.querySelectorAll('.asset-amount');
             if (assetAmounts.length >= 6) {
-                // Map values to the 6 grid items in order:
-                // 1. Available (Cash)
-                // 2. Invested (Invested)
-                // 3. Bonus (Credit)
-                // 4. Frozen (Pending)
-                // 5. Loan (Funds)
-                // 6. Pending (Settle) -> This is actually Outstanding
-
-                const fmtRaw = '₹' + rawBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const fmtInv = '₹' + inv.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const fmtBonus = '₹' + bonus.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const fmtFrozen = '₹' + frozen.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const fmtLoan = '₹' + loan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const fmtOut = '₹' + outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-                fitText(assetAmounts[0], fmtRaw);
-                fitText(assetAmounts[1], fmtInv);
-                fitText(assetAmounts[2], fmtBonus);
-                fitText(assetAmounts[3], fmtFrozen);
-                fitText(assetAmounts[4], fmtLoan);
-                fitText(assetAmounts[5], fmtOut);
+                updateVal('meAvailableBalance', rawBalance); // redundant but safe
+                assetAmounts[0].textContent = '₹' + rawBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                assetAmounts[1].textContent = '₹' + inv.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                assetAmounts[2].textContent = '₹' + bonus.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                assetAmounts[3].textContent = '₹' + frozen.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                assetAmounts[4].textContent = '₹' + loan.toLocaleString('en-IN', { minimumFractionDigits: 2 });
             }
 
-            // Update Portfolio View Invested Amounts
-            const formattedRawBal = '₹' + rawBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const formattedInv = '₹' + inv.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (window.lucide) window.lucide.createIcons();
+        };
 
-            // Update p-asset-val elements in Portfolio view
-            // Use ID targeting for precision
-            const updatePortfolioVal = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    const fmt = '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    fitText(el, fmt);
+        // Initialize sync on load
+        if (DB.getCurrentUser()) syncUserData();
+
+        // Update Portfolio View Invested Amounts
+        const formattedRawBal = '₹' + rawBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formattedInv = '₹' + inv.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Update p-asset-val elements in Portfolio view
+        // Use ID targeting for precision
+        const updatePortfolioVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) {
+                const fmt = '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                fitText(el, fmt);
+            }
+        };
+
+        updatePortfolioVal('pAvailableBalance', rawBalance);
+
+        updatePortfolioVal('pCurrentInvested', inv);
+        updatePortfolioVal('pPromoCredits', bonus);
+        updatePortfolioVal('pPendingFunds', frozen);
+        updatePortfolioVal('pBorrowedFunds', loan);
+        updatePortfolioVal('pPendingSettlement', outstanding);
+
+        // Legacy Loop for safety (if IDs missing on some copies)
+        // But skip elements that have IDs since we handled them above
+        document.querySelectorAll('.p-asset-val').forEach(el => {
+            if (el.id) return; // Skip if ID exists (handled above)
+
+            const label = el.previousElementSibling?.textContent;
+            if (label === 'Available Balance') {
+                el.textContent = formattedRawBal;
+                el.setAttribute('data-val', formattedRawBal);
+            } else if (label === 'Current Investments') {
+                el.textContent = formattedInv;
+                el.setAttribute('data-val', formattedInv);
+            }
+        });
+
+        updateVal('pInvestedMain', inv);
+
+        updateVal('pPortfolioTotal', inv);
+
+        updateVal('pCircleText', inv);
+
+        updateVal('pInsStockVal', inv);
+
+        updateVal('pStatsInvested', inv);
+        updateVal('pStatsCurrentValue', inv);
+
+        // --- PORTFOLIO DASHBOARD ENHANCEMENTS ---
+        // Calculate Total Profit & ROI for the charts
+        let totalProfit = 0;
+        let tradesCount = 0;
+
+        if (typeof transactionData !== 'undefined' && transactionData.holding) {
+            tradesCount = transactionData.holding.length;
+            transactionData.holding.forEach(item => {
+                // Use actual market price if available
+                const liveProd = (window.MarketEngine && window.MarketEngine.getProduct) ? window.MarketEngine.getProduct(item.symbol) : null;
+                const currentPrice = liveProd ? liveProd.price : parseFloat(item.price);
+                const profit = (currentPrice * item.quantity) - parseFloat(item.total_amount);
+                totalProfit += profit;
+            });
+        }
+
+        const roiPercent = inv > 0 ? (totalProfit / inv) * 100 : 0;
+
+        // Update Text Elements
+        updateVal('pProfitMain', totalProfit);
+
+        const roiEl = document.getElementById('pROIMain');
+        if (roiEl) {
+            roiEl.textContent = (roiPercent >= 0 ? '+' : '') + roiPercent.toFixed(2) + '%';
+            roiEl.style.color = roiPercent >= 0 ? '#10b981' : '#ef4444';
+        }
+
+        const tradesCountEl = document.getElementById('pTradesCount');
+        if (tradesCountEl) tradesCountEl.textContent = tradesCount;
+
+        updateVal('pTradesProfit', totalProfit);
+
+        // Animate Donut Chart
+        // The donut shows profit ratio relative to investment (capped at 100% for visual)
+        const donutCircle = document.getElementById('pDonutCircle');
+        const donutPctLabel = document.getElementById('pDonutPct');
+        if (donutCircle) {
+            let profitRatio = Math.min(Math.max(totalProfit / (inv || 1), 0), 1);
+            // Ensure a visual sliver if profit exists but is proportionately tiny
+            if (totalProfit > 0 && profitRatio < 0.01) profitRatio = 0.01;
+
+            const offset = 251.2 * (1 - profitRatio);
+            donutCircle.style.strokeDashoffset = offset;
+            if (donutPctLabel) {
+                const displayPct = (totalProfit / (inv || 1) * 100);
+                donutPctLabel.textContent = (displayPct < 0.01 && totalProfit > 0 ? '<0.01' : displayPct.toFixed(displayPct < 1 ? 2 : 0)) + '%';
+            }
+        }
+
+        // Animate Gauge Needle
+        // Map ROI -10% to +10% to the gauge 0-100%
+        const gaugeNeedle = document.getElementById('pGaugeNeedle');
+        if (gaugeNeedle) {
+            // Normalize ROI to a value between 0 and 1
+            // -10% (0) | 0% (0.5) | +10% (1.0)
+            let normalizedROI = (roiPercent + 10) / 20;
+            normalizedROI = Math.min(Math.max(normalizedROI, 0), 1);
+            const angle = -90 + (normalizedROI * 180);
+            gaugeNeedle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+        }
+
+        // Sync Stats View
+        const statsROI = document.getElementById('pStatsROI');
+        if (statsROI) {
+            statsROI.textContent = (roiPercent >= 0 ? '+' : '') + roiPercent.toFixed(2) + '%';
+        }
+
+        // Calculate Top Gainer/Loser
+        if (typeof transactionData !== 'undefined' && transactionData.holding && transactionData.holding.length > 0) {
+            let gainer = null, loser = null;
+            let maxProfitPct = -Infinity, maxLossPct = Infinity;
+
+            transactionData.holding.forEach(item => {
+                const liveProd = (window.MarketEngine && window.MarketEngine.getProduct) ? window.MarketEngine.getProduct(item.symbol) : null;
+                const currentPrice = liveProd ? liveProd.price : parseFloat(item.price);
+                const profit = (currentPrice * item.quantity) - parseFloat(item.total_amount);
+                const profitPct = (profit / parseFloat(item.total_amount)) * 100;
+
+                if (profitPct > maxProfitPct) {
+                    maxProfitPct = profitPct;
+                    gainer = { ...item, currentPrice, profit, profitPct };
                 }
-            };
-
-            updatePortfolioVal('pAvailableBalance', rawBalance);
-
-            updatePortfolioVal('pCurrentInvested', inv);
-            updatePortfolioVal('pPromoCredits', bonus);
-            updatePortfolioVal('pPendingFunds', frozen);
-            updatePortfolioVal('pBorrowedFunds', loan);
-            updatePortfolioVal('pPendingSettlement', outstanding);
-
-            // Legacy Loop for safety (if IDs missing on some copies)
-            // But skip elements that have IDs since we handled them above
-            document.querySelectorAll('.p-asset-val').forEach(el => {
-                if (el.id) return; // Skip if ID exists (handled above)
-
-                const label = el.previousElementSibling?.textContent;
-                if (label === 'Available Balance') {
-                    el.textContent = formattedRawBal;
-                    el.setAttribute('data-val', formattedRawBal);
-                } else if (label === 'Current Investments') {
-                    el.textContent = formattedInv;
-                    el.setAttribute('data-val', formattedInv);
+                if (profitPct < maxLossPct) {
+                    maxLossPct = profitPct;
+                    loser = { ...item, currentPrice, profit, profitPct };
                 }
             });
 
-            updateVal('pInvestedMain', inv);
-
-            updateVal('pPortfolioTotal', inv);
-
-            updateVal('pCircleText', inv);
-
-            updateVal('pInsStockVal', inv);
-
-            updateVal('pStatsInvested', inv);
-            updateVal('pStatsCurrentValue', inv);
-
-            // --- PORTFOLIO DASHBOARD ENHANCEMENTS ---
-            // Calculate Total Profit & ROI for the charts
-            let totalProfit = 0;
-            let tradesCount = 0;
-
-            if (typeof transactionData !== 'undefined' && transactionData.holding) {
-                tradesCount = transactionData.holding.length;
-                transactionData.holding.forEach(item => {
-                    // Use actual market price if available
-                    const liveProd = (window.MarketEngine && window.MarketEngine.getProduct) ? window.MarketEngine.getProduct(item.symbol) : null;
-                    const currentPrice = liveProd ? liveProd.price : parseFloat(item.price);
-                    const profit = (currentPrice * item.quantity) - parseFloat(item.total_amount);
-                    totalProfit += profit;
-                });
+            if (gainer) {
+                const gName = document.getElementById('pGainerName');
+                if (gName) gName.textContent = gainer.name;
+                updateVal('pGainerVal', gainer.currentPrice);
+                const gPct = document.getElementById('pGainerPct');
+                if (gPct) gPct.innerHTML = `<i data-lucide="arrow-up" size="12"></i> ${gainer.profitPct.toFixed(2)}%`;
             }
 
-            const roiPercent = inv > 0 ? (totalProfit / inv) * 100 : 0;
-
-            // Update Text Elements
-            updateVal('pProfitMain', totalProfit);
-
-            const roiEl = document.getElementById('pROIMain');
-            if (roiEl) {
-                roiEl.textContent = (roiPercent >= 0 ? '+' : '') + roiPercent.toFixed(2) + '%';
-                roiEl.style.color = roiPercent >= 0 ? '#10b981' : '#ef4444';
+            if (loser) {
+                const lName = document.getElementById('pLoserName');
+                if (lName) lName.textContent = loser.name;
+                updateVal('pLoserVal', loser.currentPrice);
+                const lPct = document.getElementById('pLoserPct');
+                if (lPct) lPct.innerHTML = `<i data-lucide="arrow-down" size="12"></i> ${loser.profitPct.toFixed(2)}%`;
             }
-
-            const tradesCountEl = document.getElementById('pTradesCount');
-            if (tradesCountEl) tradesCountEl.textContent = tradesCount;
-
-            updateVal('pTradesProfit', totalProfit);
-
-            // Animate Donut Chart
-            // The donut shows profit ratio relative to investment (capped at 100% for visual)
-            const donutCircle = document.getElementById('pDonutCircle');
-            const donutPctLabel = document.getElementById('pDonutPct');
-            if (donutCircle) {
-                let profitRatio = Math.min(Math.max(totalProfit / (inv || 1), 0), 1);
-                // Ensure a visual sliver if profit exists but is proportionately tiny
-                if (totalProfit > 0 && profitRatio < 0.01) profitRatio = 0.01;
-
-                const offset = 251.2 * (1 - profitRatio);
-                donutCircle.style.strokeDashoffset = offset;
-                if (donutPctLabel) {
-                    const displayPct = (totalProfit / (inv || 1) * 100);
-                    donutPctLabel.textContent = (displayPct < 0.01 && totalProfit > 0 ? '<0.01' : displayPct.toFixed(displayPct < 1 ? 2 : 0)) + '%';
-                }
-            }
-
-            // Animate Gauge Needle
-            // Map ROI -10% to +10% to the gauge 0-100%
-            const gaugeNeedle = document.getElementById('pGaugeNeedle');
-            if (gaugeNeedle) {
-                // Normalize ROI to a value between 0 and 1
-                // -10% (0) | 0% (0.5) | +10% (1.0)
-                let normalizedROI = (roiPercent + 10) / 20;
-                normalizedROI = Math.min(Math.max(normalizedROI, 0), 1);
-                const angle = -90 + (normalizedROI * 180);
-                gaugeNeedle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
-            }
-
-            // Sync Stats View
-            const statsROI = document.getElementById('pStatsROI');
-            if (statsROI) {
-                statsROI.textContent = (roiPercent >= 0 ? '+' : '') + roiPercent.toFixed(2) + '%';
-            }
-
-            // Calculate Top Gainer/Loser
-            if (typeof transactionData !== 'undefined' && transactionData.holding && transactionData.holding.length > 0) {
-                let gainer = null, loser = null;
-                let maxProfitPct = -Infinity, maxLossPct = Infinity;
-
-                transactionData.holding.forEach(item => {
-                    const liveProd = (window.MarketEngine && window.MarketEngine.getProduct) ? window.MarketEngine.getProduct(item.symbol) : null;
-                    const currentPrice = liveProd ? liveProd.price : parseFloat(item.price);
-                    const profit = (currentPrice * item.quantity) - parseFloat(item.total_amount);
-                    const profitPct = (profit / parseFloat(item.total_amount)) * 100;
-
-                    if (profitPct > maxProfitPct) {
-                        maxProfitPct = profitPct;
-                        gainer = { ...item, currentPrice, profit, profitPct };
-                    }
-                    if (profitPct < maxLossPct) {
-                        maxLossPct = profitPct;
-                        loser = { ...item, currentPrice, profit, profitPct };
-                    }
-                });
-
-                if (gainer) {
-                    const gName = document.getElementById('pGainerName');
-                    if (gName) gName.textContent = gainer.name;
-                    updateVal('pGainerVal', gainer.currentPrice);
-                    const gPct = document.getElementById('pGainerPct');
-                    if (gPct) gPct.innerHTML = `<i data-lucide="arrow-up" size="12"></i> ${gainer.profitPct.toFixed(2)}%`;
-                }
-
-                if (loser) {
-                    const lName = document.getElementById('pLoserName');
-                    if (lName) lName.textContent = loser.name;
-                    updateVal('pLoserVal', loser.currentPrice);
-                    const lPct = document.getElementById('pLoserPct');
-                    if (lPct) lPct.innerHTML = `<i data-lucide="arrow-down" size="12"></i> ${loser.profitPct.toFixed(2)}%`;
-                }
-            }
-
-            // Sync Allocation
-            updateVal('pAllocInstVal', inv);
-            const allocChg = document.getElementById('pAllocInstChg');
-            if (allocChg) {
-                const liveTotalVal = inv + totalProfit;
-                allocChg.innerHTML = `<i data-lucide="${totalProfit >= 0 ? 'arrow-up' : 'arrow-down'}" size="10"></i> ${totalProfit >= 0 ? '+' : '-'}₹${Math.abs(totalProfit).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${roiPercent.toFixed(2)}%)`;
-                allocChg.style.color = totalProfit >= 0 ? '#10b981' : '#ef4444';
-            }
-            // ----------------------------------------
-
-            // Update Buy Widget Balance Info
-            const fundStatus = document.getElementById('fundStatus');
-            if (fundStatus) {
-                fundStatus.textContent = `Available: ${formattedRawBal}`;
-                fundStatus.style.color = rawBalance > 0 ? '#10b981' : '#ef4444';
-            }
-
-            // Update Settings Modal Profile
-            const setPhone = document.querySelector('.settings-phone');
-            if (setPhone) setPhone.textContent = user.mobile || user.id;
-
-            const setName = document.querySelector('.settings-name');
-            if (setName) setName.textContent = user.full_name || user.name || user.mobile || 'User';
-
-            // Update Settings Avatar Initials
-            if (setAvatar && !setAvatar.querySelector('img')) {
-                const firstChar = (user.full_name || user.name || user.mobile || 'U').charAt(0).toUpperCase();
-                setAvatar.textContent = (isNaN(firstChar) ? firstChar : 'U');
-            }
-
-            lucide.createIcons();
         }
+
+        // Sync Allocation
+        updateVal('pAllocInstVal', inv);
+
+
 
         // Financial Audit & Self-Healing Logic
         window.auditFinancials = async function (btn) {

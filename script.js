@@ -337,7 +337,8 @@ function checkLoginStatus() {
 
         if (loggedOutBanner) loggedOutBanner.style.display = 'none';
 
-        // If the inline script `syncUserData` exists, it will run automatically to update values
+        // Ensure user data is synced globally on load
+        if (window.syncUserData) window.syncUserData();
     } else {
         // Show Login Buttons
         if (promoActions) promoActions.style.display = 'flex';
@@ -776,8 +777,9 @@ window.uploadAvatar = async function () {
             user.avatar_url = newSrc;
             localStorage.setItem('avendus_current_user', JSON.stringify(user));
 
-            document.querySelectorAll('.user-avatar, .avatar-circle').forEach(el => {
+            document.querySelectorAll('.user-avatar, .avatar-circle, .me-p-avatar').forEach(el => {
                 el.innerHTML = `<img src="${newSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                el.style.background = 'none';
             });
 
             if (result.success) {
@@ -787,6 +789,7 @@ window.uploadAvatar = async function () {
                 console.warn("Avatar saved locally but failed to sync to cloud. If this persists, run the SQL command provided to add the avatar_url column.", result.error?.message);
             }
 
+            if (window.syncUserData) window.syncUserData();
             window.closeAvatarModal();
         } catch (e) {
             console.error(e);
@@ -1098,11 +1101,84 @@ window.loadUserAssets = async function (userId) {
         // Update LocalStorage to keep session fresh
         localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(dbUser));
 
+        // --- Sync Profile Information (Name & Avatar) ---
+        const fullName = dbUser.full_name || dbUser.username || 'User';
+        const initials = (fullName.charAt(0) || 'U').toUpperCase();
+
+        // Update Name Displays across pages
+        const nameTargets = [
+            document.getElementById('meUserDisplayName'),
+            document.getElementById('meFullName'),
+            document.getElementById('meUsername'),
+            document.querySelector('.settings-name'),
+            document.querySelector('.user-greeting h3')
+        ];
+
+        nameTargets.forEach(el => {
+            if (el) {
+                if (el.tagName === 'H3' && el.parentElement.classList.contains('user-text')) {
+                    el.textContent = 'Welcome ' + fullName;
+                } else if (el.id === 'meFullName') {
+                    el.textContent = dbUser.full_name || '-';
+                } else if (el.id === 'meUsername') {
+                    el.textContent = dbUser.username || '-';
+                } else {
+                    el.textContent = fullName;
+                }
+            }
+        });
+
+        // Update Avatar Displays across pages
+        const activeAvatar = dbUser.avatar_url || dbUser.profile_image;
+        const avatarEls = document.querySelectorAll('.user-avatar, .avatar-circle, .me-p-avatar, #settingsAvatar');
+
+        avatarEls.forEach(el => {
+            if (activeAvatar && activeAvatar.length > 10 && !activeAvatar.includes('placeholder')) {
+                el.innerHTML = `<img src="${activeAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                el.style.background = 'none';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+                el.style.overflow = 'hidden';
+            } else {
+                el.innerHTML = initials;
+                el.style.background = '';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+            }
+        });
+
         if (window.lucide) window.lucide.createIcons();
     } catch (e) {
         console.error("loadUserAssets Exception:", e);
     }
 };
+
+// --- Settings UI Helpers (Centralized) ---
+window.toggleSettingsAccordion = function (element, id) {
+    const subMenu = document.getElementById(id);
+    const chevron = element.querySelector('.settings-chevron');
+    if (!subMenu) return;
+    subMenu.classList.toggle('active');
+    if (subMenu.classList.contains('active')) {
+        subMenu.style.maxHeight = subMenu.scrollHeight + "px";
+    } else {
+        subMenu.style.maxHeight = null;
+    }
+    if (chevron) {
+        chevron.classList.toggle('rotated');
+    }
+};
+
+window.openUpdateAvatar = function () { window.openAvatarModal(); };
+window.closeUpdateAvatar = function () { window.closeAvatarModal(); };
+window.openInternalResetPassword = function () { window.openResetPassword(); };
+window.closeInternalResetPassword = function () { window.closeResetPassword(); };
+window.togglePassVisibility = function (id, el) { window.toggleInternalPass(id, el); };
+window.submitPasswordChange = function () { window.handleInternalReset(); };
+window.openKYC = function () { window.openKYCModal(); };
+window.closeKYC = function () { window.closeKYCModal(); };
 
 // Backwards compatibility alias
 if (!window.syncUserData) {
