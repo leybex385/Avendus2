@@ -173,13 +173,7 @@
         <!-- Premium Video Featured Section -->
         <div class="video-promo-section">
             <div class="video-container" id="videoWrapper">
-                <video id="promoVideo" loop muted playsinline autoplay
-                    poster="https://images.pexels.com/photos/6801874/pexels-photo-6801874.jpeg?auto=compress&cs=tinysrgb&w=3840&h=2160&dpr=1">
-                    <source
-                        src="https://player.vimeo.com/external/494163966.sd.mp4?s=7b9e6f3d9f285d8d0c83a1d6a9e1e8d9b1c9c8a2&profile_id=164"
-                        type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
+                <canvas id="matrixCanvas"></canvas>
 
                 <!-- Video Overlays -->
                 <div class="video-overlay">
@@ -815,7 +809,99 @@
                 if (btn) btn.style.display = user ? 'flex' : 'none';
             };
             updateCSRVisibility();
+            // Matrix Hero Animation
+            // Matrix Hero Animation (Slow & Cinematic)
+            (function () {
+                const canvas = document.getElementById('matrixCanvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let width, height;
+                const symbols = ['₹', '%', 'NIFTY', 'SENSEX', 'BUY', 'SELL', 'NSE', 'BSE', '+1.25%', '-0.87%', '78,250', '24,500'];
+                const fontSize = 18; // Larger for elegance
+                let columns = 0;
+                let drops = []; // Stores {y, speed, offset}
+
+                function resize() {
+                    width = canvas.width = canvas.parentElement.offsetWidth;
+                    height = canvas.height = canvas.parentElement.offsetHeight;
+                    columns = Math.floor(width / fontSize);
+                    drops = [];
+                    for (let i = 0; i < columns; i++) {
+                        drops[i] = {
+                            y: Math.random() * -100,
+                            speed: 0.15 + Math.random() * 0.35, // Very slow descent
+                            offset: Math.random() * 100 // For unique sine wave drift
+                        };
+                    }
+                }
+
+                let lastTime = 0;
+                const fps = 30; // Smooth cinematic framerate
+                const interval = 1000 / fps;
+
+                function animate(currentTime) {
+                    requestAnimationFrame(animate);
+
+                    const delta = currentTime - lastTime;
+                    if (delta < interval) return;
+
+                    lastTime = currentTime - (delta % interval);
+
+                    // Soft fade trail - reduced alpha for longer, smoother trails
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+                    ctx.fillRect(0, 0, width, height);
+
+                    ctx.font = '500 ' + fontSize + 'px "Exo 2", sans-serif'; // Premium font if available, else standard
+
+                    for (let i = 0; i < drops.length; i++) {
+                        const text = symbols[Math.floor(Math.random() * symbols.length)];
+
+                        // Subtle horizontal drift
+                        const drift = Math.sin((Date.now() / 2000) + drops[i].offset) * 2;
+                        const x = i * fontSize + drift;
+                        const y = drops[i].y * fontSize;
+
+                        // Premium Gold Palette
+                        const colorRandom = Math.random();
+                        if (colorRandom > 0.6) ctx.fillStyle = '#d4af37'; // Gold
+                        else if (colorRandom > 0.3) ctx.fillStyle = '#b8860b'; // Dark Goldenrod
+                        else ctx.fillStyle = 'rgba(212, 175, 55, 0.4)'; // Faint Gold
+
+                        ctx.fillText(text, x, y);
+
+                        // Reset when off screen
+                        if (y > height && Math.random() > 0.98) {
+                            drops[i].y = -5;
+                            drops[i].speed = 0.15 + Math.random() * 0.35; // New random speed
+                        }
+
+                        drops[i].y += drops[i].speed;
+                    }
+                }
+
+                window.addEventListener('resize', resize);
+                resize();
+                requestAnimationFrame(animate);
+            })();
+
             if (typeof syncUserData === 'function') syncUserData();
+
+            // Hero Interactive Glow
+            const heroAnimate = document.getElementById('heroAnimate');
+            const mouseGlow = document.getElementById('mouseGlow');
+            if (heroAnimate && mouseGlow) {
+                heroAnimate.addEventListener('mousemove', (e) => {
+                    const rect = heroAnimate.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    mouseGlow.style.left = x + 'px';
+                    mouseGlow.style.top = y + 'px';
+                    mouseGlow.style.opacity = '0.6';
+                });
+                heroAnimate.addEventListener('mouseleave', () => {
+                    mouseGlow.style.opacity = '0';
+                });
+            }
 
             // Initialize Market Components
             if (typeof lucide !== 'undefined') lucide.createIcons();
