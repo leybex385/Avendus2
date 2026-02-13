@@ -1,35 +1,35 @@
 /* 
    Portfolio View Theme Overrides 
-   Scoped strictly to #portfolioView to match side's black and gold theme.
+   Scoped strictly to .portfolio-page container to match site's black and gold theme.
 */
 
-#portfolioView {
+.portfolio-page {
     background-color: #0b0b0b !important;
     color: #e5e5e5 !important;
     padding-top: 1rem;
 }
 
 /* 1. Global Color Replacements (Blue/Purple -> Gold) */
-#portfolioView .blue,
-#portfolioView .purple,
-#portfolioView [style*="color: #3b82f6"],
-#portfolioView [style*="color: #1e56a0"],
-#portfolioView [style*="color: #a855f7"],
-#portfolioView [style*="color: #2563eb"],
-#portfolioView .p-card-title div[style*="color: #3b82f6"],
-#portfolioView .p-card-title {
+.portfolio-page .blue,
+.portfolio-page .purple,
+.portfolio-page [style*="color: #3b82f6"],
+.portfolio-page [style*="color: #1e56a0"],
+.portfolio-page [style*="color: #a855f7"],
+.portfolio-page [style*="color: #2563eb"],
+.portfolio-page .p-card-title div[style*="color: #3b82f6"],
+.portfolio-page .p-card-title {
     color: #d4af37 !important;
 }
 
 /* 2. Replace green highlights with Gold accent */
-#portfolioView .green,
-#portfolioView [style*="color: #10b981"],
-#portfolioView [style*="color: #2dd4bf"] {
+.portfolio-page .green,
+.portfolio-page [style*="color: #10b981"],
+.portfolio-page [style*="color: #2dd4bf"] {
     color: #d4af37 !important;
 }
 
 /* 3. Card Base Styles */
-#portfolioView .p-card {
+.portfolio-page .p-card {
     background: #111 !important;
     border: 1px solid #222 !important;
     color: #e5e5e5 !important;
@@ -38,36 +38,36 @@
     margin-bottom: 1.5rem;
 }
 
-#portfolioView .p-card-title {
+.portfolio-page .p-card-title {
     border-bottom: 1px solid #222 !important;
     padding-bottom: 1rem;
     margin-bottom: 1.5rem !important;
 }
 
 /* 4. Portfolio Left Column Styles */
-#portfolioView .p-asset-item {
+.portfolio-page .p-asset-item {
     background: #161616 !important;
     border: 1px solid #222 !important;
     border-radius: 8px;
     padding: 1rem;
 }
 
-#portfolioView .p-asset-label {
+.portfolio-page .p-asset-label {
     color: #94a3b8 !important;
 }
 
-#portfolioView .p-asset-val {
+.portfolio-page .p-asset-val {
     color: #ffffff !important;
 }
 
-#portfolioView .p-asset-sub {
+.portfolio-page .p-asset-sub {
     color: #64748b !important;
 }
 
 /* 5. Buttons */
 /* Deposit: gold gradient */
-#portfolioView .p-btn.deposit,
-#portfolioView .btn-deposit {
+.portfolio-page .p-btn.deposit,
+.portfolio-page .btn-deposit {
     background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%) !important;
     color: #000 !important;
     border: none !important;
@@ -76,14 +76,14 @@
     transition: transform 0.2s;
 }
 
-#portfolioView .p-btn.deposit:hover {
+.portfolio-page .p-btn.deposit:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
 }
 
 /* Withdraw: dark with gold border */
-#portfolioView .p-btn.withdraw,
-#portfolioView .btn-withdraw {
+.portfolio-page .p-btn.withdraw,
+.portfolio-page .btn-withdraw {
     background: #111 !important;
     color: #d4af37 !important;
     border: 1px solid #d4af37 !important;
@@ -92,120 +92,120 @@
     transition: all 0.2s;
 }
 
-#portfolioView .p-btn.withdraw:hover {
+.portfolio-page .p-btn.withdraw:hover {
     background: rgba(212, 175, 55, 0.05) !important;
     transform: translateY(-2px);
 }
 
 /* 6. Chart & Visuals */
 /* Donut Chart */
-#portfolioView #pDonutCircle {
+.portfolio-page #pDonutCircle {
     stroke: #d4af37 !important;
 }
 
-#portfolioView svg circle[stroke="#3b82f6"],
-#portfolioView svg circle[stroke="#f1f5f9"] {
+.portfolio-page svg circle[stroke="#3b82f6"],
+.portfolio-page svg circle[stroke="#f1f5f9"] {
     stroke: #2a2a2a !important;
 }
 
-#portfolioView #pDonutPct {
+.portfolio-page #pDonutPct {
     color: #ffffff !important;
 }
 
-#portfolioView .donut-circle-box div[style*="background: #3b82f6"] {
+.portfolio-page .donut-circle-box div[style*="background: #3b82f6"] {
     background: #d4af37 !important;
 }
 
-#portfolioView .donut-circle-box div[style*="background: #10b981"] {
+.portfolio-page .donut-circle-box div[style*="background: #10b981"] {
     background: #64748b !important;
     /* Muted gray */
 }
 
 /* Gauge Chart */
-#portfolioView #pGaugeNeedle {
+.portfolio-page #pGaugeNeedle {
     background: #d4af37 !important;
 }
 
-#portfolioView #pGaugeNeedle>div {
+.portfolio-page #pGaugeNeedle>div {
     background: #d4af37 !important;
     border-color: #111 !important;
 }
 
-#portfolioView svg path[stroke="#f1f5f9"] {
+.portfolio-page svg path[stroke="#f1f5f9"] {
     stroke: #2a2a2a !important;
 }
 
 /* Gauge Chart Segments (Replacing Red/Yellow/Green with Gold/Gray) */
-#portfolioView svg path[stroke="#f87171"] {
+.portfolio-page svg path[stroke="#f87171"] {
     stroke: #333333 !important;
     /* Dark Gray */
     opacity: 1 !important;
 }
 
-#portfolioView svg path[stroke="#fbbf24"] {
+.portfolio-page svg path[stroke="#fbbf24"] {
     stroke: #64748b !important;
     /* Muted Gray */
     opacity: 1 !important;
 }
 
-#portfolioView svg path[stroke="#10b981"] {
+.portfolio-page svg path[stroke="#10b981"] {
     stroke: #d4af37 !important;
     /* Gold */
     opacity: 1 !important;
 }
 
 /* Bar Chart Analysis */
-#portfolioView #chartContainer {
+.portfolio-page #chartContainer {
     border-color: #222 !important;
 }
 
 /* Invested Bar (was blue) */
-#portfolioView #chartContainer div[style*="background: #3b82f6"] {
+.portfolio-page #chartContainer div[style*="background: #3b82f6"] {
     background: #d4af37 !important;
 }
 
 /* Profit Bar (was green) */
-#portfolioView #chartContainer div[style*="background: #10b981"] {
+.portfolio-page #chartContainer div[style*="background: #10b981"] {
     background: #444444 !important;
     /* Muted gray */
 }
 
 /* ROI Line indicator dot (was yellow) */
-#portfolioView #chartContainer div[style*="background: #f59e0b"] {
+.portfolio-page #chartContainer div[style*="background: #f59e0b"] {
     background: #d4af37 !important;
     border: 1px solid #ffffff !important;
 }
 
 /* Chart Legend */
-#portfolioView [style*="display: flex; gap: 1.5rem; font-size: 0.8rem;"] div[style*="background: #3b82f6"] {
+.portfolio-page [style*="display: flex; gap: 1.5rem; font-size: 0.8rem;"] div[style*="background: #3b82f6"] {
     background: #d4af37 !important;
 }
 
-#portfolioView [style*="display: flex; gap: 1.5rem; font-size: 0.8rem;"] div[style*="background: #10b981"] {
+.portfolio-page [style*="display: flex; gap: 1.5rem; font-size: 0.8rem;"] div[style*="background: #10b981"] {
     background: #64748b !important;
 }
 
 /* 7. Fund Records */
-#portfolioView .p-tab-bar {
+.portfolio-page .p-tab-bar {
     border-bottom: 1px solid #222 !important;
     margin-bottom: 1.5rem !important;
 }
 
-#portfolioView .p-tab {
+.portfolio-page .p-tab {
     color: #94a3b8 !important;
     border-bottom: 2px solid transparent !important;
     background: transparent !important;
     border: none !important;
 }
 
-#portfolioView .p-tab.active {
+.portfolio-page .p-tab.active {
     color: #d4af37 !important;
     border-bottom: 2px solid #d4af37 !important;
     font-weight: 700 !important;
 }
 
 /* Fund Item Card Styles */
-#portfolioView .fund-item-card {
+.portfolio-page .fund-item-card {
     background: #161616 !important;
     border: 1px solid #222 !important;
     border-radius: 12px;
@@ -214,86 +214,116 @@
     transition: all 0.2s;
 }
 
-#portfolioView .fund-item-card:hover {
+.portfolio-page .fund-item-card:hover {
     border-color: #d4af37 !important;
     transform: scale(1.01);
 }
 
 /* Fund Records Selected Row */
-#portfolioView .fund-item-card.selected {
+.portfolio-page .fund-item-card.selected {
     border: 1px solid #d4af37 !important;
     background: rgba(212, 175, 55, 0.08) !important;
 }
 
-#portfolioView .f-item-type {
+.portfolio-page .f-item-type {
     color: #ffffff !important;
     font-weight: 700 !important;
 }
 
-#portfolioView .f-item-sub {
+.portfolio-page .f-item-sub {
     color: #94a3b8 !important;
 }
 
-#portfolioView .f-item-id {
+.portfolio-page .f-item-id {
     color: #64748b !important;
 }
 
-#portfolioView .f-item-amount.green {
+.portfolio-page .f-item-amount.green {
     color: #d4af37 !important;
 }
 
-#portfolioView .f-item-amount.red {
+.portfolio-page .f-item-amount.red {
     color: #ef4444 !important;
 }
 
+/* 7.5 Fund Records Section Height & Scroll (Portfolio Page Only) */
+.portfolio-page #fundRecordsList {
+    max-height: 480px;
+    /* Aligns with chart height and approx 15 records */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 10px;
+    scroll-behavior: smooth;
+    margin-top: 1rem;
+}
+
+/* Custom Gold Scrollbar for Fund Records inside Portfolio */
+.portfolio-page #fundRecordsList::-webkit-scrollbar {
+    width: 6px;
+}
+
+.portfolio-page #fundRecordsList::-webkit-scrollbar-track {
+    background: #0b0b0b;
+    border-radius: 10px;
+}
+
+.portfolio-page #fundRecordsList::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #d4af37, #aa8c2c);
+    border-radius: 10px;
+}
+
+.portfolio-page #fundRecordsList::-webkit-scrollbar-thumb:hover {
+    background: #f9e29b;
+}
+
 /* 8. Allocation & Stats Overrides */
-#portfolioView .advances-bar {
+.portfolio-page .advances-bar {
     background: #222 !important;
 }
 
-#portfolioView #barAdvances {
+.portfolio-page #barAdvances {
     background: #d4af37 !important;
 }
 
-#portfolioView #barDeclines {
+.portfolio-page #barDeclines {
     background: #ef4444 !important;
 }
 
-#portfolioView div[style*="background: #f1f5f9"],
-#portfolioView div[style*="background: #f8fafc"] {
+.portfolio-page div[style*="background: #f1f5f9"],
+.portfolio-page div[style*="background: #f8fafc"] {
     background: #1a1a1a !important;
 }
 
 /* Dividers */
-#portfolioView [style*="border-top: 1px solid #f1f5f9"],
-#portfolioView [style*="border-bottom: 1px solid #f1f5f9"],
-#portfolioView [style*="border-bottom: 1px solid #fda4af"] {
+.portfolio-page [style*="border-top: 1px solid #f1f5f9"],
+.portfolio-page [style*="border-bottom: 1px solid #f1f5f9"],
+.portfolio-page [style*="border-bottom: 1px solid #fda4af"] {
     border-color: #222 !important;
 }
 
 /* Date Pickers */
-#portfolioView .date-input-group {
+.portfolio-page .date-input-group {
     background: #111 !important;
     border: 1px solid #333 !important;
     color: #ffffff !important;
 }
 
-#portfolioView .date-input-group input {
+.portfolio-page .date-input-group input {
     color: #ffffff !important;
     background: transparent !important;
 }
 
-#portfolioView .date-input-group i {
+.portfolio-page .date-input-group i {
     color: #d4af37 !important;
 }
 
-#portfolioView .clear-btn {
+.portfolio-page .clear-btn {
     background: #222 !important;
     color: #94a3b8 !important;
     border: 1px solid #333 !important;
 }
 
-#portfolioView .clear-btn:hover {
+.portfolio-page .clear-btn:hover {
     color: #ffffff !important;
     border-color: #d4af37 !important;
 }
