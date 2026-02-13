@@ -3401,8 +3401,17 @@
             function selectStock(sym, name, type = 'stock') {
                 sInput.value = '';
                 sResults.style.display = 'none';
-                // Redirect to Stock Detail Page with type info
-                window.location.href = `stock_detail.html?symbol=${encodeURIComponent(sym)}&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
+
+                const product = { symbol: sym, name: name, type: type.toLowerCase() };
+                if (product.type === 'stock') {
+                    if (typeof window.openStockTrade === 'function') window.openStockTrade(product);
+                } else if (product.type === 'otc') {
+                    if (typeof window.openOTCSubscribe === 'function') window.openOTCSubscribe(product);
+                } else if (product.type === 'ipo') {
+                    if (typeof window.openIPOSubscribe === 'function') window.openIPOSubscribe(product);
+                } else {
+                    if (typeof window.openStockTrade === 'function') window.openStockTrade(product);
+                }
             }
 
             window.onload = function () {

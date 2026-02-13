@@ -225,21 +225,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.globalSelectStock = (symbol, name, type) => {
-        if (window.location.pathname.includes('market.html')) {
-            if (typeof openStockDetail === 'function') {
-                const s = (window.MarketEngine && window.MarketEngine.getProduct) ? window.MarketEngine.getProduct(symbol) : null;
-                if (s) {
-                    openStockDetail(s.symbol, s.name, 'NSE', '₹' + s.price.toLocaleString('en-IN', { minimumFractionDigits: 2 }), (s.change >= 0 ? '+' : '') + (s.change || 0).toFixed(2) + '%', (s.change >= 0 ? '#10b981' : '#ef4444'), s.type);
-                } else {
-                    // International/Global
-                    openStockDetail(symbol, name, 'NSE', '₹0', '0%', '#10b981', type);
-                }
-                globalSearchResults.style.display = 'none';
-                if (globalSearchInput) globalSearchInput.value = '';
+        console.log("Global Select Stock:", symbol, name, type);
+        const product = { symbol, name, type: (type || 'stock').toLowerCase() };
+
+        if (product.type === 'stock') {
+            if (typeof window.openStockTrade === 'function') {
+                window.openStockTrade(product);
+            }
+        } else if (product.type === 'otc') {
+            if (typeof window.openOTCSubscribe === 'function') {
+                window.openOTCSubscribe(product);
+            }
+        } else if (product.type === 'ipo') {
+            if (typeof window.openIPOSubscribe === 'function') {
+                window.openIPOSubscribe(product);
             }
         } else {
-            window.location.href = `market.html?symbol=${symbol}`;
+            // Fallback for types not explicitly caught
+            if (typeof window.openStockTrade === 'function') {
+                window.openStockTrade(product);
+            }
         }
+
+        // Close results
+        const globalSearchResults = document.getElementById('searchResults');
+        if (globalSearchResults) globalSearchResults.style.display = 'none';
+        const globalSearchInput = document.getElementById('globalSearchInput');
+        if (globalSearchInput) globalSearchInput.value = '';
     };
 });
 
