@@ -5720,7 +5720,26 @@
             if (icon) {
                 setTimeout(() => icon.style.transform = 'none', 1000);
             }
-            alert("Fund records updated.");
+
+            // Custom Toast Notification
+            let toast = document.getElementById('fundRefreshToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'fundRefreshToast';
+                toast.innerHTML = `<i data-lucide="check-circle"></i> Fund records updated`;
+                document.body.appendChild(toast);
+                lucide.createIcons();
+            }
+
+            // Trigger Animation
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Auto-hide
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
         function switchFundTab(el, tab) {
@@ -5732,10 +5751,12 @@
         // Helper to render filtered list
         function renderFundList(data) {
             const list = document.getElementById('fundRecordsList');
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 list.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 2rem; font-size: 0.85rem;">No data.</div>`;
-                document.getElementById('fundRecordCount').textContent = '0 records';
-                document.getElementById('fundTotalAmount').textContent = '₹0.00';
+                const countEl = document.getElementById('fundRecordCount');
+                if (countEl) countEl.textContent = '0 records';
+                const totalEl = document.getElementById('fundTotalAmount');
+                if (totalEl) totalEl.textContent = '₹0.00';
                 return;
             }
 
@@ -5757,7 +5778,7 @@
             }
 
             list.innerHTML = data.map(item => `
-                <div class="fund-item-card">
+                <div class="fund-item-card" data-date="${item.rawDate ? item.rawDate.toISOString() : ''}">
                     <div class="f-item-main">
                         <div class="f-item-type">${item.type}</div>
                         <div class="f-item-sub">${item.date} • ${item.ex}</div>
@@ -5769,6 +5790,13 @@
                     </div>
                 </div>
             `).join('');
+
+            // Apply filter immediately if dates are set (persistence across tab switches)
+            const fVal = document.getElementById('fundDateFrom')?.value;
+            const tVal = document.getElementById('fundDateTo')?.value;
+            if (fVal || tVal) {
+                applyDateFilter();
+            }
         }
 
         function renderFundRecords(tab) {
@@ -5786,28 +5814,41 @@
         updateClock();
 
         // Date Filtering Logic
+        // Date Filtering Logic
         function applyDateFilter() {
-            const fVal = document.getElementById('fundDateFrom').value;
-            const tVal = document.getElementById('fundDateTo').value;
+            const fVal = document.getElementById('fundDateFrom')?.value;
+            const tVal = document.getElementById('fundDateTo')?.value;
 
-            // If empty, maybe revert to tab? Let's just filter 'all' if input changes
-            if (!fVal && !tVal) return;
+            // Tabs remain active. We filter within the current view.
 
-            // Deselect tabs visually to indicate custom filter
-            document.querySelectorAll('#fundTabs .p-tab').forEach(t => t.classList.remove('active'));
+            const fromDate = fVal ? new Date(fVal) : null;
+            if (fromDate) fromDate.setHours(0, 0, 0, 0);
 
-            let list = fundRecordsData['all'] || [];
-            if (fVal) {
-                const fromD = new Date(fVal);
-                fromD.setHours(0, 0, 0, 0);
-                list = list.filter(i => i.rawDate && i.rawDate >= fromD);
-            }
-            if (tVal) {
-                const toD = new Date(tVal);
-                toD.setHours(23, 59, 59, 999);
-                list = list.filter(i => i.rawDate && i.rawDate <= toD);
-            }
-            renderFundList(list);
+            const toDate = tVal ? new Date(tVal) : null;
+            if (toDate) toDate.setHours(23, 59, 59, 999);
+
+            const cards = document.querySelectorAll('#fundRecordsList .fund-item-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const dateStr = card.getAttribute('data-date');
+                if (!dateStr) return;
+
+                const cardDate = new Date(dateStr);
+                let isVisible = true;
+
+                if (fromDate && cardDate < fromDate) isVisible = false;
+                if (toDate && cardDate > toDate) isVisible = false;
+
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+
+            // Optional: Update record count specifically for filtered view?
+            // User requirement: "The filtering must work together with the existing tabs"
+            // Let's update the visual count to reflect what the user actually sees
+            const countEl = document.getElementById('fundRecordCount');
+            if (countEl) countEl.textContent = `${visibleCount} records`;
         }
 
         const fundDateFrom = document.getElementById('fundDateFrom');
@@ -5822,15 +5863,18 @@
             if (fFrom) fFrom.value = '';
             if (fTo) fTo.value = '';
 
-            // Reset to All Tab
-            const fundTabs = document.getElementById('fundTabs');
-            if (fundTabs) {
-                const allTab = fundTabs.querySelector('.p-tab'); // First tab is 'All'
-                if (allTab) switchFundTab(allTab, 'all');
-            } else {
-                renderFundRecords('all');
-            }
-        };
+            // Restore all items
+            const cards = document.querySelectorAll('#fundRecordsList .fund-item-card');
+            cards.forEach(c => c.style.display = '');
+
+            // Restore original total count based on all cards
+            const countEl = document.getElementById('fundRecordCount');
+            if (countEl) countEl.textContent = `${cards.length} records`;
+
+            // Reset Tab Selection? The user said "Restore the full list based on the currently selected tab"
+            // The list is already based on the selected tab (because renderFundRecords was called last).
+            // So simply showing all hidden items restores the tab's full list.
+        }
 
         // Settings Modal Logic
         function deleteAllMessages() {

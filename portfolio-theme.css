@@ -303,6 +303,38 @@
     background: #f9e29b;
 }
 
+/* Custom Fund Toast Notification */
+#fundRefreshToast {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    background: #111;
+    color: #d4af37;
+    border: 1px solid #d4af37;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#fundRefreshToast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+#fundRefreshToast i {
+    color: #10b981;
+    /* Success Green for icon */
+}
+
 /* 8. Allocation & Stats Overrides */
 .portfolio-page .advances-bar {
     background: #222 !important;
