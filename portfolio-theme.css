@@ -1,0 +1,299 @@
+/* 
+   Portfolio View Theme Overrides 
+   Scoped strictly to #portfolioView to match side's black and gold theme.
+*/
+
+#portfolioView {
+    background-color: #0b0b0b !important;
+    color: #e5e5e5 !important;
+    padding-top: 1rem;
+}
+
+/* 1. Global Color Replacements (Blue/Purple -> Gold) */
+#portfolioView .blue,
+#portfolioView .purple,
+#portfolioView [style*="color: #3b82f6"],
+#portfolioView [style*="color: #1e56a0"],
+#portfolioView [style*="color: #a855f7"],
+#portfolioView [style*="color: #2563eb"],
+#portfolioView .p-card-title div[style*="color: #3b82f6"],
+#portfolioView .p-card-title {
+    color: #d4af37 !important;
+}
+
+/* 2. Replace green highlights with Gold accent */
+#portfolioView .green,
+#portfolioView [style*="color: #10b981"],
+#portfolioView [style*="color: #2dd4bf"] {
+    color: #d4af37 !important;
+}
+
+/* 3. Card Base Styles */
+#portfolioView .p-card {
+    background: #111 !important;
+    border: 1px solid #222 !important;
+    color: #e5e5e5 !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+    margin-bottom: 1.5rem;
+}
+
+#portfolioView .p-card-title {
+    border-bottom: 1px solid #222 !important;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem !important;
+}
+
+/* 4. Portfolio Left Column Styles */
+#portfolioView .p-asset-item {
+    background: #161616 !important;
+    border: 1px solid #222 !important;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+#portfolioView .p-asset-label {
+    color: #94a3b8 !important;
+}
+
+#portfolioView .p-asset-val {
+    color: #ffffff !important;
+}
+
+#portfolioView .p-asset-sub {
+    color: #64748b !important;
+}
+
+/* 5. Buttons */
+/* Deposit: gold gradient */
+#portfolioView .p-btn.deposit,
+#portfolioView .btn-deposit {
+    background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%) !important;
+    color: #000 !important;
+    border: none !important;
+    font-weight: 800 !important;
+    border-radius: 8px !important;
+    transition: transform 0.2s;
+}
+
+#portfolioView .p-btn.deposit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4) !important;
+}
+
+/* Withdraw: dark with gold border */
+#portfolioView .p-btn.withdraw,
+#portfolioView .btn-withdraw {
+    background: #111 !important;
+    color: #d4af37 !important;
+    border: 1px solid #d4af37 !important;
+    font-weight: 800 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s;
+}
+
+#portfolioView .p-btn.withdraw:hover {
+    background: rgba(212, 175, 55, 0.05) !important;
+    transform: translateY(-2px);
+}
+
+/* 6. Chart & Visuals */
+/* Donut Chart */
+#portfolioView #pDonutCircle {
+    stroke: #d4af37 !important;
+}
+
+#portfolioView svg circle[stroke="#3b82f6"],
+#portfolioView svg circle[stroke="#f1f5f9"] {
+    stroke: #2a2a2a !important;
+}
+
+#portfolioView #pDonutPct {
+    color: #ffffff !important;
+}
+
+#portfolioView .donut-circle-box div[style*="background: #3b82f6"] {
+    background: #d4af37 !important;
+}
+
+#portfolioView .donut-circle-box div[style*="background: #10b981"] {
+    background: #64748b !important;
+    /* Muted gray */
+}
+
+/* Gauge Chart */
+#portfolioView #pGaugeNeedle {
+    background: #d4af37 !important;
+}
+
+#portfolioView #pGaugeNeedle>div {
+    background: #d4af37 !important;
+    border-color: #111 !important;
+}
+
+#portfolioView svg path[stroke="#f1f5f9"] {
+    stroke: #2a2a2a !important;
+}
+
+/* Gauge Chart Segments (Replacing Red/Yellow/Green with Gold/Gray) */
+#portfolioView svg path[stroke="#f87171"] {
+    stroke: #333333 !important;
+    /* Dark Gray */
+    opacity: 1 !important;
+}
+
+#portfolioView svg path[stroke="#fbbf24"] {
+    stroke: #64748b !important;
+    /* Muted Gray */
+    opacity: 1 !important;
+}
+
+#portfolioView svg path[stroke="#10b981"] {
+    stroke: #d4af37 !important;
+    /* Gold */
+    opacity: 1 !important;
+}
+
+/* Bar Chart Analysis */
+#portfolioView #chartContainer {
+    border-color: #222 !important;
+}
+
+/* Invested Bar (was blue) */
+#portfolioView #chartContainer div[style*="background: #3b82f6"] {
+    background: #d4af37 !important;
+}
+
+/* Profit Bar (was green) */
+#portfolioView #chartContainer div[style*="background: #10b981"] {
+    background: #444444 !important;
+    /* Muted gray */
+}
+
+/* ROI Line indicator dot (was yellow) */
+#portfolioView #chartContainer div[style*="background: #f59e0b"] {
+    background: #d4af37 !important;
+    border: 1px solid #ffffff !important;
+}
+
+/* Chart Legend */
+#portfolioView [style*="display: flex; gap: 1.5rem; font-size: 0.8rem;"] div[style*="background: #3b82f6"] {
+    background: #d4af37 !important;
+}
+
+#portfolioView [style*="display: flex; gap: 1.5rem; font-size: 0.8rem;"] div[style*="background: #10b981"] {
+    background: #64748b !important;
+}
+
+/* 7. Fund Records */
+#portfolioView .p-tab-bar {
+    border-bottom: 1px solid #222 !important;
+    margin-bottom: 1.5rem !important;
+}
+
+#portfolioView .p-tab {
+    color: #94a3b8 !important;
+    border-bottom: 2px solid transparent !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+#portfolioView .p-tab.active {
+    color: #d4af37 !important;
+    border-bottom: 2px solid #d4af37 !important;
+    font-weight: 700 !important;
+}
+
+/* Fund Item Card Styles */
+#portfolioView .fund-item-card {
+    background: #161616 !important;
+    border: 1px solid #222 !important;
+    border-radius: 12px;
+    padding: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
+    transition: all 0.2s;
+}
+
+#portfolioView .fund-item-card:hover {
+    border-color: #d4af37 !important;
+    transform: scale(1.01);
+}
+
+/* Fund Records Selected Row */
+#portfolioView .fund-item-card.selected {
+    border: 1px solid #d4af37 !important;
+    background: rgba(212, 175, 55, 0.08) !important;
+}
+
+#portfolioView .f-item-type {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+#portfolioView .f-item-sub {
+    color: #94a3b8 !important;
+}
+
+#portfolioView .f-item-id {
+    color: #64748b !important;
+}
+
+#portfolioView .f-item-amount.green {
+    color: #d4af37 !important;
+}
+
+#portfolioView .f-item-amount.red {
+    color: #ef4444 !important;
+}
+
+/* 8. Allocation & Stats Overrides */
+#portfolioView .advances-bar {
+    background: #222 !important;
+}
+
+#portfolioView #barAdvances {
+    background: #d4af37 !important;
+}
+
+#portfolioView #barDeclines {
+    background: #ef4444 !important;
+}
+
+#portfolioView div[style*="background: #f1f5f9"],
+#portfolioView div[style*="background: #f8fafc"] {
+    background: #1a1a1a !important;
+}
+
+/* Dividers */
+#portfolioView [style*="border-top: 1px solid #f1f5f9"],
+#portfolioView [style*="border-bottom: 1px solid #f1f5f9"],
+#portfolioView [style*="border-bottom: 1px solid #fda4af"] {
+    border-color: #222 !important;
+}
+
+/* Date Pickers */
+#portfolioView .date-input-group {
+    background: #111 !important;
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+}
+
+#portfolioView .date-input-group input {
+    color: #ffffff !important;
+    background: transparent !important;
+}
+
+#portfolioView .date-input-group i {
+    color: #d4af37 !important;
+}
+
+#portfolioView .clear-btn {
+    background: #222 !important;
+    color: #94a3b8 !important;
+    border: 1px solid #333 !important;
+}
+
+#portfolioView .clear-btn:hover {
+    color: #ffffff !important;
+    border-color: #d4af37 !important;
+}
