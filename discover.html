@@ -7934,6 +7934,14 @@
             color: #fff;
         }
     </style>
+    <script src="js/trading.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof showDiscoverView === 'function') {
+                showDiscoverView();
+            }
+        });
+    </script>
 </body>
 
 </html>

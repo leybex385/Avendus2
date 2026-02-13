@@ -2584,10 +2584,10 @@
 
                 // 1. Manage User Balance if status becomes APPROVED
                 if (status === 'Approved' && oldStatus !== 'Approved') {
-                    const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', actualUid).single();
+                    const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
                     if (uErr) throw uErr;
 
-                    const currentBalance = parseFloat(user.balance) || 0;
+                    const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
                     let newBalance = currentBalance;
 
                     if (type === 'deposit') {
@@ -2596,18 +2596,24 @@
                         newBalance = amount;
                     }
 
-                    const { error: upErr } = await client.from('users').update({ balance: newBalance }).eq('id', actualUid);
+                    const updates = { balance: newBalance };
+                    if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
+
+                    const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
                     if (upErr) throw upErr;
                 }
                 // Handle case where it was Approved but now changed to something else (e.g. error correction)
                 else if (status !== 'Approved' && oldStatus === 'Approved') {
-                    const { data: user, error: uErr } = await client.from('users').select('balance').eq('id', actualUid).single();
+                    const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
                     if (uErr) throw uErr;
 
-                    const currentBalance = parseFloat(user.balance) || 0;
+                    const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
                     const newBalance = currentBalance - oldAmount; // Reverse previous add
 
-                    const { error: upErr } = await client.from('users').update({ balance: newBalance }).eq('id', actualUid);
+                    const updates = { balance: newBalance };
+                    if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
+
+                    const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
                     if (upErr) throw upErr;
                 }
 
@@ -2700,7 +2706,7 @@
                 const { data: user, error: uErr } = await client.from('users').select('*').eq('id', uid).single();
                 if (uErr || !user) throw new Error("User not found: " + uid);
 
-                const currentBalance = parseFloat(user.balance) || 0;
+                const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
                 const currentInvested = parseFloat(user.invested) || 0;
 
                 let newBalance = currentBalance;
@@ -2734,10 +2740,10 @@
                 }
 
                 if (shouldUpdateUser) {
-                    const { error: upUserErr } = await client.from('users').update({
-                        balance: newBalance,
-                        invested: newInvested
-                    }).eq('id', uid);
+                    const updates = { balance: newBalance, invested: newInvested };
+                    if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
+
+                    const { error: upUserErr } = await client.from('users').update(updates).eq('id', uid);
                     if (upUserErr) throw new Error("Failed to update user balance: " + upUserErr.message);
                 }
 

@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS trades (
     quantity DECIMAL(20, 2) NOT NULL,
     price DECIMAL(20, 2) NOT NULL,
     total_amount DECIMAL(20, 2) NOT NULL,
-    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Settled')),
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Holding', 'Sold', 'Pending', 'Approved', 'Settled', 'Rejected')),
     admin_note TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     processed_at TIMESTAMP WITH TIME ZONE

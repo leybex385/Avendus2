@@ -18,6 +18,7 @@ window.DB = {
             console.error("Supabase SDK not loaded!");
             return null;
         }
+        console.log("Supabase Project URL:", this.SUPABASE_URL);
         this.client = supabase.createClient(this.SUPABASE_URL, this.SUPABASE_KEY);
         return this.client;
     },
@@ -440,11 +441,20 @@ window.DB = {
         return { success: !error, error };
     },
 
-    async updateUserFinancials(userId, newBalance, newInvested, newOutstanding) {
+    async updateUserFinancials(userId, updates) {
         const client = this.getClient();
-        const updates = { balance: newBalance };
-        if (newInvested !== undefined) updates.invested = newInvested;
-        if (newOutstanding !== undefined) updates.outstanding = newOutstanding;
+        // Fallback for old calls if they pass positional args
+        if (typeof updates !== 'object') {
+            const newBalance = arguments[1];
+            const newInvested = arguments[2];
+            const newOutstanding = arguments[3];
+            updates = { balance: newBalance };
+            // Ensure available_balance is kept in sync if we're using positional args (older code)
+            updates.available_balance = newBalance;
+
+            if (newInvested !== undefined) updates.invested = newInvested;
+            if (newOutstanding !== undefined) updates.outstanding = newOutstanding;
+        }
 
         const { data, error } = await client
             .from('users')

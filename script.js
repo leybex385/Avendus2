@@ -896,85 +896,151 @@ window.submitKYC = async function () {
 };
 
 // --- Data Sync Logic ---
-window.syncUserData = async function () {
-    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
-    if (!user) return;
-
-    const settingsRoot = document.getElementById('settingsModal');
-    const setName = settingsRoot ? settingsRoot.querySelector('.settings-name') : null;
-    const greetingName = document.querySelector('.user-text h3');
-    const setPhone = settingsRoot ? settingsRoot.querySelector('.settings-phone') : null;
-    const setVip = settingsRoot ? settingsRoot.querySelector('.s-badge.vip') : null;
-    const setCredit = settingsRoot ? settingsRoot.querySelector('.s-badge.credit') : null;
-
-    if (setName) setName.textContent = user.full_name || 'Set Name';
-    if (greetingName) greetingName.textContent = user.full_name || user.mobile;
-    if (setPhone) setPhone.textContent = user.mobile;
-
-    const avatars = document.querySelectorAll('.user-avatar, .avatar-circle');
-    const renderAvatar = (url) => {
-        avatars.forEach(av => {
-            if (url) {
-                av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-            } else {
-                av.textContent = (user.mobile || 'U').substring(0, 1).toUpperCase();
-            }
-        });
-    };
-    if (user.avatar_url) renderAvatar(user.avatar_url);
+// --- Global Asset Loading Logic ---
+window.loadUserAssets = async function (userId) {
+    if (!userId) {
+        console.error("loadUserAssets: No userId provided.");
+        return;
+    }
+    console.log("User ID:", userId);
 
     const client = window.DB ? window.DB.getClient() : null;
-    if (client) {
-        try {
-            const { data: dbUser } = await client.from('users').select('*').eq('id', user.id).single();
-            if (dbUser) {
-                // Fetch Pending items for Effective Balance
-                const [pD, pW, pT] = await Promise.all([
-                    client.from('deposits').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
-                    client.from('withdrawals').select('amount').eq('user_id', user.id).eq('status', 'Pending'),
-                    client.from('trades').select('total_amount').eq('user_id', user.id).eq('status', 'Pending')
-                ]);
+    if (!client) {
+        console.error("Supabase client not initialized.");
+        return;
+    }
 
-                const lockedDeposits = (pD.data || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-                const lockedWithdrawals = (pW.data || []).reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
-                const lockedTrades = (pT.data || []).reduce((sum, t) => sum + (parseFloat(t.total_amount) || 0), 0);
+    try {
+        const { data: dbUser, error } = await client
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
 
-                let effectiveBalance = (parseFloat(dbUser.balance) || 0) + lockedDeposits - lockedWithdrawals - lockedTrades;
-                if (effectiveBalance < 0) effectiveBalance = 0;
+        if (error) {
+            console.error("Error fetching user assets:", error);
+            return;
+        }
 
-                let changed = false;
-                if (dbUser.avatar_url && dbUser.avatar_url !== user.avatar_url) { user.avatar_url = dbUser.avatar_url; changed = true; }
-                if (dbUser.full_name && dbUser.full_name !== user.full_name) { user.full_name = dbUser.full_name; changed = true; }
+        console.log("Assets response:", dbUser);
 
-                if (changed) {
-                    localStorage.setItem('avendus_current_user', JSON.stringify(user));
-                    renderAvatar(user.avatar_url);
-                    if (setName) setName.textContent = user.full_name;
-                    if (greetingName) greetingName.textContent = user.full_name;
-                }
+        if (!dbUser) {
+            console.error("User not found.");
+            return;
+        }
 
-                if (setVip) setVip.innerHTML = `<i data-lucide="shield-check" size="18"></i> VIP: ${dbUser.vip || 0}`;
+        // --- Data Extraction & Safe Fallbacks ---
+        const rawBalance = parseFloat(dbUser.balance) || 0;
+        const inv = parseFloat(dbUser.invested) || 0;
+        const bonus = parseFloat(dbUser.bonus) || 0;
 
-                let creditScore = dbUser.credit_score;
-                if (creditScore === undefined || creditScore === null || creditScore === 'undefined') creditScore = 100;
-                if (setCredit) setCredit.innerHTML = `<i data-lucide="crown" size="18"></i> Credit Score: ${creditScore}`;
+        // pending_funds vs frozen (legacy support)
+        const frozen = (typeof dbUser.pending_funds !== 'undefined') ? (parseFloat(dbUser.pending_funds) || 0) : (parseFloat(dbUser.frozen) || 0);
 
-                const fmt = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+        // borrowed_funds vs loan (legacy support)
+        const loan = (typeof dbUser.borrowed_funds !== 'undefined') ? (parseFloat(dbUser.borrowed_funds) || 0) : (parseFloat(dbUser.loan) || 0);
 
-                // Update Balance Elements with Effective Balance
-                const balanceEls = document.querySelectorAll('.stat-value.green, .portfolio-balance');
-                balanceEls.forEach(el => {
-                    el.textContent = fmt(effectiveBalance);
-                });
+        // pending_settlement vs outstanding (legacy support)
+        let outstanding = (typeof dbUser.outstanding_balance !== 'undefined') ? (parseFloat(dbUser.outstanding_balance) || 0) : (parseFloat(dbUser.outstanding) || 0);
 
-                const investedEls = document.querySelectorAll('.stat-value.blue');
-                if (investedEls.length > 0) investedEls[0].textContent = fmt(dbUser.invested || 0);
+        // --- DOM Helpers ---
+        const formatCurrency = (val) => '₹' + (val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                if (window.lucide) lucide.createIcons();
-            }
-        } catch (e) { }
+        // Safe-fit text (replicated from market.html for consistency)
+        const fitText = (el, text) => {
+            if (!el) return;
+            el.setAttribute('data-val', text);
+            el.title = text;
+
+            // Check hidden state (using global vars if defined, else default false)
+            let isHidden = false;
+            // Market/Global asset-amount
+            if (el.classList.contains('asset-amount') && window.mainAssetsHidden) isHidden = true; // Assumes variable is on window or accessible
+            // Portfolio
+            else if (el.classList.contains('p-asset-val') && window.portfolioAssetsHidden) isHidden = true;
+            // Me
+            else if (el.classList.contains('me-as-val') && window.meAssetsHidden) isHidden = true;
+
+            const displayValue = isHidden ? '********' : text;
+            if (el.textContent !== displayValue) el.textContent = displayValue;
+
+            // Styling reset
+            el.style.fontSize = '';
+            el.style.whiteSpace = 'nowrap';
+            el.style.overflow = 'hidden';
+            el.style.textOverflow = 'ellipsis';
+            // Simple dynamic sizing
+            if (displayValue.length > 28) el.style.fontSize = '0.6rem';
+            else if (displayValue.length > 22) el.style.fontSize = '0.7rem';
+            else if (displayValue.length > 16) el.style.fontSize = '0.8rem';
+        };
+
+        const updateVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) fitText(el, formatCurrency(val));
+        };
+
+        // --- Update Market Page (Sidebar Assets) ---
+        // These are usually elements with 'asset-amount' class in order 0-5
+        const assetAmounts = document.querySelectorAll('.asset-amount');
+        if (assetAmounts.length >= 6) {
+            const vals = [rawBalance, inv, bonus, frozen, loan, outstanding];
+            assetAmounts.forEach((el, idx) => {
+                if (vals[idx] !== undefined) fitText(el, formatCurrency(vals[idx]));
+            });
+        }
+
+        // --- Update Me Page (Specific IDs) ---
+        updateVal('meAvailableBalance', rawBalance);
+        updateVal('meCurrentInvestments', inv);
+        updateVal('meBonusCredits', bonus);
+        updateVal('meFrozenFunds', frozen);
+        updateVal('meBorrowedFunds', loan);
+        updateVal('mePendingSettlement', outstanding);
+
+        // --- Update Portfolio Page (Specific IDs) ---
+        updateVal('pAvailableBalance', rawBalance);
+        updateVal('pCurrentInvested', inv);
+        updateVal('pPromoCredits', bonus);
+        updateVal('pPendingFunds', frozen);
+        updateVal('pBorrowedFunds', loan);
+        updateVal('pPendingSettlement', outstanding);
+
+        // Also update portfolio totals/stats
+        updateVal('pInvestedMain', inv); // "Current Value" in circle
+        updateVal('pPortfolioTotal', inv); // "Total Invested"
+
+        // --- Update Generic Indicators (Header/Script.js elements) ---
+        const balanceEls = document.querySelectorAll('.stat-value.green, .portfolio-balance, #mainBalance, #valAvailable');
+        balanceEls.forEach(el => fitText(el, formatCurrency(rawBalance)));
+
+        const investedEls = document.querySelectorAll('.stat-value.blue, #valInvested');
+        investedEls.forEach(el => fitText(el, formatCurrency(inv)));
+
+        // Update LocalStorage to keep session fresh
+        localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(dbUser));
+
+        if (window.lucide) window.lucide.createIcons();
+    } catch (e) {
+        console.error("loadUserAssets Exception:", e);
     }
 };
+
+// Backwards compatibility alias
+if (!window.syncUserData) {
+    window.syncUserData = async function () {
+        const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+        if (user) {
+            await window.loadUserAssets(user.id);
+
+            // Keep the profile update stuff here or move it? user just asked for "Assets" consistency.
+            // I'll leave the basic profile update logic here for script.js, but minimal.
+            const settingsRoot = document.getElementById('settingsModal');
+            const setName = settingsRoot ? settingsRoot.querySelector('.settings-name') : null;
+            if (setName) setName.textContent = user.full_name || 'Set Name';
+        }
+    };
+}
 
 // --- Message Center Logic ---
 // --- Message Center Logic (Notices) ---
