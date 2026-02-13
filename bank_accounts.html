@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Bank Accounts</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="settings-panel-fix.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1051,10 +1052,11 @@
         <div class="settings-content">
             <button class="settings-close" onclick="closeSettings()"><i data-lucide="x" size="24"></i></button>
             <div class="settings-header">
-                <div class="avatar-circle">U</div>
-                <div class="settings-name"
+                <div class="avatar-circle" id="settingsAvatar">U</div>
+                <div class="settings-name" id="settingsName"
                     style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 0.5rem;">User Name</div>
-                <div class="settings-phone" style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
+                <div class="settings-phone" id="settingsPhone"
+                    style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
                 <div class="badge-row">
                     <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
                     <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
@@ -1071,6 +1073,9 @@
                         style="transition: transform 0.2s;"></i>
                 </div>
                 <div id="userProfileSubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openEditNameModal()">
+                        <i data-lucide="edit-3" size="18"></i> Update Name
+                    </div>
                     <div class="submenu-item" onclick="openAvatarModal()">
                         <i data-lucide="image" size="18"></i> Update Avatar
                     </div>
@@ -1078,13 +1083,22 @@
                         <i data-lucide="file-check" size="18"></i> View KYC
                     </div>
                 </div>
-                <div class="settings-item" onclick="openResetPassword()">
+                <div class="settings-item" onclick="toggleSecurityMenu()">
                     <div class="settings-item-icon"><i data-lucide="lock" size="20"></i></div>
                     <div class="settings-item-info">
                         <div class="settings-item-title">Security</div>
                         <div class="settings-item-desc">Update your system security settings.</div>
                     </div>
-                    <i data-lucide="chevron-right" class="settings-chevron" size="18"></i>
+                    <i data-lucide="chevron-down" id="securityChevron" class="settings-chevron" size="18"
+                        style="transition: transform 0.2s;"></i>
+                </div>
+                <div id="securitySubmenu" class="settings-submenu">
+                    <div class="submenu-item" onclick="openWithdrawalPinModal()">
+                        <i data-lucide="shield-check" size="18"></i> Withdrawal PIN
+                    </div>
+                    <div class="submenu-item" onclick="openResetPassword()">
+                        <i data-lucide="key" size="18"></i> Change Login Password
+                    </div>
                 </div>
                 <div class="settings-item" onclick="window.location.href='bank_accounts.html'">
                     <div class="settings-item-icon"><i data-lucide="landmark" size="20"></i></div>

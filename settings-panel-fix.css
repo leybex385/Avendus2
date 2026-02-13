@@ -8,7 +8,8 @@
 #csModal,
 #topAlertContainer,
 #resetPasswordModal,
-#withdrawalPinModal {
+#withdrawalPinModal,
+.center-popup-modal {
     font-family: 'Outfit', sans-serif !important;
 }
 
@@ -34,32 +35,43 @@
 #settingsModal .settings-close,
 #csModal .settings-close {
     position: absolute !important;
-    top: 15px !important;
+    top: 20px !important;
     right: 20px !important;
     background: transparent !important;
     border: none !important;
     color: #d4af37 !important;
     cursor: pointer !important;
     padding: 5px !important;
-    transition: all 0.3s ease !important;
-    z-index: 10 !important;
+    display: block !important;
+    transition: none !important;
+    z-index: 100 !important;
+    border-radius: 0 !important;
+    transform: none !important;
 }
 
 #settingsModal .settings-close:hover,
 #csModal .settings-close:hover {
-    color: #f5d76e !important;
-    text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
-    transform: scale(1.1);
+    background: transparent !important;
+    color: #d4af37 !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
-/* Headers */
+#settingsModal .settings-close i,
+#csModal .settings-close i {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Header standard alignment */
 #settingsModal .settings-header,
 #csModal .settings-header {
-    border-bottom: 1px solid rgba(212, 175, 55, 0.1) !important;
-    padding-bottom: 1.5rem !important;
-    margin-bottom: 1.5rem !important;
-    background: transparent !important;
-    text-align: center;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-bottom: 2rem !important;
+    padding-top: 1rem !important;
+    text-align: center !important;
     /* Center align like premium profile cards */
 }
 
@@ -148,11 +160,11 @@
 }
 
 #settingsModal .submenu-item i {
-    color: #888888 !important;
+    color: #d4af37 !important;
 }
 
 #settingsModal .submenu-item:hover i {
-    color: #d4af37 !important;
+    color: #f9e29b !important;
 }
 
 /* Logout Button */
@@ -225,4 +237,151 @@
 #settingsModal .settings-content::-webkit-scrollbar-thumb:hover,
 #chatBox::-webkit-scrollbar-thumb:hover {
     background: #d4af37;
+}
+
+/* Unified Center Popups (Update Name, Withdrawal PIN, Reset Password, KYC, Avatar) */
+.center-popup-modal {
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+.center-popup-content {
+    background: #0b0b0b !important;
+    border: 1px solid #d4af37 !important;
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.2) !important;
+    border-radius: 12px !important;
+}
+
+.popup-header h2 {
+    color: #d4af37 !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+}
+
+.popup-close {
+    color: #d4af37 !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.popup-close:hover {
+    color: #f9e29b !important;
+    transform: scale(1.1) rotate(90deg) !important;
+}
+
+/* Inputs in Popups */
+.reg-input,
+.kyc-field-input,
+.center-popup-modal input {
+    background: #151515 !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 0.8rem 1rem !important;
+}
+
+.reg-input:focus,
+.kyc-field-input:focus,
+.center-popup-modal input:focus {
+    border-color: #d4af37 !important;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3) !important;
+}
+
+.reg-input::placeholder,
+.kyc-field-input::placeholder,
+.center-popup-modal input::placeholder {
+    color: #888888 !important;
+}
+
+/* Modal Titles/Labels */
+.reg-input-group label,
+.kyc-field-label,
+.center-popup-modal label {
+    color: #d4af37 !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.popup-body p,
+#wpModalDesc {
+    color: #aaaaaa !important;
+}
+
+/* Primary Action Buttons (Save/Update) */
+.center-popup-modal button.btn-primary,
+.center-popup-modal button.btn-submit,
+.center-popup-modal button.logout-btn:not(:last-of-type) {
+    background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%) !important;
+    color: #000000 !important;
+    border: none !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3) !important;
+    padding: 0.8rem !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+}
+
+.center-popup-modal button.btn-primary:hover,
+.center-popup-modal button.btn-submit:hover,
+.center-popup-modal button.logout-btn:not(:last-of-type):hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5) !important;
+}
+
+/* Secondary/Cancel Buttons */
+.center-popup-modal button.btn-secondary,
+.center-popup-modal button.logout-btn:last-of-type {
+    background: #000000 !important;
+    color: #d4af37 !important;
+    border: 1px solid #d4af37 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    padding: 0.8rem !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+}
+
+.center-popup-modal button.btn-secondary:hover,
+.center-popup-modal button.logout-btn:last-of-type:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+    color: #f9e29b !important;
+}
+
+/* password eye icon adjustment */
+.reg-password-wrapper i {
+    color: #d4af37 !important;
+    opacity: 0.6;
+}
+
+.reg-password-wrapper i:hover {
+    opacity: 1;
+}
+
+/* KYC Specific Upload Boxes */
+.kyc-upload-box {
+    background: #111 !important;
+    border: 1px dashed rgba(212, 175, 55, 0.5) !important;
+    color: #d4af37 !important;
+}
+
+.kyc-upload-box:hover {
+    background: #151515 !important;
+    border-style: solid !important;
+}
+
+/* Avatar Specifics */
+#avatarPlaceholderIcon {
+    color: #d4af37 !important;
+    opacity: 0.5;
+}
+
+.avatar-change-overlay {
+    background: rgba(212, 175, 55, 0.85) !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
 }

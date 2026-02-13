@@ -7,6 +7,7 @@
     <title>Market - Avendus Capital</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="portfolio-theme.css">
+    <link rel="stylesheet" href="settings-panel-fix.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -7040,10 +7041,11 @@
         <div class="settings-content">
             <button class="settings-close" onclick="closeSettings()"><i data-lucide="x" size="24"></i></button>
             <div class="settings-header">
-                <div class="avatar-circle">U</div>
-                <div class="settings-name"
+                <div class="avatar-circle" id="settingsAvatar">U</div>
+                <div class="settings-name" id="settingsName"
                     style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-top: 0.5rem;">User Name</div>
-                <div class="settings-phone" style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
+                <div class="settings-phone" id="settingsPhone"
+                    style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
                 <div class="badge-row">
                     <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
                     <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
@@ -7106,6 +7108,46 @@
             </div>
             <div class="logout-btn-container">
                 <button class="logout-btn" onclick="DB.logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Service Modal -->
+    <div id="csModal" class="settings-modal" onclick="if(event.target == this) closeCS()">
+        <div class="settings-content" style="max-width: 500px; height: 600px; display: flex; flex-direction: column;">
+            <button class="settings-close" onclick="closeCS()"><i data-lucide="x" size="24"></i></button>
+            <div class="settings-header" style="margin-bottom: 1rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 700;">Customer Service</h2>
+            </div>
+            <div id="chatBox"
+                style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="file" id="csImageInput" accept="image/*" style="display: none;"
+                    onchange="handleCSImageUpload(this)">
+                <button onclick="document.getElementById('csImageInput').click()"
+                    style="background: none; border: none; cursor: pointer; color: #64748b; padding: 0.5rem;">
+                    <i data-lucide="image" size="20"></i>
+                </button>
+                <button onclick="toggleEmojiPicker()"
+                    style="background: none; border: none; cursor: pointer; color: #64748b; padding: 0.5rem; position: relative;">
+                    <i data-lucide="smile" size="20"></i>
+                    <div id="emojiPicker"
+                        style="display: none; position: absolute; bottom: 40px; left: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 150px;">
+                        <span onclick="insertEmoji('👍')" style="cursor: pointer; font-size: 1.2rem;">👍</span>
+                        <span onclick="insertEmoji('👋')" style="cursor: pointer; font-size: 1.2rem;">👋</span>
+                        <span onclick="insertEmoji('😊')" style="cursor: pointer; font-size: 1.2rem;">😊</span>
+                        <span onclick="insertEmoji('😂')" style="cursor: pointer; font-size: 1.2rem;">😂</span>
+                        <span onclick="insertEmoji('❤️')" style="cursor: pointer; font-size: 1.2rem;">❤️</span>
+                        <span onclick="insertEmoji('🔥')" style="cursor: pointer; font-size: 1.2rem;">🔥</span>
+                        <span onclick="insertEmoji('🎉')" style="cursor: pointer; font-size: 1.2rem;">🎉</span>
+                        <span onclick="insertEmoji('😢')" style="cursor: pointer; font-size: 1.2rem;">😢</span>
+                    </div>
+                </button>
+                <input type="text" id="csInput" placeholder="Type a message..."
+                    style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                <button onclick="sendCSMessage()"
+                    style="background: #3b82f6; color: white; border: none; padding: 0 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Send</button>
             </div>
         </div>
     </div>
@@ -7516,47 +7558,6 @@
                 <p style="text-align: center; margin-top: 1rem; font-size: 0.7rem; color: #94a3b8; line-height: 1.4;">
                     Settlement will be immediate. Proceeds will be credited to your wallet after statutory deductions.
                 </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Customer Service Modal -->
-
-    <div id="csModal" class="settings-modal" onclick="if(event.target == this) closeCS()">
-        <div class="settings-content" style="max-width: 500px; height: 600px; display: flex; flex-direction: column;">
-            <button class="settings-close" onclick="closeCS()"><i data-lucide="x" size="24"></i></button>
-            <div class="settings-header" style="margin-bottom: 1rem;">
-                <h2 style="font-size: 1.5rem; font-weight: 700;">Customer Service</h2>
-            </div>
-            <div id="chatBox"
-                style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-            </div>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <input type="file" id="csImageInput" accept="image/*" style="display: none;"
-                    onchange="handleCSImageUpload(this)">
-                <button onclick="document.getElementById('csImageInput').click()"
-                    style="background: none; border: none; cursor: pointer; color: #64748b; padding: 0.5rem;">
-                    <i data-lucide="image" size="20"></i>
-                </button>
-                <button onclick="toggleEmojiPicker()"
-                    style="background: none; border: none; cursor: pointer; color: #64748b; padding: 0.5rem; position: relative;">
-                    <i data-lucide="smile" size="20"></i>
-                    <div id="emojiPicker"
-                        style="display: none; position: absolute; bottom: 40px; left: 0; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); width: 150px;">
-                        <span onclick="insertEmoji('👍')" style="cursor: pointer; font-size: 1.2rem;">👍</span>
-                        <span onclick="insertEmoji('👋')" style="cursor: pointer; font-size: 1.2rem;">👋</span>
-                        <span onclick="insertEmoji('😊')" style="cursor: pointer; font-size: 1.2rem;">😊</span>
-                        <span onclick="insertEmoji('😂')" style="cursor: pointer; font-size: 1.2rem;">😂</span>
-                        <span onclick="insertEmoji('❤️')" style="cursor: pointer; font-size: 1.2rem;">❤️</span>
-                        <span onclick="insertEmoji('🔥')" style="cursor: pointer; font-size: 1.2rem;">🔥</span>
-                        <span onclick="insertEmoji('🎉')" style="cursor: pointer; font-size: 1.2rem;">🎉</span>
-                        <span onclick="insertEmoji('😢')" style="cursor: pointer; font-size: 1.2rem;">😢</span>
-                    </div>
-                </button>
-                <input type="text" id="csInput" placeholder="Type a message..."
-                    style="flex: 1; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
-                <button onclick="sendCSMessage()"
-                    style="background: #3b82f6; color: white; border: none; padding: 0 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Send</button>
             </div>
         </div>
     </div>
