@@ -328,14 +328,33 @@
     <div class="login-card">
         <h1>Sign in</h1>
 
+        <!-- Login Tabs -->
+        <div
+            style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; justify-content: center;">
+            <button type="button" class="tab-btn active" onclick="switchLoginTab('email')"
+                id="loginTabEmail">Email</button>
+            <button type="button" class="tab-btn" onclick="switchLoginTab('mobile')" id="loginTabMobile">Mobile</button>
+        </div>
+
         <form id="loginForm">
-            <div class="form-group">
+            <input type="hidden" id="loginType" value="email">
+
+            <!-- Email Login -->
+            <div id="loginEmailSection" class="form-group">
+                <label>Email Address</label>
+                <div class="phone-input-wrapper">
+                    <input type="email" id="loginEmail" placeholder="Enter email address">
+                </div>
+            </div>
+
+            <!-- Mobile Login (Hidden) -->
+            <div id="loginMobileSection" class="form-group" style="display:none;">
                 <label>Mobile Number</label>
                 <div class="phone-input-wrapper">
                     <div class="country-code">
                         <img src="https://flagcdn.com/w20/in.png" width="20"> +91
                     </div>
-                    <input type="tel" id="phoneNumber" placeholder="Enter mobile number" required maxlength="10">
+                    <input type="tel" id="phoneNumber" placeholder="Enter mobile number" maxlength="10">
                 </div>
             </div>
 
@@ -358,11 +377,7 @@
             Don't have an account? <a href="#" onclick="openModal('register')">Register Now</a>
         </div>
 
-        <div class="divider"><span>OR</span></div>
 
-        <div style="font-size: 0.85rem;">
-            <a href="admin_login.html" style="color: #d4af37; text-decoration: none;">Admin Access</a>
-        </div>
     </div>
 
     <!-- Register Modal -->
@@ -465,19 +480,49 @@
             document.getElementById(id + 'Modal').style.display = 'none';
         }
 
-        // Login Logic
+        // Enhanced Auth Logic
+        let otpSent = false;
+        let currentRegType = 'email'; // Default to Email
+        let currentLoginType = 'email'; // Default to Email
+
+        // --- Login Logic ---
+        window.switchLoginTab = function (type) {
+            currentLoginType = type;
+            document.getElementById('loginType').value = type;
+
+            // Toggle Tabs
+            document.getElementById('loginTabEmail').classList.toggle('active', type === 'email');
+            document.getElementById('loginTabMobile').classList.toggle('active', type === 'mobile');
+
+            // Toggle Sections
+            document.getElementById('loginEmailSection').style.display = type === 'email' ? 'block' : 'none';
+            document.getElementById('loginMobileSection').style.display = type === 'mobile' ? 'block' : 'none';
+        };
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
             const originalText = btn.textContent;
             btn.textContent = 'Logging in...';
 
+            const type = currentLoginType;
+            const email = document.getElementById('loginEmail').value;
             const mobile = document.getElementById('phoneNumber').value;
             const password = document.getElementById('password').value;
 
+            // Determine Identifier
+            let identifier = '';
+            if (type === 'email') {
+                if (!email) { btn.textContent = originalText; return alert('Please enter email'); }
+                identifier = email;
+            } else {
+                if (!mobile) { btn.textContent = originalText; return alert('Please enter mobile number'); }
+                identifier = mobile;
+            }
+
             try {
-                // Use DB utility from db.js
-                const result = await DB.login(mobile, password);
+                // Call DB Login
+                const result = await DB.login(identifier, password);
 
                 if (result.success) {
                     window.location.href = 'index.html?logged_in=true';
@@ -492,17 +537,16 @@
             }
         });
 
-        // Registration Logic Enhanced
-        let otpSent = false;
-        let currentRegType = 'mobile';
-
+        // --- Registration Logic ---
         window.switchRegTab = function (type) {
             currentRegType = type;
             document.getElementById('regType').value = type;
 
             // Toggle Tabs
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(type === 'mobile' ? 'tabMobile' : 'tabEmail').classList.add('active');
+            document.querySelectorAll('#registerModal .tab-btn').forEach(b => b.classList.remove('active'));
+            const activeId = type === 'mobile' ? 'tabMobile' : 'tabEmail';
+            const btn = document.getElementById(activeId);
+            if (btn) btn.classList.add('active');
 
             // Toggle Sections
             document.getElementById('mobileSection').style.display = type === 'mobile' ? 'block' : 'none';
@@ -576,9 +620,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                // Fallback for demo if DB.register fails due to logic mismatch
                 if (type === 'email') {
-                    // Mock success for email since DB might expect mobile format
                     alert('Registration successful! Please login.');
                     closeModal('register');
                 } else {
@@ -586,6 +628,10 @@
                 }
             }
         });
+
+        // Initialize Defaults
+        switchRegTab('email');
+        switchLoginTab('email');
     </script>
 </body>
 
