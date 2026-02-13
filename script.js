@@ -1,4 +1,62 @@
 
+// --- Custom UI Alerts & Modals System ---
+window.CustomUI = {
+    init: function () {
+        if (document.getElementById('customAlertOverlay')) return;
+        const overlay = document.createElement('div');
+        overlay.id = 'customAlertOverlay';
+        overlay.className = 'custom-alert-overlay';
+        overlay.innerHTML = `
+            <div class="custom-alert-box">
+                <div class="custom-alert-title" id="customAlertTitle">Notification</div>
+                <div class="custom-alert-message" id="customAlertMessage">Message content goes here...</div>
+                <div class="custom-alert-actions" id="customAlertActions">
+                    <button class="custom-alert-btn secondary" id="customAlertCancel" style="display:none;">Cancel</button>
+                    <button class="custom-alert-btn primary" id="customAlertOk">OK</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        this.overlay = overlay;
+        this.titleEl = overlay.querySelector('#customAlertTitle');
+        this.msgEl = overlay.querySelector('#customAlertMessage');
+        this.okBtn = overlay.querySelector('#customAlertOk');
+        this.cancelBtn = overlay.querySelector('#customAlertCancel');
+    },
+    alert: function (message, title = 'Notification') {
+        this.init();
+        return new Promise((resolve) => {
+            this.titleEl.innerText = title;
+            this.msgEl.innerText = message;
+            this.okBtn.innerText = 'OK';
+            this.cancelBtn.style.display = 'none';
+            this.okBtn.onclick = () => { this.hide(); resolve(true); };
+            this.show();
+        });
+    },
+    confirm: function (message, title = 'Confirm Action') {
+        this.init();
+        return new Promise((resolve) => {
+            this.titleEl.innerText = title;
+            this.msgEl.innerText = message;
+            this.okBtn.innerText = 'Confirm';
+            this.cancelBtn.innerText = 'Cancel';
+            this.cancelBtn.style.display = 'block';
+            this.okBtn.onclick = () => { this.hide(); resolve(true); };
+            this.cancelBtn.onclick = () => { this.hide(); resolve(false); };
+            this.show();
+        });
+    },
+    show: function () {
+        this.overlay.style.display = 'flex';
+        setTimeout(() => this.overlay.classList.add('show'), 10);
+    },
+    hide: function () {
+        this.overlay.classList.remove('show');
+        setTimeout(() => this.overlay.style.display = 'none', 300);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Icons
     if (window.lucide) lucide.createIcons();
@@ -329,7 +387,7 @@ window.toggleInternalPass = function (id, el) {
 window.handleInternalReset = async function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (!user) {
-        alert("Please login first.");
+        await window.CustomUI.alert("Please login first.", "Authentication Required");
         return;
     }
 
@@ -338,22 +396,22 @@ window.handleInternalReset = async function () {
     const confirmPass = document.getElementById('confirmPassInternal')?.value;
 
     if (!currentPass || !newPass || !confirmPass) {
-        alert("All fields are required.");
+        await window.CustomUI.alert("All fields are required.", "Incomplete Form");
         return;
     }
 
     if (currentPass !== user.password) {
-        alert("Current password is incorrect.");
+        await window.CustomUI.alert("Current password is incorrect.", "Security Error");
         return;
     }
 
     if (newPass !== confirmPass) {
-        alert("New passwords do not match.");
+        await window.CustomUI.alert("New passwords do not match.", "Input Error");
         return;
     }
 
     if (newPass.length < 6) {
-        alert("New password must be at least 6 characters.");
+        await window.CustomUI.alert("New password must be at least 6 characters.", "Invalid Password");
         return;
     }
 
@@ -367,14 +425,14 @@ window.handleInternalReset = async function () {
     try {
         const result = await window.DB.updateUser(user.id, { password: newPass });
         if (result.success) {
-            alert("Password updated successfully! Please login again.");
+            await window.CustomUI.alert("Password updated successfully! Please login again.", "Success");
             window.DB.logout();
         } else {
-            alert("Failed to update password: " + (result.error?.message || "Unknown error"));
+            await window.CustomUI.alert("Failed to update password: " + (result.error?.message || "Unknown error"), "Update Failed");
         }
     } catch (e) {
         console.error(e);
-        alert("An error occurred. Please try again.");
+        await window.CustomUI.alert("An error occurred. Please try again.", "Error");
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -383,7 +441,7 @@ window.handleInternalReset = async function () {
     }
 };
 
-window.handleGuestClick = function (url) {
+window.handleGuestClick = async function (url) {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (user) {
         if (url && url !== '#') window.location.href = url;
@@ -394,7 +452,7 @@ window.handleGuestClick = function (url) {
             alertBox.style.display = 'block';
             setTimeout(() => alertBox.style.display = 'none', 3000);
         } else {
-            alert("Please login to access this feature.");
+            await window.CustomUI.alert("Please login to access this feature.", "Login Required");
         }
     }
 };
@@ -522,7 +580,7 @@ window.saveName = async function () {
     if (!input) return;
     const newName = input.value.trim();
     if (!newName) {
-        alert('Please enter a name');
+        await window.CustomUI.alert('Please enter a name', 'Incomplete Form');
         return;
     }
 
@@ -544,15 +602,15 @@ window.saveName = async function () {
             user.username = newName;
             localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(user));
 
-            alert('Name updated successfully!');
+            await window.CustomUI.alert('Name updated successfully!', 'Success');
             if (window.syncUserData) window.syncUserData();
             window.closeEditNameModal();
         } else {
-            alert('Error: ' + (result.error?.message || 'Failed to update name'));
+            await window.CustomUI.alert('Error: ' + (result.error?.message || 'Failed to update name'), 'Update Failed');
         }
     } catch (e) {
         console.error(e);
-        alert('An error occurred.');
+        await window.CustomUI.alert('An error occurred.', 'Error');
     } finally {
         if (btn) {
             btn.innerText = 'Save Name';
@@ -593,7 +651,7 @@ window.closeWithdrawalPinModal = function () {
 
 window.handleWithdrawalPinSubmit = async function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
-    if (!user) { alert("Please login first."); return; }
+    if (!user) { await window.CustomUI.alert("Please login first.", "Authentication Required"); return; }
 
     const modal = document.getElementById('withdrawalPinModal');
     if (!modal) return;
@@ -603,22 +661,22 @@ window.handleWithdrawalPinSubmit = async function () {
     const confirmPin = modal.querySelector('#wpConfirmPin')?.value;
 
     if (!loginPass || !newPin || !confirmPin) {
-        alert("All fields are required.");
+        await window.CustomUI.alert("All fields are required.", "Incomplete Form");
         return;
     }
 
     if (loginPass !== user.password) {
-        alert("Incorrect login password.");
+        await window.CustomUI.alert("Incorrect login password.", "Security Error");
         return;
     }
 
     if (newPin !== confirmPin) {
-        alert("PINs do not match.");
+        await window.CustomUI.alert("PINs do not match.", "Input Error");
         return;
     }
 
     if (newPin.length < 4) {
-        alert("PIN must be at least 4 digits.");
+        await window.CustomUI.alert("PIN must be at least 4 digits.", "Invalid PIN");
         return;
     }
 
@@ -633,17 +691,17 @@ window.handleWithdrawalPinSubmit = async function () {
     try {
         const result = await window.DB.updateUser(user.id, { withdrawal_pin: newPin });
         if (result.success) {
-            alert("Withdrawal PIN updated successfully!");
+            await window.CustomUI.alert("Withdrawal PIN updated successfully!", "Success");
             // Update local user object
             user.withdrawal_pin = newPin;
             localStorage.setItem('avendus_current_user', JSON.stringify(user));
             window.closeWithdrawalPinModal();
         } else {
-            alert("Failed to update PIN: " + (result.error?.message || "Unknown error"));
+            await window.CustomUI.alert("Failed to update PIN: " + (result.error?.message || "Unknown error"), "Update Failed");
         }
     } catch (e) {
         console.error(e);
-        alert("An error occurred.");
+        await window.CustomUI.alert("An error occurred.", "Error");
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -698,7 +756,7 @@ window.uploadAvatar = async function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     const saveBtn = document.querySelector('.btn-primary');
 
-    if (!user) { alert('Please login first.'); return; }
+    if (!user) { await window.CustomUI.alert('Please login first.', 'Authentication Required'); return; }
 
     if (previewImg && previewImg.src && previewImg.style.display !== 'none') {
         const newSrc = previewImg.src;
@@ -723,16 +781,16 @@ window.uploadAvatar = async function () {
             });
 
             if (result.success) {
-                alert('Avatar updated successfully!');
+                await window.CustomUI.alert('Avatar updated successfully!', 'Success');
             } else {
-                alert('Success: Profile updated locally. (Note: Cloud sync may be pending)');
+                await window.CustomUI.alert('Success: Profile updated locally. (Note: Cloud sync may be pending)', 'Partial Success');
                 console.warn("Avatar saved locally but failed to sync to cloud. If this persists, run the SQL command provided to add the avatar_url column.", result.error?.message);
             }
 
             window.closeAvatarModal();
         } catch (e) {
             console.error(e);
-            alert('An error occurred while saving: ' + e.message);
+            await window.CustomUI.alert('An error occurred while saving: ' + e.message, 'Error');
         } finally {
             if (saveBtn) {
                 saveBtn.disabled = false;
@@ -740,7 +798,7 @@ window.uploadAvatar = async function () {
             }
         }
     } else {
-        alert('Please select an image first.');
+        await window.CustomUI.alert('Please select an image first.', 'Selection Required');
     }
 };
 
@@ -819,7 +877,7 @@ window.previewKYCImage = function (input, previewId) {
 window.submitKYC = async function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (!user) {
-        alert('Please login to submit KYC.');
+        await window.CustomUI.alert('Please login to submit KYC.', 'Authentication Required');
         return;
     }
 
@@ -833,7 +891,7 @@ window.submitKYC = async function () {
     const backPreview = document.getElementById('kycBackPreview').src;
 
     if (!name || !idNum || (!frontInput.files[0] && (!frontPreview || frontPreview.includes('placeholder'))) || (!backInput.files[0] && (!backPreview || backPreview.includes('placeholder')))) {
-        alert('Please complete all fields and upload both ID images.');
+        await window.CustomUI.alert('Please complete all fields and upload both ID images.', 'Incomplete Form');
         return;
     }
 
@@ -883,13 +941,13 @@ window.submitKYC = async function () {
         const result = await window.DB.submitKYC(user.id, kycData);
 
         if (result.success) {
-            alert('KYC Verification Submitted Successfully!');
+            await window.CustomUI.alert('KYC Verification Submitted Successfully!', 'Submission Success');
             if (window.syncUserData) window.syncUserData(); // Update UI
             window.closeKYCModal();
         } else {
             // Note: If images fail but profile updated, we log and alert
             console.error("KYC files submission error:", result.error);
-            alert('Partial Success: Profile info updated. (Note: ID Images failed to sync)');
+            await window.CustomUI.alert('Partial Success: Profile info updated. (Note: ID Images failed to sync)', 'Partial Update');
             window.closeKYCModal();
         }
 
@@ -898,7 +956,7 @@ window.submitKYC = async function () {
 
     } catch (e) {
         console.error(e);
-        alert('An error occurred: ' + e.message);
+        await window.CustomUI.alert('An error occurred: ' + e.message, 'Error');
         const btn = document.querySelector('.btn-submit');
         if (btn) {
             btn.disabled = false;
@@ -1430,7 +1488,7 @@ window.sendCSMessage = async () => {
         const { success, error } = await window.DB.sendMessage(user.id, text, 'User');
         if (!success) {
             console.error("Chat Error:", error);
-            alert("Message failed to send. Please try again.");
+            await window.CustomUI.alert("Message failed to send. Please try again.", "Send Error");
         }
     }
 };
@@ -1453,13 +1511,13 @@ window.insertEmoji = function (emoji) {
     if (picker) picker.style.display = 'none';
 };
 
-window.handleCSImageUpload = function (input) {
+window.handleCSImageUpload = async function (input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
 
         // Size check (e.g. 2MB limit)
         if (file.size > 2 * 1024 * 1024) {
-            alert("Image file is too large (max 2MB).");
+            await window.CustomUI.alert("Image file is too large (max 2MB).", "File Too Large");
             input.value = ''; // Reset
             return;
         }
@@ -1476,7 +1534,7 @@ window.handleCSImageUpload = function (input) {
                 // Show uploading state? Or just send.
                 const { success, error } = await window.DB.sendMessage(user.id, imgMsg, 'User');
                 if (!success) {
-                    alert("Failed to send image.");
+                    await window.CustomUI.alert("Failed to send image.", "Send Error");
                 }
             }
         };

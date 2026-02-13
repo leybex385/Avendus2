@@ -9,8 +9,106 @@
 #topAlertContainer,
 #resetPasswordModal,
 #withdrawalPinModal,
-.center-popup-modal {
+.center-popup-modal,
+.custom-alert-overlay {
     font-family: 'Outfit', sans-serif !important;
+}
+
+/* Custom Global Alert/Confirm Modal */
+.custom-alert-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(8px) !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 20000 !important;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.custom-alert-overlay.show {
+    display: flex !important;
+    opacity: 1;
+}
+
+.custom-alert-box {
+    background: #0d0d0d !important;
+    border: 1px solid #d4af37 !important;
+    box-shadow: 0 0 50px rgba(212, 175, 55, 0.25) !important;
+    border-radius: 20px !important;
+    width: 90% !important;
+    max-width: 420px !important;
+    padding: 2.5rem 2rem !important;
+    text-align: center !important;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.custom-alert-overlay.show .custom-alert-box {
+    transform: scale(1);
+}
+
+.custom-alert-title {
+    color: #d4af37 !important;
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 1rem !important;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.custom-alert-message {
+    color: #cccccc !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    margin-bottom: 2.5rem !important;
+    font-weight: 400 !important;
+}
+
+.custom-alert-actions {
+    display: flex !important;
+    gap: 1rem !important;
+    justify-content: center !important;
+}
+
+.custom-alert-btn {
+    padding: 0.85rem 1.8rem !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    min-width: 120px !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.custom-alert-btn.primary {
+    background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%) !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3) !important;
+}
+
+.custom-alert-btn.primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5) !important;
+}
+
+.custom-alert-btn.secondary {
+    background: transparent !important;
+    color: #d4af37 !important;
+    border: 1px solid #d4af37 !important;
+}
+
+.custom-alert-btn.secondary:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+    color: #f9e29b !important;
 }
 
 /* Modal Overlay */
