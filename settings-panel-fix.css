@@ -3,174 +3,226 @@
    Scope: Settings drawer component only
    ======================================== */
 
-/* Settings modal overlay */
-#settingsModal.settings-modal {
+/* General Font Unification */
+#settingsModal,
+#csModal,
+#topAlertContainer,
+#resetPasswordModal,
+#withdrawalPinModal {
+    font-family: 'Outfit', sans-serif !important;
+}
+
+/* Modal Overlay */
+#settingsModal.settings-modal,
+#csModal.settings-modal {
     background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(5px);
 }
 
-/* Settings panel content */
-#settingsModal .settings-content {
-    background: #111111 !important;
-    border-left: 2px solid #D4AF37 !important;
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(212, 175, 55, 0.15) !important;
+/* Settings Side Panel & CS Modal Content */
+#settingsModal .settings-content,
+#csModal .settings-content {
+    background: #121212 !important;
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.08) !important;
+    position: relative !important;
+    /* For absolute close button */
+    color: #cccccc !important;
 }
 
-/* Settings header */
-#settingsModal .settings-header {
-    background: #0a0a0a !important;
-    border-bottom: 1px solid #2a2a2a !important;
+/* Close Button Repositioning & Styling */
+#settingsModal .settings-close,
+#csModal .settings-close {
+    position: absolute !important;
+    top: 15px !important;
+    right: 20px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #d4af37 !important;
+    cursor: pointer !important;
+    padding: 5px !important;
+    transition: all 0.3s ease !important;
+    z-index: 10 !important;
 }
 
-/* Avatar circle */
+#settingsModal .settings-close:hover,
+#csModal .settings-close:hover {
+    color: #f5d76e !important;
+    text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
+    transform: scale(1.1);
+}
+
+/* Headers */
+#settingsModal .settings-header,
+#csModal .settings-header {
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1) !important;
+    padding-bottom: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    background: transparent !important;
+    text-align: center;
+    /* Center align like premium profile cards */
+}
+
+/* Typography Colors */
+#settingsModal h2,
+#settingsModal .settings-name,
+#csModal h2,
+#wpModalTitle {
+    color: #d4af37 !important;
+    font-weight: 700 !important;
+}
+
+#settingsModal .settings-phone,
+#settingsModal .settings-item-desc {
+    color: #888888 !important;
+}
+
+#settingsModal .settings-item-title {
+    color: #d4af37 !important;
+    font-weight: 600 !important;
+}
+
+/* Avatar Styling */
 #settingsModal .avatar-circle {
-    background: linear-gradient(135deg, #D4AF37 0%, #f9e29b 100%) !important;
+    background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
     color: #000 !important;
     font-weight: 800 !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
 }
 
-/* Settings name and phone */
-#settingsModal .settings-name {
-    color: #D4AF37 !important;
-}
-
-#settingsModal .settings-phone {
-    color: #B3B3B3 !important;
-}
-
-/* VIP and Credit Score badges */
-#settingsModal .s-badge.vip,
-#settingsModal .s-badge.credit {
-    background: rgba(212, 175, 55, 0.1) !important;
-    color: #D4AF37 !important;
-    border: 1.5px solid rgba(212, 175, 55, 0.3) !important;
-}
-
-/* Settings list container */
-#settingsModal .settings-list {
-    background: transparent !important;
-}
-
-/* Settings accordion items */
+/* Menu Items (Cards) */
 #settingsModal .settings-item {
-    background: #141414 !important;
-    border: 1px solid #2a2a2a !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    background: #151515 !important;
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
+    border-radius: 12px !important;
+    margin-bottom: 1rem !important;
+    padding: 1rem !important;
+    transition: all 0.3s ease !important;
 }
 
 #settingsModal .settings-item:hover {
-    background: #1c1c1c !important;
-    border-color: #D4AF37 !important;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2) !important;
+    background: rgba(212, 175, 55, 0.08) !important;
+    border-color: rgba(212, 175, 55, 0.4) !important;
+    transform: translateX(5px);
 }
 
-/* Active accordion state */
-#settingsModal .settings-item.active {
-    background: #000000 !important;
-    border-color: #D4AF37 !important;
-}
-
-/* Settings item icons */
+/* Menu Item Icons */
 #settingsModal .settings-item-icon {
-    color: #FFFFFF !important;
+    color: #d4af37 !important;
+    background: rgba(212, 175, 55, 0.1) !important;
+    padding: 8px !important;
+    border-radius: 8px !important;
 }
 
-#settingsModal .settings-item:hover .settings-item-icon,
-#settingsModal .settings-item.active .settings-item-icon {
-    color: #D4AF37 !important;
-}
-
-/* Settings item title */
-#settingsModal .settings-item-title {
-    color: #FFFFFF !important;
-}
-
-#settingsModal .settings-item.active .settings-item-title {
-    color: #D4AF37 !important;
-}
-
-/* Settings item description */
-#settingsModal .settings-item-desc {
-    color: #B3B3B3 !important;
-}
-
-/* Settings chevron */
 #settingsModal .settings-chevron {
-    color: #B3B3B3 !important;
+    color: #666 !important;
 }
 
-#settingsModal .settings-item:hover .settings-chevron,
-#settingsModal .settings-item.active .settings-chevron {
-    color: #D4AF37 !important;
+#settingsModal .settings-item:hover .settings-chevron {
+    color: #d4af37 !important;
 }
 
-/* Submenu containers */
+/* Submenu Items */
 #settingsModal .settings-submenu {
-    background: #111111 !important;
-    border-top: 1px solid #2a2a2a !important;
-    border-bottom: 1px solid #2a2a2a !important;
+    background: transparent !important;
+    border: none !important;
+    padding-left: 1rem !important;
 }
 
-/* Submenu items (Update Name, Update Avatar, etc.) */
 #settingsModal .submenu-item {
-    background: #141414 !important;
-    color: #FFFFFF !important;
+    background: #151515 !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
     border-left: 3px solid transparent !important;
-    transition: all 0.2s ease !important;
+    margin-bottom: 0.5rem !important;
+    color: #cccccc !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
 }
 
 #settingsModal .submenu-item:hover {
-    background: #1c1c1c !important;
-    color: #D4AF37 !important;
-    border-left-color: #D4AF37 !important;
+    background: rgba(212, 175, 55, 0.05) !important;
+    border-color: rgba(212, 175, 55, 0.3) !important;
+    border-left-color: #d4af37 !important;
+    color: #d4af37 !important;
 }
 
 #settingsModal .submenu-item i {
-    color: #FFFFFF !important;
+    color: #888888 !important;
 }
 
 #settingsModal .submenu-item:hover i {
-    color: #D4AF37 !important;
+    color: #d4af37 !important;
 }
 
-/* Logout button container */
+/* Logout Button */
 #settingsModal .logout-btn-container {
-    padding: 1.5rem !important;
-    border-top: 1px solid #2a2a2a !important;
-    background: #0a0a0a !important;
+    padding-top: 2rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: transparent !important;
+    text-align: center;
 }
 
-/* Logout button */
 #settingsModal .logout-btn {
-    background: #1a1a1a !important;
-    color: #cc6666 !important;
-    border: 1px solid #5a1a1a !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-    transition: all 0.2s ease !important;
+    background: transparent !important;
+    border: 1px solid rgba(255, 0, 0, 0.4) !important;
+    color: #ff4d4d !important;
+    width: 100% !important;
+    padding: 0.8rem !important;
+    border-radius: 8px !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 600 !important;
+    transition: all 0.3s !important;
 }
 
 #settingsModal .logout-btn:hover {
-    background: #2a1a1a !important;
-    border-color: #cc6666 !important;
-    box-shadow: 0 0 10px rgba(204, 102, 102, 0.3) !important;
+    background: rgba(255, 0, 0, 0.05) !important;
+    border-color: #ff0000 !important;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.2) !important;
 }
 
-/* Close button */
-#settingsModal .settings-close {
-    color: #D4AF37 !important;
+/* Badges */
+#settingsModal .s-badge {
+    background: #000 !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    color: #d4af37 !important;
 }
 
-#settingsModal .settings-close:hover {
-    color: #FFD700 !important;
+/* CS Modal Chat Specifics */
+#chatBox {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Remove any blue colors from settings panel */
-#settingsModal [style*="color: #3b82f6"],
-#settingsModal [style*="color: #2563eb"],
-#settingsModal [style*="background: #3b82f6"],
-#settingsModal [style*="background: #2563eb"] {
-    color: #D4AF37 !important;
-    background: transparent !important;
+#csInput {
+    background: #1a1a1a !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    color: #fff !important;
+}
+
+#csInput:focus {
+    border-color: #d4af37 !important;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.2) !important;
+}
+
+/* Scrollbar styling for panels */
+#settingsModal .settings-content::-webkit-scrollbar,
+#chatBox::-webkit-scrollbar {
+    width: 6px;
+}
+
+#settingsModal .settings-content::-webkit-scrollbar-track,
+#chatBox::-webkit-scrollbar-track {
+    background: #111;
+}
+
+#settingsModal .settings-content::-webkit-scrollbar-thumb,
+#chatBox::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+#settingsModal .settings-content::-webkit-scrollbar-thumb:hover,
+#chatBox::-webkit-scrollbar-thumb:hover {
+    background: #d4af37;
 }

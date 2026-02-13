@@ -457,6 +457,112 @@
             border-color: #d4af37 !important;
             color: #fff !important;
         }
+
+        /* Notifications & Modals Override */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(50px);
+            background: #151515;
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2000;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            min-width: 300px;
+        }
+
+        .toast-notification.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-icon {
+            color: #d4af37;
+        }
+
+        .confirm-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .confirm-modal {
+            background: #151515;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.1);
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .confirm-title {
+            color: #d4af37;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .confirm-msg {
+            color: #cccccc;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            flex: 1;
+        }
+
+        .confirm-btn.delete {
+            background: linear-gradient(90deg, #d4af37, #f5d76e);
+            color: #000;
+        }
+
+        .confirm-btn.delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .confirm-btn.cancel {
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #d4af37;
+        }
+
+        .confirm-btn.cancel:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
     </style>
 </head>
 
@@ -619,26 +725,102 @@
                     style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
             </div>
 
-            <div class="ba-form-group">
-                <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">IFSC <span
-                        style="color: #ef4444">*</span></label>
-                <input type="text" id="addIFSC" class="ba-input" placeholder="Please enter IFSC"
-                    style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
-            </div>
-
-            <div class="ba-modal-actions" style="margin-top: 2rem; gap: 1rem; justify-content: flex-end;">
-                <button class="ba-btn" onclick="submitAdd()"
-                    style="background: #93c5fd; color: white; padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600; border:none; transition: background 0.2s;">Submit</button>
-                <button class="ba-btn" onclick="closeAddAccountModal()"
-                    style="background: #ef4444; color: white; padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600; border:none; transition: background 0.2s;">Cancel</button>
+            <label class="ba-label" style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">IFSC <span
+                    style="color: #ef4444">*</span></label>
+            <input type="text" id="addIFSC" class="ba-input" placeholder="Please enter IFSC"
+                style="padding: 0.8rem; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem;">
+            <div class="ba-modal-actions"
+                style="margin-top: 2rem; gap: 1rem; justify-content: flex-end; display: flex;">
+                <button class="ba-btn" onclick="submitAdd()">Add Account</button>
+                <button class="ba-btn" onclick="closeAddAccountModal()">Cancel</button>
             </div>
         </div>
     </div>
+
+    <!-- Notifications HTML -->
+    <div id="toastNotification" class="toast-notification">
+        <i data-lucide="check-circle" class="toast-icon"></i>
+        <span id="toastMessage">Success</span>
+    </div>
+
+    <div id="deleteConfirmModal" class="confirm-modal-overlay" style="z-index: 9999;">
+        <div class="confirm-modal">
+            <h3 class="confirm-title">Confirm Deletion</h3>
+            <p class="confirm-msg" id="confirmMessage">Are you sure you want to delete this bank account?</p>
+            <div class="confirm-actions">
+                <button class="confirm-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button class="confirm-btn delete" id="btnConfirmDeleteAction"
+                    onclick="confirmDeleteAction()">Delete</button>
+            </div>
+        </div>
     </div>
 
     <script>
         let allAccounts = [];
         let editingAccountId = null;
+
+        // --- Custom Notification Logic ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toastNotification');
+            const msgSpan = document.getElementById('toastMessage');
+            const icon = toast.querySelector('.toast-icon');
+
+            msgSpan.textContent = message;
+            if (isError) {
+                toast.style.borderLeft = '4px solid #ef4444';
+                // icon logic could be improved but simple style change is enough for now
+            } else {
+                toast.style.borderLeft = '4px solid #d4af37';
+            }
+
+            toast.classList.add('show');
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        let pendingConfirmCallback = null;
+
+        function showConfirm(message, onConfirm) {
+            const msgEl = document.getElementById('confirmMessage');
+            const modal = document.getElementById('deleteConfirmModal');
+
+            if (msgEl) msgEl.textContent = message;
+            if (modal) {
+                modal.style.display = 'flex';
+                // Force z-index to be top-most
+                modal.style.zIndex = '9999';
+            } else {
+                console.error("Delete Confirm Modal not found in DOM");
+            }
+            pendingConfirmCallback = onConfirm;
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) modal.style.display = 'none';
+            pendingConfirmCallback = null;
+        }
+
+        function confirmDeleteAction() {
+            if (typeof pendingConfirmCallback === 'function') {
+                pendingConfirmCallback();
+            }
+            closeConfirmModal();
+        }
+
+        // Wrapper to safely handle click event and propagation
+        function onDeleteClick(event, id) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            handleDelete(id);
+        }
+
+        // --- Existing Logic Updated ---
 
         async function init() {
             const user = DB.getCurrentUser();
@@ -668,30 +850,20 @@
                 const masked = rawNum.length > 4 ? rawNum.substring(0, 3) + "*****" + rawNum.substring(rawNum.length - 3) : rawNum;
 
                 return `
-                    <div class="ba-blue-card">
+                    <div class="ba-blue-card" style="margin-bottom: 2rem;">
                         <div class="ba-blue-top">
-                            <div class="ba-bank-name">${acc.bank_name}</div>
-                            <div class="ba-country-tag">IN</div>
+                            <div class="ba-bank-name">${acc.bank_name} <span class="ba-country-tag">IN</span></div>
+                            <div class="ba-list-actions" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px;">
+                                <button class="ba-action-btn" onclick="openEditAccountModal('${acc.id}')" title="Edit"><i data-lucide="pencil" size="16"></i></button>
+                                <button class="ba-action-btn delete" onclick="onDeleteClick(event, '${acc.id}')" title="Delete"><i data-lucide="trash-2" size="16"></i></button>
+                            </div>
                         </div>
-                        <div class="ba-account-num">${masked}</div>
-                        <div class="ba-account-name">${acc.first_name} ${acc.last_name}</div>
-                        <div class="ba-account-phone">${acc.mobile || ''}</div>
+                        <div class="ba-account-num" style="font-family: monospace; letter-spacing: 4px;">${masked}</div>
+                        <div class="ba-account-name" style="margin-top: 1rem; font-weight: 600; color: #fff;">${acc.first_name} ${acc.last_name}</div>
+                        <div class="ba-account-phone" style="font-size: 0.8rem; margin-top: 2px;">${acc.mobile || ''}</div>
                         <div class="ba-blue-bottom">
-                            <span>IFSC</span>
-                            <span style="font-family: monospace;">${acc.ifsc}</span>
-                        </div>
-                    </div>
-
-                    <div class="ba-list-item">
-                        <div class="ba-list-left">
-                            <div class="ba-list-bank">${acc.bank_name} <span class="ba-list-tag">IN</span></div>
-                            <div class="ba-list-num">${masked}</div>
-                            <div class="ba-list-ifsc">IFSC: ${acc.ifsc}</div>
-                        </div>
-                        <div class="ba-list-actions">
-                            <button class="ba-action-btn delete" onclick="handleDelete('${acc.id}')"><i data-lucide="trash-2" size="16"></i></button>
-                            <button class="ba-action-btn" onclick="openEditAccountModal('${acc.id}')"><i data-lucide="pencil" size="16"></i></button>
-                            <button class="ba-action-btn"><i data-lucide="chevron-right" size="16"></i></button>
+                            <span>IFSC CODE</span>
+                            <span style="font-family: monospace; letter-spacing: 1px;">${acc.ifsc}</span>
                         </div>
                     </div>
                 `;
@@ -701,7 +873,12 @@
 
         function openAddAccountModal() {
             editingAccountId = null;
-            document.getElementById('addAccountModal').style.display = 'flex';
+            // create local refs
+            const addModal = document.getElementById('addAccountModal');
+            const deleteModal = document.getElementById('deleteConfirmModal');
+
+            if (deleteModal) deleteModal.style.display = 'none';
+            if (addModal) addModal.style.display = 'flex';
         }
 
         function closeAddAccountModal() {
@@ -718,42 +895,37 @@
                 ifsc: document.getElementById('addIFSC').value.trim()
             };
 
-            // Basic Validation
             if (!data.bank_name || !data.account_number || !data.first_name || !data.last_name || !data.mobile || !data.ifsc) {
-                alert('Please fill in all required fields marked with *');
+                showToast('Please fill in all required fields marked with *', true);
                 return;
             }
 
             const user = window.DB.getCurrentUser();
             if (!user) {
-                alert("Please login first.");
+                showToast("Please login first.", true);
                 return;
             }
 
-            // Call Backend
             const res = await window.DB.addBankAccount(user.id, data);
 
             if (res.success) {
-                alert('Account added successfully!');
+                showToast('Bank account added successfully.');
                 closeAddAccountModal();
 
-                // If demo mode (backend didn't save), manually update list
                 if (res.demo) {
-                    // Create fake ID for UI
                     data.id = 'demo_' + Date.now();
                     allAccounts.push(data);
                     renderAccounts();
                 } else {
-                    loadAccounts(); // Refresh from backend
+                    loadAccounts();
                 }
 
-                // Reset form
                 ['addBankName', 'addFirstName', 'addLastName', 'addAccNum', 'addPhone', 'addIFSC'].forEach(id => {
                     document.getElementById(id).value = '';
                 });
             } else {
                 console.error("Add Bank Error:", res.error);
-                alert('Error adding account: ' + (res.error?.message || 'Unknown error'));
+                showToast('Error adding account: ' + (res.error?.message || 'Unknown error'), true);
             }
         }
 
@@ -777,8 +949,6 @@
             document.getElementById('editAccountModal').style.display = 'none';
         }
 
-
-
         async function submitEdit() {
             if (!editingAccountId) return;
 
@@ -791,52 +961,49 @@
                 ifsc: document.getElementById('editIFSC').value.trim()
             };
 
-            // Basic Validation
             if (!data.bank_name || !data.account_number || !data.first_name || !data.last_name || !data.mobile || !data.ifsc) {
-                alert('Please fill in all required fields marked with *');
+                showToast('Please fill in all required fields.', true);
                 return;
             }
 
-            // Check if this is a demo account (starts with demo_)
             if (editingAccountId.startsWith('demo_')) {
-                // Update locally
                 const idx = allAccounts.findIndex(a => a.id === editingAccountId);
                 if (idx !== -1) {
                     allAccounts[idx] = { ...allAccounts[idx], ...data };
-                    alert('Account updated locally (Demo Mode)!');
+                    showToast('Account updated locally (Demo Mode)!');
                     closeEditAccountModal();
                     renderAccounts();
                 }
                 return;
             }
 
-            // Real Backend Update
             const res = await window.DB.updateBankAccount(editingAccountId, data);
 
             if (res.success) {
-                alert('Account updated successfully!');
+                showToast('Account updated successfully!');
                 closeEditAccountModal();
                 loadAccounts();
             } else {
                 console.error("Update Error:", res.error);
-                alert('Error updating account: ' + (res.error?.message || 'Unknown error'));
+                showToast('Error: ' + (res.error?.message || 'Unknown error'), true);
             }
         }
 
-        async function handleDelete(id) {
-            if (confirm('Are you sure you want to delete this account?')) {
-                const res = await DB.deleteBankAccount(id);
+        function handleDelete(id) {
+            showConfirm("Are you sure you want to delete this bank account?", async () => {
+                const res = await window.DB.deleteBankAccount(id);
                 if (res.success) {
+                    showToast("Bank account deleted successfully.");
                     loadAccounts();
                 } else {
-                    alert('Error deleting account');
+                    showToast('Error deleting account', true);
                 }
-            }
+            });
         }
 
         window.onload = init;
     </script>
-    <!-- Modals -->
+
     <div id="topAlertContainer" class="top-alert-container">
         <div class="top-alert">
             <i data-lucide="alert-circle"></i>
