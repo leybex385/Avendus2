@@ -1104,24 +1104,6 @@
             gap: 10px;
         }
 
-        .cs-floating-tab {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: #1e56a0;
-            color: white;
-            padding: 0.8rem 1.4rem;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(30, 86, 160, 0.3);
-            z-index: 1000;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
         .cs-input:focus {
             border-color: #1e56a0;
         }
@@ -4028,7 +4010,9 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                         <div>
-                            <div id="pStatsInvested" style="font-size: 1.5rem; font-weight: 700;">₹0.00</div>
+                            <div id="pStatsInvested"
+                                style="font-size: clamp(16px, 2vw, 22px); font-weight: 700; word-break: break-all; overflow-wrap: anywhere; white-space: normal; max-width: 100%; display: block;">
+                                ₹0.00</div>
                             <div style="font-size: 0.8rem; color: #94a3b8;">Invested</div>
                         </div>
                         <div style="text-align: right;">
@@ -4395,8 +4379,21 @@
                     </div>
                     <div onclick="window.location.href='loan_application.html'"
                         style="background: #f8fafc; border-radius: 12px; padding: 1.25rem; border: 1px solid #e2e8f0; display: flex; gap: 1rem; align-items: center; cursor: pointer; transition: transform 0.2s;"
-                        onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="https://flagcdn.com/w80/in.png" width="40" style="opacity: 0.2;">
+                        onmouseover="this.style.transform='scale(1.02)'; this.querySelector('.loan-icon-box').style.boxShadow='0 0 15px rgba(212, 175, 55, 0.4)'"
+                        onmouseout="this.style.transform='scale(1)'; this.querySelector('.loan-icon-box').style.boxShadow='none'">
+                        <div class="loan-icon-box"
+                            style="width: 48px; height: 48px; background: #111111; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #D4AF37; flex-shrink: 0; transition: box-shadow 0.3s ease;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="3" y1="22" x2="21" y2="22"></line>
+                                <line x1="6" y1="18" x2="6" y2="11"></line>
+                                <line x1="10" y1="18" x2="10" y2="11"></line>
+                                <line x1="14" y1="18" x2="14" y2="11"></line>
+                                <line x1="18" y1="18" x2="18" y2="11"></line>
+                                <polygon points="12 2 20 7 4 7 12 2"></polygon>
+                            </svg>
+                        </div>
                         <div>
                             <div style="font-weight: 700; color: #1e293b;">Tailored Personal Credit Loans</div>
                             <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.3rem;">Enjoy a seamless,
@@ -7236,11 +7233,11 @@
     </div>
 
     <!-- Notification Bell Floating Button -->
-    <div class="cs-floating-tab" onclick="toggleMessageCenter()"
-        style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; background: #fff; border: 1px solid #e2e8f0; color: #64748b; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;">
+    <div class="floating-notification-btn" onclick="toggleMessageCenter()"
+        style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; z-index: 1000; position: fixed; display: flex; align-items: center; cursor: pointer;">
         <div
             style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
-            <i data-lucide="bell" size="24" color="#1e56a0"></i>
+            <i data-lucide="bell" size="24"></i>
             <div id="msgBadge"
                 style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
             </div>

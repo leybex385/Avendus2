@@ -124,6 +124,28 @@
                 width: 100%;
             }
         }
+
+        #homepage-notification-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 30px;
+            z-index: 9999;
+            background: linear-gradient(135deg, #d4af37, #f5d76e);
+            color: #000;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        #homepage-notification-btn:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 
@@ -1052,11 +1074,11 @@
     </script>
 
     <!-- Notification Bell Floating Button -->
-    <div class="cs-floating-tab" onclick="toggleMessageCenter()"
-        style="bottom: 7rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; padding:0; justify-content:center; background: #fff; border: 1px solid #e2e8f0; color: #64748b; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;">
+    <!-- Notification Bell Floating Button -->
+    <div id="homepage-notification-btn" onclick="toggleMessageCenter()">
         <div
             style="position:relative; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
-            <i data-lucide="bell" size="24" color="#1e56a0"></i>
+            <i data-lucide="bell" size="24" color="#000000"></i>
             <div id="msgBadge"
                 style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
             </div>

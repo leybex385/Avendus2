@@ -1292,6 +1292,12 @@ window.toggleMessageCenter = async function () {
             modal.classList.remove('active');
             overlay.classList.remove('active');
             setTimeout(() => overlay.style.display = 'none', 300);
+
+            // Mark all read when closing
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+            if (user && window.DB.markAllNotificationsRead) {
+                window.DB.markAllNotificationsRead(user.id);
+            }
         } else {
             overlay.style.display = 'block';
             setTimeout(() => {
@@ -1299,35 +1305,23 @@ window.toggleMessageCenter = async function () {
                 overlay.classList.add('active');
             }, 10);
 
-            // Hide Badges when opened
+            // Hide Badges instantly on open
             const badges = document.querySelectorAll('.notif-badge, #msgBadge');
             badges.forEach(b => b.style.display = 'none');
 
-            // Fetch Notices via Chat History and Filter
-            if (window.DB && window.DB.getMessages) {
+            // Fetch Notices
+            if (window.DB && window.DB.getNotifications) {
                 const user = window.DB.getCurrentUser();
                 if (user) {
                     list.innerHTML = '<div style="padding:20px;text-align:center;">Loading...</div>';
-                    // We fetch ALL messages (Admin+User) to find notifications
-                    // This is inefficient but necessary without DB query changes for JSON
-                    // Optimally: DB.getMessages includes Admin messages.
-                    const allMsgs = await window.DB.getMessages(user.id);
-
-                    // Filter: Sender must be Admin AND have is_notification: true
-                    // OR Sender is System (legacy)
-                    const notices = allMsgs.filter(m => {
-                        if (m.sender === 'System') return true;
-                        if (m.sender === 'Admin') {
-                            try {
-                                const p = JSON.parse(m.message);
-                                return p.is_notification === true;
-                            } catch (e) { return false; }
-                        }
-                        return false;
-                    });
-
+                    const notices = await window.DB.getNotifications(user.id);
                     renderNotices(notices);
+
+                    // Mark read in DB immediately upon viewing list
+                    window.DB.markAllNotificationsRead(user.id);
                 }
+            } else {
+                list.innerHTML = '<div style="padding:20px;text-align:center;">Database Error</div>';
             }
         }
     }
@@ -1339,7 +1333,7 @@ function renderNotices(notices) {
     if (!list) return;
 
     if (!notices || notices.length === 0) {
-        list.innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+        list.innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No notifications</div>';
         if (count) count.textContent = '0 Messages';
         return;
     }
@@ -1347,27 +1341,17 @@ function renderNotices(notices) {
     if (count) count.textContent = `${notices.length} Messages`;
 
     list.innerHTML = notices.map(n => {
-        let title = n.title || 'System Notice';
-        let body = n.message || '';
-        try {
-            if (body.startsWith('{')) {
-                const p = JSON.parse(body);
-                if (p.title) title = p.title;
-                if (p.body) body = p.body;
-            }
-        } catch (e) { }
-
         return `
         <div class="notif-card" id="notif-${n.id}" onclick="toggleNotifView('${n.id}', event)">
-            <div class="notif-timeline ${n.read ? '' : 'unread'}"></div>
+            <div class="notif-timeline ${n.is_read ? '' : 'unread'}"></div>
             <div class="notif-header">
                 <div class="notif-main-info">
-                    <div class="notif-title">${title} <span class="notif-tag" style="font-size:10px; margin-left:5px;">${n.tag || 'NOTICE'}</span></div>
+                    <div class="notif-title">${n.title || 'Notification'} <span class="notif-tag" style="font-size:10px; margin-left:5px;">${n.type || 'GENERAL'}</span></div>
                     <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
                 </div>
                 <button class="notif-delete-btn" onclick="deleteMessage('${n.id}', this); event.stopPropagation();">Delete</button>
             </div>
-            <div class="notif-body">${body}</div>
+            <div class="notif-body">${n.message || ''}</div>
         </div>
         `;
     }).join('');
@@ -1428,8 +1412,8 @@ window.deleteSelected = async function () {
     if (!confirm(`Delete ${selected.length} notifications?`)) return;
 
     for (const id of selected) {
-        if (window.DB && window.DB.deleteMessage) {
-            await window.DB.deleteMessage(id);
+        if (window.DB && window.DB.deleteNotification) {
+            await window.DB.deleteNotification(id);
             const el = document.getElementById(`notif-${id}`);
             if (el) el.remove();
         }
@@ -1437,18 +1421,52 @@ window.deleteSelected = async function () {
 
     // Refresh list logic if empty?
     if (document.querySelectorAll('.mc-item').length === 0) {
-        document.getElementById('mcList').innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+        document.getElementById('mcList').innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No notifications</div>';
     }
 
     // Exit select mode
     window.sysToggleSelect();
 };
 
-window.makeAllRead = function () {
+window.makeAllRead = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) return;
+
+    // 1. Update DB to mark all read
+    if (window.DB.markAllNotificationsRead) {
+        const result = await window.DB.markAllNotificationsRead(user.id);
+        if (result && result.error) {
+            console.error("Make all read failed:", result.error);
+            alert(result.error.message || "Failed to mark as read");
+            return;
+        }
+    }
+
+    // 2. Re-fetch Notifications
+    if (window.DB.getNotifications) {
+        const list = document.getElementById('mcList');
+        if (list) {
+            const notices = await window.DB.getNotifications(user.id);
+            renderNotices(notices);
+        }
+    }
+
+    // 3. Update Bell Unread Count
+    if (window.DB.getUnreadNotificationCount) {
+        const count = await window.DB.getUnreadNotificationCount(user.id);
+        const badges = document.querySelectorAll('.notif-badge, #msgBadge');
+        if (count > 0) {
+            badges.forEach(b => {
+                b.textContent = count > 99 ? '99+' : count;
+                b.style.display = 'block';
+            });
+        } else {
+            badges.forEach(b => b.style.display = 'none');
+        }
+    }
+
+    // 4. Ensure red dot disappears immediately (double safety)
     document.querySelectorAll('.mc-dot.unread').forEach(el => el.classList.remove('unread'));
-    const count = document.getElementById('msgCount');
-    if (count) count.textContent = '0 Messages';
-    // Logic to mark read in DB could go here
 };
 
 window.deleteAllMessages = async function () {
@@ -1457,24 +1475,23 @@ window.deleteAllMessages = async function () {
     const cards = document.querySelectorAll('.notif-card');
     if (cards.length === 0) return;
 
-    if (window.DB && window.DB.deleteMessage) {
+    if (window.DB && window.DB.deleteNotification) {
         // Collect IDs
         const ids = Array.from(cards).map(c => c.id.replace('notif-', ''));
 
         // Batch delete simulation (since API is single delete)
-        // Show loading state?
         const btn = document.querySelector('button[onclick="deleteAllMessages()"]');
         if (btn) btn.textContent = "Deleting...";
 
         for (const id of ids) {
-            await window.DB.deleteMessage(id);
+            await window.DB.deleteNotification(id);
         }
 
         if (btn) btn.textContent = "Delete All";
     }
 
     // Clear UI
-    document.getElementById('mcList').innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No messages</div>';
+    document.getElementById('mcList').innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;">No notifications</div>';
 
     // Reset Badge
     const badge = document.getElementById('msgBadge');
@@ -1484,8 +1501,8 @@ window.deleteAllMessages = async function () {
 window.deleteMessage = async function (id, btn) {
     if (!confirm("Delete this notification?")) return;
 
-    if (window.DB && window.DB.deleteMessage) {
-        await window.DB.deleteMessage(id);
+    if (window.DB && window.DB.deleteNotification) {
+        await window.DB.deleteNotification(id);
     }
 
     const item = btn.closest('.notif-card');
@@ -1721,62 +1738,49 @@ window.startNotificationListener = async function () {
     const client = window.DB ? window.DB.getClient() : null;
     if (!client) return;
 
-    // Listen for System OR Admin-as-Notification
-    client.channel('user-notices')
+    // Listen for NEW Notifications in 'messages' table
+    client.channel('user-notices-real')
         .on('postgres_changes', {
             event: 'INSERT',
             schema: 'public',
-            table: 'messages',
+            table: 'messages', // Reverted to messages table
             filter: `user_id=eq.${user.id}`
         }, payload => {
             const m = payload.new;
-            let isNotif = false;
+            // Only trigger if it looks like a notification (Admin/System)
+            // Or if we want to show red dot for ALL messages as requested.
+            // Request said: "The red dot should count: SELECT COUNT(*) FROM public.messages WHERE user_id = current_user_id AND is_read = false;"
+            // So ANY new message should trigger the dot.
 
-            if (m.sender === 'System') isNotif = true;
-            else if (m.sender === 'Admin') {
-                try {
-                    const p = JSON.parse(m.message);
-                    if (p.is_notification) isNotif = true;
-                } catch (e) { }
-            }
+            playNotificationSound();
 
-            if (isNotif) {
-                playNotificationSound();
+            // Update Bell Badges
+            const badges = document.querySelectorAll('.notif-badge, #msgBadge');
+            badges.forEach(b => {
+                b.style.display = 'block';
+            });
 
-                // Update Bell Badges
-                const badges = document.querySelectorAll('.notif-badge, #msgBadge');
-                badges.forEach(b => {
-                    b.style.display = 'block';
-                });
-
-                // Trigger Ring Animation on all bell icons
-                const icons = document.querySelectorAll('i[data-lucide="bell"]');
-                icons.forEach(icon => {
-                    icon.classList.remove('bell-ring');
-                    void icon.offsetWidth; // Trigger reflow
-                    icon.classList.add('bell-ring');
-                    setTimeout(() => icon.classList.remove('bell-ring'), 1000);
-                });
-            }
+            // Trigger Ring Animation on all bell icons
+            const icons = document.querySelectorAll('i[data-lucide="bell"]');
+            icons.forEach(icon => {
+                icon.classList.remove('bell-ring');
+                void icon.offsetWidth; // Trigger reflow
+                icon.classList.add('bell-ring');
+                setTimeout(() => icon.classList.remove('bell-ring'), 1000);
+            });
         })
         .subscribe();
 
     // Initial Check for Unread Notifications on Load
     setTimeout(async () => {
-        if (window.DB && window.DB.getMessages) {
-            const allMsgs = await window.DB.getMessages(user.id);
-            const notices = allMsgs.filter(m => {
-                let isN = false;
-                if (m.sender === 'System') isN = true;
-                if (m.sender === 'Admin') {
-                    try { const p = JSON.parse(m.message); if (p.is_notification) isN = true; } catch (e) { }
-                }
-                return isN && !m.read;
-            });
-
-            if (notices.length > 0) {
+        if (window.DB && window.DB.getUnreadNotificationCount) {
+            const count = await window.DB.getUnreadNotificationCount(user.id);
+            if (count > 0) {
                 const badges = document.querySelectorAll('.notif-badge, #msgBadge');
                 badges.forEach(b => b.style.display = 'block');
+            } else {
+                const badges = document.querySelectorAll('.notif-badge, #msgBadge');
+                badges.forEach(b => b.style.display = 'none');
             }
         }
     }, 2000);

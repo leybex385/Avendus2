@@ -168,6 +168,148 @@ window.DB = {
         return { success: !error, error };
     },
 
+
+    // --- NOTIFICATIONS (VIA MESSAGES TABLE) ---
+
+    // Helper to resolve numeric ID if needed
+    async _getNumericUserId(paramUserId) {
+        const client = this.getClient();
+        try {
+            // User requested strict logic: get numeric ID from users table using auth_id
+            const { data: authData } = await client.auth.getUser();
+            const authId = authData?.user?.id;
+
+            // If we have an auth session, use it to find the numeric ID
+            if (authId) {
+                const { data: userData } = await client
+                    .from('users')
+                    .select('id')
+                    .eq('auth_id', authId)
+                    .single();
+                if (userData) return userData.id;
+            }
+
+            // Fallback: Check if paramUserId is already the numeric ID or if we can find it by auth_id=paramUserId
+            if (paramUserId) {
+                // Try treating paramUserId as auth_id
+                const { data: userData } = await client
+                    .from('users')
+                    .select('id')
+                    .eq('auth_id', paramUserId)
+                    .single();
+                if (userData) return userData.id;
+
+                // If not found, maybe paramUserId is ALREADY the numeric ID? 
+                // We return it as is if we couldn't resolve via auth_id
+                return paramUserId;
+            }
+        } catch (e) { console.error("ID Resolution Error:", e); }
+        return paramUserId;
+    },
+
+    async getNotifications(userId) {
+        const client = this.getClient();
+        if (!client) return [];
+
+        const numericId = await this._getNumericUserId(userId);
+
+        const { data, error } = await client
+            .from('messages')
+            .select('*')
+            .eq('user_id', numericId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching notifications:", error);
+            return [];
+        }
+
+        return (data || []).map(m => {
+            let title = 'Notification';
+            let body = m.message;
+            let type = 'GENERAL';
+
+            try {
+                if (m.message && m.message.startsWith('{')) {
+                    const p = JSON.parse(m.message);
+                    if (p.title) title = p.title;
+                    if (p.body) body = p.body;
+                    if (p.type) type = p.type;
+                }
+            } catch (e) { }
+
+            return {
+                id: m.id,
+                user_id: m.user_id,
+                title: title,
+                message: body,
+                type: type,
+                is_read: m.is_read || false, // Renamed to is_read in updates, verify column name
+                created_at: m.created_at
+            };
+        });
+    },
+
+    async getUnreadNotificationCount(userId) {
+        const client = this.getClient();
+        if (!client) return 0;
+
+        const numericId = await this._getNumericUserId(userId);
+
+        const { count, error } = await client
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', numericId)
+            .eq('is_read', false);
+
+        return error ? 0 : count;
+    },
+
+    async markAllNotificationsRead(userId) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+
+        const numericId = await this._getNumericUserId(userId);
+
+        const { data, error } = await client
+            .from('messages')
+            .update({ is_read: true })
+            .eq('user_id', numericId)
+            .eq('is_read', false)
+            .select();
+
+        return { success: !error, error, data };
+    },
+
+    async sendNotice(userId, title, message, type = 'general') {
+        const client = this.getClient();
+
+        const numericId = await this._getNumericUserId(userId);
+
+        // JSON structure for backward compatibility
+        const payload = JSON.stringify({
+            title: title,
+            body: message,
+            type: type,
+            is_notification: true
+        });
+
+        const { error } = await client
+            .from('messages')
+            .insert([{
+                user_id: numericId,
+                message: payload,
+                sender: 'Admin',
+                is_read: false
+            }]);
+        return { success: !error, error };
+    },
+
+    async deleteNotification(id) {
+        // Reuse deleteMessage logic
+        return this.deleteMessage(id);
+    },
+
     // --- KYC ---
     async submitKYC(userId, kycData) {
         const client = this.getClient();
