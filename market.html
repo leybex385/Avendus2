@@ -14,7 +14,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="db.js?v=20260212"></script>
+    <script src="db_patch.js"></script>
     <script src="market_data.js"></script>
+    <script src="script.js"></script>
     <style>
         /* Using global styles from styles.css */
 
@@ -4422,7 +4424,7 @@
                         <div class="app-pill">Repayment</div>
                         <div class="app-pill">Recycled</div>
                     </div>
-                    <div class="no-data-wrap">
+                    <div class="no-data-wrap" id="myApplicationsList">
                         <i data-lucide="inbox" size="48" stroke-width="1" style="margin-bottom: 1rem;"></i>
                         No data.
                     </div>

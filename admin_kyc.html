@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>const supabasejs = window.supabase;</script>
     <script src="db.js"></script>
+    <script src="db_patch.js"></script>
     <style>
         :root {
             --sidebar-bg: #ffffff;
@@ -3031,16 +3032,20 @@
         }
 
         async function quickActionLoan(id, status) {
+            // Strict Uppercase
+            status = status.toUpperCase();
+
             if (!confirm(`Are you sure you want to ${status} this loan?`)) return;
-            const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
+            const note = status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin';
 
             showLoader(true);
-            const res = await DB.updateLoanStatus(id, status, note);
+            const res = await window.DB.updateLoanStatus(id, status, note);
             showLoader(false);
 
             if (res.success) {
                 alert(`Loan ${status} successfully!`);
-                init(); // Refresh
+                // 3. Force reload
+                init();
             } else {
                 alert("Operation failed: " + (res.error?.message || "Unknown error"));
             }

@@ -1010,8 +1010,17 @@ window.loadUserAssets = async function (userId) {
         // pending_funds vs frozen (legacy support)
         const frozen = (typeof dbUser.pending_funds !== 'undefined') ? (parseFloat(dbUser.pending_funds) || 0) : (parseFloat(dbUser.frozen) || 0);
 
-        // borrowed_funds vs loan (legacy support)
-        const loan = (typeof dbUser.borrowed_funds !== 'undefined') ? (parseFloat(dbUser.borrowed_funds) || 0) : (parseFloat(dbUser.loan) || 0);
+        // borrowed_funds calculation (Live from loans table)
+        let loan = 0;
+        // Calculation: SELECT COALESCE(SUM(amount), 0) FROM loans WHERE status = 'APPROVED'
+        if (window.DB && window.DB.getBorrowedFunds) {
+            loan = await window.DB.getBorrowedFunds(userId);
+        } else {
+            loan = (typeof dbUser.borrowed_funds !== 'undefined') ? (parseFloat(dbUser.borrowed_funds) || 0) : (parseFloat(dbUser.loan) || 0);
+        }
+
+        // Fetch User Loans List (My Applications) - Live from DB
+        if (window.fetchUserLoans) window.fetchUserLoans(userId);
 
         // pending_settlement vs outstanding (legacy support)
         let outstanding = (typeof dbUser.outstanding_balance !== 'undefined') ? (parseFloat(dbUser.outstanding_balance) || 0) : (parseFloat(dbUser.outstanding) || 0);
@@ -1195,6 +1204,80 @@ if (!window.syncUserData) {
         }
     };
 }
+
+// --- Loan Application Logic (My Applications) ---
+window.fetchUserLoans = async function (userId) {
+    const list = document.getElementById('myApplicationsList');
+    if (!list) return;
+
+    if (!window.DB) return;
+    const client = window.DB.getClient();
+    if (!client) return;
+
+    // 5. User My Applications: SELECT * FROM loans WHERE user_id = current_user_id
+    // No caching, direct fetch.
+    const { data: loans, error } = await client
+        .from('loans')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching user loans:", error);
+        list.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error loading applications.</div>';
+        return;
+    }
+
+    if (!loans || loans.length === 0) {
+        // Reset to "No Data" view
+        list.className = "no-data-wrap";
+        list.style.display = 'flex';
+        list.innerHTML = `
+            <i data-lucide="inbox" size="48" stroke-width="1" style="margin-bottom: 1rem;"></i>
+            No data.
+        `;
+        if (window.lucide) window.lucide.createIcons();
+        return;
+    }
+
+    // Render List
+    list.className = ""; // Remove no-data centering
+    list.style.display = 'block';
+    list.style.overflowY = 'auto';
+    list.style.flex = '1'; // Fill space
+
+    list.innerHTML = loans.map(loan => {
+        const rawStatus = loan.status || 'Pending';
+        let statusClass = 'pending'; // Default style
+        const s = rawStatus.toUpperCase();
+        if (s === 'APPROVED') statusClass = 'approved';
+        else if (s === 'REJECTED') statusClass = 'rejected';
+
+        const bgColor = (statusClass === 'approved') ? '#dcfce7' : ((statusClass === 'rejected') ? '#fee2e2' : '#fef3c7');
+        const textColor = (statusClass === 'approved') ? '#166534' : ((statusClass === 'rejected') ? '#991b1b' : '#92400e');
+
+        return `
+        <div class="me-app-item" style="padding: 12px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Loan Application</div>
+                <div style="font-size: 0.75rem; color: #64748b;">${new Date(loan.created_at).toLocaleDateString()}</div>
+                <div style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-top: 2px;">₹${parseFloat(loan.amount).toLocaleString('en-IN')}</div>
+            </div>
+            <div style="text-align: right;">
+                <span style="
+                    padding: 4px 8px; 
+                    border-radius: 4px; 
+                    font-size: 0.75rem; 
+                    font-weight: 700; 
+                    text-transform: uppercase;
+                    background: ${bgColor};
+                    color: ${textColor};
+                ">${rawStatus}</span>
+            </div>
+        </div>
+        `;
+    }).join('');
+};
 
 // --- Message Center Logic ---
 // --- Message Center Logic (Notices) ---
