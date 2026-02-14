@@ -6457,7 +6457,7 @@
             const currentBalance = parseFloat(user.balance || 0);
 
             if (currentBalance < outstanding) {
-                alert(`Insufficient balance to settle this order. You need ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} more. Please deposit funds first.`);
+                showIBModal(`Insufficient balance to settle this order. You need ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} more. Please deposit funds first.`);
                 return;
             }
 
@@ -6509,7 +6509,64 @@
         function closeHoldingDetail() {
             document.getElementById('holdingDetailModal').style.display = 'none';
         }
+
+        // Insufficient Balance Modal Logic
+        function showIBModal(msg) {
+            const modal = document.getElementById('insufficientBalanceModal');
+            const msgEl = document.getElementById('ibModalMsg');
+            if (modal && msgEl) {
+                msgEl.innerText = msg;
+                modal.style.display = 'flex';
+                if (window.lucide) lucide.createIcons();
+            } else {
+                alert(msg);
+            }
+        }
+        function closeIBModal() {
+            const modal = document.getElementById('insufficientBalanceModal');
+            if (modal) modal.style.display = 'none';
+        }
     </script>
+
+    <!-- Insufficient Balance Modal -->
+    <div id="insufficientBalanceModal" class="center-popup-modal"
+        style="display:none; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center;">
+        <div class="ib-modal-content"
+            style="background-color: #111111; border: 1px solid #d4af37; border-radius: 20px; padding: 2.5rem; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); animation: ibModalFadeIn 0.3s ease-out;">
+            <div class="ib-modal-icon"
+                style="color: #d4af37; margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                <i data-lucide="alert-circle" size="48"></i>
+            </div>
+            <h2 class="ib-modal-title"
+                style="color: #d4af37; font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;">
+                Insufficient Balance</h2>
+            <p id="ibModalMsg" class="ib-modal-message"
+                style="color: #e2e8f0; font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem; font-family: 'Outfit', sans-serif;">
+            </p>
+            <button class="ib-modal-btn" onclick="closeIBModal()"
+                style="background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%); color: #000; border: none; padding: 0.8rem 2.5rem; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; font-family: 'Outfit', sans-serif;">OK</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes ibModalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .ib-modal-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+    </style>
+
     <script src="js/trading.js"></script>
 
 

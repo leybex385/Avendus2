@@ -6419,6 +6419,48 @@
             openHoldingDetail('LISTING:' + symbol);
         }
 
+        async function executeSettleLogic(trade, user, outstanding, btn) {
+            const originalText = btn.innerText;
+            btn.innerText = "Settling...";
+            btn.disabled = true;
+
+            try {
+                const newBalance = (parseFloat(user.balance) || 0) - outstanding;
+                const currentInvested = parseFloat(user.invested) || 0;
+                const newInvested = currentInvested + outstanding;
+
+                // 1. Update User Financials (Decrement by the settled amount)
+                const currentOutstanding = parseFloat(user.outstanding) || 0;
+                const newOutstanding = Math.max(0, currentOutstanding - outstanding);
+                const finResult = await window.DB.updateUserFinancials(user.id, newBalance, newInvested, newOutstanding);
+
+                if (finResult.success) {
+                    // 2. Update Trade Status (Set to Pending for Admin Approval)
+                    const tradeResult = await window.DB.updateTradeStatus(trade.id, 'Pending', 'Subscribed Fully');
+
+                    if (tradeResult.success) {
+                        showModal('success', 'Success', "Successfully settled! Your subscription is now fully paid and has been moved to Pending transactions for admin approval.", async () => {
+                            document.getElementById('holdingDetailModal').style.display = 'none';
+                            await fetchUserTransactions();
+                            // Switch to Pending tab
+                            const pendingTab = document.querySelector('.d-tab-pill[onclick*="pending"]');
+                            if (pendingTab) switchTransactionTab(pendingTab, 'pending');
+                        });
+                    } else {
+                        showModal('error', 'Update Failed', "Balance deducted but failed to update trade status. Please contact support.");
+                    }
+                } else {
+                    showModal('error', 'Error', "Failed to update financials: " + (finResult.error?.message || "Unknown error"));
+                }
+            } catch (e) {
+                console.error(e);
+                showModal('error', 'Error', "An error occurred: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
         async function settleOutstanding(tradeId, btnEl) {
             const trade = transactionData.all.find(t => t.id == tradeId);
             if (!trade) return;
@@ -6439,59 +6481,138 @@
             const currentBalance = parseFloat(user.balance || 0);
 
             if (currentBalance < outstanding) {
-                alert(`Insufficient balance to settle this order. You need ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} more. Please deposit funds first.`);
+                showIBModal(`Insufficient balance to settle this order. You need ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} more. Please deposit funds first.`);
                 return;
             }
 
-            if (!confirm(`Are you sure you want to settle the outstanding balance of ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} for ${trade.name}?`)) {
-                return;
-            }
-
-            const btn = btnEl || event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "Settling...";
-            btn.disabled = true;
-
-            try {
-                const newBalance = currentBalance - outstanding;
-                const currentInvested = parseFloat(user.invested) || 0;
-                const newInvested = currentInvested + outstanding;
-
-                // 1. Update User Financials (Decrement by the settled amount)
-                const currentOutstanding = parseFloat(user.outstanding) || 0;
-                const newOutstanding = Math.max(0, currentOutstanding - outstanding);
-                const finResult = await window.DB.updateUserFinancials(user.id, newBalance, newInvested, newOutstanding);
-
-                if (finResult.success) {
-                    // 2. Update Trade Status (Set to Pending for Admin Approval)
-                    const tradeResult = await window.DB.updateTradeStatus(trade.id, 'Pending', 'Subscribed Fully');
-
-                    if (tradeResult.success) {
-                        alert("Successfully settled! Your subscription is now fully paid and has been moved to Pending transactions for admin approval.");
-                        document.getElementById('holdingDetailModal').style.display = 'none';
-                        await fetchUserTransactions();
-                        // Switch to Pending tab
-                        const pendingTab = document.querySelector('.d-tab-pill[onclick*="pending"]');
-                        switchTransactionTab(pendingTab, 'pending');
-                    } else {
-                        alert("Balance deducted but failed to update trade status. Please contact support.");
-                    }
-                } else {
-                    alert("Failed to update financials: " + (finResult.error?.message || "Unknown error"));
-                }
-            } catch (e) {
-                console.error(e);
-                alert("An error occurred: " + e.message);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            // Custom Settlement Confirmation Modal
+            showSettleConfirm(`Are you sure you want to settle the outstanding balance of ₹${outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} for ${trade.name}?`, () => {
+                executeSettleLogic(trade, user, outstanding, btnEl || event.target);
+            });
         }
 
         function closeHoldingDetail() {
             document.getElementById('holdingDetailModal').style.display = 'none';
         }
+
+        // Insufficient Balance Modal Logic
+        function showIBModal(msg) {
+            const modal = document.getElementById('insufficientBalanceModal');
+            const msgEl = document.getElementById('ibModalMsg');
+            if (modal && msgEl) {
+                msgEl.innerText = msg;
+                modal.style.display = 'flex';
+                if (window.lucide) lucide.createIcons();
+            } else {
+                alert(msg);
+            }
+        }
+        function closeIBModal() {
+            const modal = document.getElementById('insufficientBalanceModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Settlement Confirmation Modal Functions
+        let settleConfirmCallback = null;
+        function showSettleConfirm(msg, callback) {
+            const modal = document.getElementById('settleConfirmModal');
+            const msgEl = document.getElementById('settleConfirmMsg');
+            if (modal && msgEl) {
+                msgEl.innerText = msg;
+                settleConfirmCallback = callback;
+                modal.style.display = 'flex';
+                if (window.lucide) lucide.createIcons();
+            } else {
+                if (confirm(msg)) callback();
+            }
+        }
+        function closeSettleConfirm(confirmed) {
+            const modal = document.getElementById('settleConfirmModal');
+            if (modal) modal.style.display = 'none';
+            if (confirmed && settleConfirmCallback) {
+                settleConfirmCallback();
+            }
+            settleConfirmCallback = null;
+        }
     </script>
+
+    <!-- Insufficient Balance Modal -->
+    <div id="insufficientBalanceModal" class="center-popup-modal"
+        style="display:none; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center;">
+        <div class="ib-modal-content"
+            style="background-color: #111111; border: 1px solid #d4af37; border-radius: 20px; padding: 2.5rem; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); animation: ibModalFadeIn 0.3s ease-out;">
+            <div class="ib-modal-icon"
+                style="color: #d4af37; margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                <i data-lucide="alert-circle" size="48"></i>
+            </div>
+            <h2 class="ib-modal-title"
+                style="color: #d4af37; font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;">
+                Insufficient Balance</h2>
+            <p id="ibModalMsg" class="ib-modal-message"
+                style="color: #e2e8f0; font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem; font-family: 'Outfit', sans-serif;">
+            </p>
+            <button class="ib-modal-btn" onclick="closeIBModal()"
+                style="background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%); color: #000; border: none; padding: 0.8rem 2.5rem; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; font-family: 'Outfit', sans-serif;">OK</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes ibModalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes settleModalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .ib-modal-btn:hover,
+        .settle-btn-primary:hover,
+        .settle-btn-secondary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+    </style>
+
+    <!-- Settlement Confirmation Modal -->
+    <div id="settleConfirmModal" class="center-popup-modal"
+        style="display:none; z-index: 10001; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); align-items: center; justify-content: center;">
+        <div class="settle-modal-content"
+            style="background-color: #111111; border: 1px solid #333; border-radius: 24px; padding: 2.5rem; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); animation: settleModalFadeIn 0.3s ease-out;">
+            <div style="color: #d4af37; margin-bottom: 1.5rem; display: flex; justify-content: center;">
+                <i data-lucide="help-circle" size="56"></i>
+            </div>
+            <h2
+                style="color: #f8fafc; font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;">
+                Confirm Settlement</h2>
+            <p id="settleConfirmMsg"
+                style="color: #94a3b8; font-size: 1rem; line-height: 1.6; margin-bottom: 2.5rem; font-family: 'Outfit', sans-serif;">
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="closeSettleConfirm(false)" class="settle-btn-secondary"
+                    style="flex: 1; padding: 0.8rem; background: transparent; border: 1px solid #475569; color: #94a3b8; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                <button onclick="closeSettleConfirm(true)" class="settle-btn-primary"
+                    style="flex: 1; padding: 0.8rem; background: linear-gradient(135deg, #d4af37 0%, #aa8c2c 100%); border: none; color: #000; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">Settle
+                    Now</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/trading.js"></script>
 
 
