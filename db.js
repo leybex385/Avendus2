@@ -609,9 +609,6 @@ window.DB = {
             const newInvested = arguments[2];
             const newOutstanding = arguments[3];
             updates = { balance: newBalance };
-            // Ensure available_balance is kept in sync if we're using positional args (older code)
-            updates.available_balance = newBalance;
-
             if (newInvested !== undefined) updates.invested = newInvested;
             if (newOutstanding !== undefined) updates.outstanding = newOutstanding;
         }

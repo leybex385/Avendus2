@@ -1024,8 +1024,28 @@ window.loadUserAssets = async function (userId) {
         // Fetch User Loans List (My Applications) - Live from DB
         if (window.fetchUserLoans) window.fetchUserLoans(userId);
 
-        // pending_settlement vs outstanding (legacy support)
-        let outstanding = (typeof dbUser.outstanding_balance !== 'undefined') ? (parseFloat(dbUser.outstanding_balance) || 0) : (parseFloat(dbUser.outstanding) || 0);
+        // --- Calculate Dynamic Outstanding (Pending Settlement) ---
+        // Requirement: Fetch all user trades/subscriptions with specific statuses and sum their amounts.
+        let dynamicOutstanding = 0;
+        if (window.DB && window.DB.getTradesByUserId) {
+            try {
+                const trades = await window.DB.getTradesByUserId(userId);
+                const pendingTrades = trades.filter(t => {
+                    const s = (t.status || "").toLowerCase();
+                    return s === 'pending' || s === 'wallet_pending' || s === 'settlement_pending';
+                });
+                dynamicOutstanding = pendingTrades.reduce((sum, trade) => {
+                    // Use total_amount (from schema) or amount (from user example)
+                    return sum + Number(trade.total_amount || trade.amount || 0);
+                }, 0);
+                console.log("Calculated Dynamic Outstanding Balance:", dynamicOutstanding);
+            } catch (err) {
+                console.error("Error calculating dynamic outstanding balance:", err);
+            }
+        }
+
+        // Final outstanding value for display
+        let outstanding = (dynamicOutstanding > 0) ? dynamicOutstanding : ((typeof dbUser.outstanding_balance !== 'undefined') ? (parseFloat(dbUser.outstanding_balance) || 0) : (parseFloat(dbUser.outstanding) || 0));
 
         // --- DOM Helpers ---
         const formatCurrency = (val) => '₹' + (val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1089,6 +1109,11 @@ window.loadUserAssets = async function (userId) {
         updateVal('meFrozenFunds', frozen);
         updateVal('meBorrowedFunds', loan);
         updateVal('mePendingSettlement', outstanding);
+
+        // Update additional UI fields for Outstanding/Pending Settlement
+        document.querySelectorAll('.pending-settlement-value, .outstanding-balance-value').forEach(el => {
+            fitText(el, formatCurrency(outstanding));
+        });
 
         // --- Update Portfolio Page (Specific IDs) ---
         updateVal('pAvailableBalance', rawBalance);
