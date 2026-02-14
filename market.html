@@ -4768,6 +4768,7 @@
             document.querySelector('.header').style.display = 'flex';
 
             setActiveNav(document.getElementById('navMe'));
+            if (typeof window.syncVipCredit === 'function') window.syncVipCredit();
 
             // Refresh user data (KYC status, balance, etc.) from backend
             DB.refreshCurrentUser().then(fullUser => {
@@ -6525,8 +6526,10 @@
                 <div class="settings-phone" id="settingsPhone"
                     style="font-size: 0.9rem; color: #64748b; margin-top: 0.2rem;">+91</div>
                 <div class="badge-row">
-                    <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: 0</div>
-                    <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: 100</div>
+                    <div class="s-badge vip"><i data-lucide="shield-check" size="18"></i> VIP: <span
+                            id="settingsVip">0</span></div>
+                    <div class="s-badge credit"><i data-lucide="crown" size="18"></i> Credit Score: <span
+                            id="settingsCredit">100</span></div>
                 </div>
             </div>
             <div class="settings-list">

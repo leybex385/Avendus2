@@ -355,6 +355,8 @@ function checkLoginStatus() {
 window.openSettings = function () {
     const el = document.getElementById('settingsModal');
     if (el) el.style.display = 'flex';
+    // Always fetch fresh VIP and Credit when opening settings
+    if (typeof window.syncVipCredit === 'function') window.syncVipCredit();
 };
 
 window.closeSettings = function () {
@@ -1148,19 +1150,126 @@ window.loadUserAssets = async function (userId) {
                 el.style.display = 'flex';
                 el.style.alignItems = 'center';
                 el.style.justifyContent = 'center';
-                el.style.overflow = 'hidden';
             } else {
-                el.innerHTML = initials;
-                el.style.background = '';
-                el.style.display = 'flex';
-                el.style.alignItems = 'center';
-                el.style.justifyContent = 'center';
+                el.innerHTML = initials; // Fallback to initials
             }
         });
 
+        // --- Update Credit Score & VIP Level ---
+        const credit = dbUser.credit_score || 0;
+        const vip = dbUser.vip || 0;
+
+        // Update display elements
+        const creditScoreEl = document.getElementById('meCreditScore');
+        if (creditScoreEl) creditScoreEl.textContent = credit;
+
+        const vipLevelEl = document.getElementById('meVipLevel');
+        if (vipLevelEl) vipLevelEl.textContent = vip;
+
+        const settingsVipEl = document.getElementById('settingsVip');
+        if (settingsVipEl) settingsVipEl.textContent = vip;
+
+        const settingsCreditEl = document.getElementById('settingsCredit');
+        if (settingsCreditEl) settingsCreditEl.textContent = credit;
+
+        // Update Credit Profile Text on Me Page (if it exists)
+        const creditProfileInfo = document.getElementById('creditProfileInfo');
+        if (creditProfileInfo) {
+            creditProfileInfo.innerHTML = `Based on the latest evaluation, your <b>Credit Score is ${credit}</b>. Your credit profile falls into the <b>${credit >= 90 ? 'Excellent' : (credit >= 70 ? 'Fair' : 'Low')}</b> category.`;
+        }
+
+        // --- Enforce Withdrawal Restrictions ---
+        const isWithdrawDisabled = credit < 90;
+        const withdrawButtons = document.querySelectorAll('.btn-withdraw, .p-btn.withdraw, .me-btn.withdraw');
+
+        withdrawButtons.forEach(btn => {
+            if (isWithdrawDisabled) {
+                btn.classList.add('disabled-action');
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.style.pointerEvents = 'none';
+                btn.title = "Withdrawal disabled. Minimum credit score required: 90.";
+
+                // If it's a button with onclick, we might need to disable it more firmly
+                if (btn.tagName === 'BUTTON') {
+                    btn.disabled = true;
+                    btn.removeAttribute('onclick');
+                } else if (btn.tagName === 'A') {
+                    btn.onclick = (e) => { e.preventDefault(); return false; };
+                    btn.href = "javascript:void(0)";
+                }
+            } else {
+                btn.classList.remove('disabled-action');
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.style.pointerEvents = 'auto';
+                btn.title = "";
+
+                if (btn.tagName === 'BUTTON') {
+                    btn.disabled = false;
+                    // Restore onclick if it was on Me or Portfolio page
+                    if (btn.classList.contains('withdraw')) {
+                        btn.onclick = () => { window.location.href = 'withdraw.html'; };
+                    }
+                } else if (btn.tagName === 'A') {
+                    btn.href = "withdraw.html";
+                    btn.onclick = null;
+                }
+            }
+        });
         if (window.lucide) window.lucide.createIcons();
     } catch (e) {
         console.error("loadUserAssets Exception:", e);
+    }
+};
+
+// --- Targeted VIP & Credit Sync (For immediate UI updates) ---
+window.syncVipCredit = async function () {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) return;
+
+    const client = window.DB ? window.DB.getClient() : null;
+    if (!client) return;
+
+    try {
+        const { data, error } = await client
+            .from('users')
+            .select('vip, credit_score')
+            .eq('id', user.id)
+            .single();
+
+        if (error) {
+            console.error("syncVipCredit error:", error);
+            return;
+        }
+
+        if (data) {
+            const vip = data.vip || 0;
+            const credit = data.credit_score || 0;
+
+            console.log("Fresh VIP/Credit fetched:", { vip, credit });
+
+            // Update display elements
+            const targets = {
+                'meCreditScore': credit,
+                'meVipLevel': vip,
+                'settingsVip': vip,
+                'settingsCredit': credit
+            };
+
+            for (const [id, val] of Object.entries(targets)) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            }
+
+            // Update Credit Profile Text on Me Page (if it exists)
+            const creditProfileInfo = document.getElementById('creditProfileInfo');
+            if (creditProfileInfo) {
+                creditProfileInfo.innerHTML = `Based on the latest evaluation, your <b>Credit Score is ${credit}</b>. Your credit profile falls into the <b>${credit >= 90 ? 'Excellent' : (credit >= 70 ? 'Fair' : 'Low')}</b> category.`;
+            }
+        }
+    } catch (e) {
+        console.error("syncVipCredit Exception:", e);
     }
 };
 

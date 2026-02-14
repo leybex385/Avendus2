@@ -1274,8 +1274,12 @@
                         <input type="text" id="ek_phone" class="kyc-input" placeholder="Enter phone">
                     </div>
                     <div class="kyc-form-group">
-                        <label>Date of birth <span style="color:#ef4444">*</span></label>
-                        <input type="date" id="ek_dob" class="kyc-input">
+                        <label>VIP Level <span style="color:#ef4444">*</span></label>
+                        <input type="number" id="ek_vip" class="kyc-input" placeholder="Enter VIP Level">
+                    </div>
+                    <div class="kyc-form-group">
+                        <label>Credit Score <span style="color:#ef4444">*</span></label>
+                        <input type="number" id="ek_credit" class="kyc-input" placeholder="Enter Credit Score">
                     </div>
                 </div>
 
@@ -1337,6 +1341,37 @@
         </div>
     </div>
 
+    <!-- VIP & Credit Edit Modal -->
+    <div id="vipCreditModal" class="kyc-modal-overlay">
+        <div class="kyc-modal-card" style="max-width: 400px; padding: 20px;">
+            <div class="kyc-modal-header" style="margin-bottom: 20px;">
+                <span style="font-weight: 700;">Update VIP & Credit</span>
+                <i data-lucide="x" style="cursor:pointer" onclick="closeVipCreditModal()"></i>
+            </div>
+            <div class="kyc-modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="kyc-form-group">
+                    <label style="display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">VIP
+                        Level</label>
+                    <input type="number" id="vc_vip" class="kyc-input" min="0" placeholder="0"
+                        style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+                <div class="kyc-form-group">
+                    <label style="display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px;">Credit Score
+                        (0-100)</label>
+                    <input type="number" id="vc_credit" class="kyc-input" min="0" max="100" placeholder="100"
+                        style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+            </div>
+            <div class="kyc-modal-footer"
+                style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="vsl-btn submit" onclick="saveVipCredit()"
+                    style="background: #1e56a0; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Update</button>
+                <button class="vsl-btn cancel" onclick="closeVipCreditModal()"
+                    style="background: #f1f5f9; color: #64748b; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- NEW MESSAGE MODAL -->
     <div id="msgModal" class="loader" style="background:rgba(0,0,0,0.5); z-index:2000;">
         <div class="section-card" style="width:550px; min-height:auto;">
@@ -1371,6 +1406,62 @@
         let allMsgs = [];
         let allSubmissions = [];
         let kycStatusFilter = 'all';
+
+        let targetVipUser = null;
+        function openVipCreditEdit(uid, vip, credit) {
+            targetVipUser = uid;
+            document.getElementById('vc_vip').value = vip;
+            document.getElementById('vc_credit').value = credit;
+            document.getElementById('vipCreditModal').style.display = 'flex';
+            setTimeout(() => lucide.createIcons(), 100);
+        }
+
+        function closeVipCreditModal() {
+            document.getElementById('vipCreditModal').style.display = 'none';
+        }
+
+        async function saveVipCredit() {
+            const vipValue = parseInt(document.getElementById('vc_vip').value);
+            const creditValue = parseInt(document.getElementById('vc_credit').value);
+            const userId = targetVipUser;
+
+            if (isNaN(vipValue) || vipValue < 0) {
+                alert("VIP Level cannot be negative.");
+                return;
+            }
+            if (isNaN(creditValue) || creditValue < 0 || creditValue > 100) {
+                alert("Credit Score must be between 0 and 100.");
+                return;
+            }
+
+            if (!userId) {
+                alert("No user selected.");
+                return;
+            }
+
+            console.log("Updating VIP/Credit", userId, vipValue, creditValue);
+            showLoader(true);
+
+            const { data, error } = await DB.getClient()
+                .from('users')
+                .update({
+                    vip: vipValue,
+                    credit_score: creditValue
+                })
+                .eq('id', userId)
+                .select();
+
+            console.log("Update result:", data, error);
+
+            if (error) {
+                alert("Error updating: " + error.message);
+            } else {
+                alert("Updated successfully!");
+                closeVipCreditModal();
+                init(); // Re-fetch and re-render without page reload
+            }
+            showLoader(false);
+        }
 
         async function init() {
             showLoader(true);
@@ -1423,8 +1514,14 @@
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile}</td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.username}</td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance).toFixed(2)}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.vip}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.credit_score}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            ${x.vip}
+                            <i data-lucide="edit-3" size="14" style="cursor:pointer; margin-left:5px; color:#3b82f6;" onclick="openVipCreditEdit('${x.id}', ${x.vip}, ${x.credit_score})"></i>
+                        </td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            ${x.credit_score}
+                            <i data-lucide="edit-3" size="14" style="cursor:pointer; margin-left:5px; color:#3b82f6;" onclick="openVipCreditEdit('${x.id}', ${x.vip}, ${x.credit_score})"></i>
+                        </td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                             <div class="btn-edit-wrap">
                                 <i data-lucide="edit" size="16" style="cursor:pointer" onclick="openKycEdit('${x.id}')"></i>
@@ -1702,8 +1799,8 @@
                 document.getElementById('ek_idnum').value = user.id_number || 'No ID set';
                 document.getElementById('ek_phone').value = user.mobile || '';
                 document.getElementById('ek_status').value = user.kyc || 'Pending';
-                // Note: dob/address might need schema check, using defaults for now
-                document.getElementById('ek_dob').value = '';
+                document.getElementById('ek_vip').value = user.vip || 0;
+                document.getElementById('ek_credit').value = user.credit_score || 100;
                 document.getElementById('ek_notes').value = '';
             }
 
@@ -1750,7 +1847,9 @@
                 username: document.getElementById('ek_name').value,
                 id_number: document.getElementById('ek_idnum').value,
                 mobile: document.getElementById('ek_phone').value,
-                kyc: document.getElementById('ek_status').value
+                kyc: document.getElementById('ek_status').value,
+                vip: parseInt(document.getElementById('ek_vip').value) || 0,
+                credit_score: parseInt(document.getElementById('ek_credit').value) || 0
             };
 
             const kycUpdates = {
