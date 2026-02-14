@@ -1203,45 +1203,7 @@ window.loadUserAssets = async function (userId) {
             creditProfileInfo.innerHTML = `Based on the latest evaluation, your <b>Credit Score is ${credit}</b>. Your credit profile falls into the <b>${credit >= 90 ? 'Excellent' : (credit >= 70 ? 'Fair' : 'Low')}</b> category.`;
         }
 
-        // --- Enforce Withdrawal Restrictions ---
-        const isWithdrawDisabled = credit < 90;
-        const withdrawButtons = document.querySelectorAll('.btn-withdraw, .p-btn.withdraw, .me-btn.withdraw');
-
-        withdrawButtons.forEach(btn => {
-            if (isWithdrawDisabled) {
-                btn.classList.add('disabled-action');
-                btn.style.opacity = '0.5';
-                btn.style.cursor = 'not-allowed';
-                btn.style.pointerEvents = 'none';
-                btn.title = "Withdrawal disabled. Minimum credit score required: 90.";
-
-                // If it's a button with onclick, we might need to disable it more firmly
-                if (btn.tagName === 'BUTTON') {
-                    btn.disabled = true;
-                    btn.removeAttribute('onclick');
-                } else if (btn.tagName === 'A') {
-                    btn.onclick = (e) => { e.preventDefault(); return false; };
-                    btn.href = "javascript:void(0)";
-                }
-            } else {
-                btn.classList.remove('disabled-action');
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-                btn.style.pointerEvents = 'auto';
-                btn.title = "";
-
-                if (btn.tagName === 'BUTTON') {
-                    btn.disabled = false;
-                    // Restore onclick if it was on Me or Portfolio page
-                    if (btn.classList.contains('withdraw')) {
-                        btn.onclick = () => { window.location.href = 'withdraw.html'; };
-                    }
-                } else if (btn.tagName === 'A') {
-                    btn.href = "withdraw.html";
-                    btn.onclick = null;
-                }
-            }
-        });
+        // --- Withdrawal Restrictions logic moved to click event (openWithdrawPage) ---
         if (window.lucide) window.lucide.createIcons();
     } catch (e) {
         console.error("loadUserAssets Exception:", e);
@@ -1959,3 +1921,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 });
+
+async function openWithdrawPage() {
+    const user = window.DB ? window.DB.getCurrentUser() : null;
+    if (!user) {
+        if (window.CustomUI) {
+            await window.CustomUI.alert("Please login to proceed with withdrawal.", "Authentication Required");
+        } else {
+            alert("Please login to proceed.");
+        }
+        return;
+    }
+
+    const credit = parseInt(user.credit_score || 0);
+    if (credit < 90) {
+        if (window.CustomUI) {
+            await window.CustomUI.alert("Withdrawal disabled. Minimum credit score required: 90.", "Eligibility Check");
+        } else {
+            alert("Withdrawal disabled. Minimum credit score required: 90.");
+        }
+        return;
+    }
+
+    window.location.href = "withdraw.html";
+}

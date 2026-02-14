@@ -603,14 +603,27 @@
             color: #3b82f6;
         }
 
-        .kyc-table-img {
+        .kyc-table-img,
+        .kyc-thumb {
             width: 50px;
             height: 35px;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            border: 1px solid #ddd;
             object-fit: cover;
             background: #f8fafc;
             cursor: pointer;
+        }
+
+        .image-placeholder {
+            width: 50px;
+            height: 35px;
+            border-radius: 6px;
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
         }
 
         .kyc-refresh-btn {
@@ -857,11 +870,13 @@
             <div style="font-size: 0.85rem; display: flex; align-items: center; gap: 15px;">
                 Welcome, <b>admin</b>
                 <button onclick="init()"
-                    style="background:none; border:none; color:#f97316; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;"><i
-                        data-lucide="refresh-cw" size="14"></i> Refresh Data</button>
+                    style="background:none; border:none; color:#f97316; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <i data-lucide="refresh-cw" size="14"></i> Refresh Data
+                </button>
                 <button onclick="adminLogout()"
-                    style="background:none; border:none; color:#ef4444; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;"><i
-                        data-lucide="power" size="14"></i> Logout</button>
+                    style="background:none; border:none; color:#ef4444; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <i data-lucide="power" size="14"></i> Logout
+                </button>
             </div>
         </header>
 
@@ -1798,268 +1813,278 @@
 
         async function init() {
             showLoader(true);
-            try {
-                const client = DB.getClient();
-                if (!client) throw new Error("Database client not initialized");
+            const client = DB.getClient();
 
-                // Helper for safe, limited fetching
-                const fetchSafe = async (table, select = '*', limit = 200) => {
-                    try {
-                        const { data, error } = await client.from(table)
-                            .select(select)
-                            .order('created_at', { ascending: false })
-                            .limit(limit);
-                        return error ? [] : data;
-                    } catch (e) { return []; }
-                };
+            // 4. Modify fetchSafe() temporarily as requested
+            const fetchSafe = async (table, query) => {
+                const { data, error } = await query;
+                if (error) {
+                    console.error("Fetch error on table:", table, error);
+                    return [];
+                }
+                console.log(`Table ${table} loaded:`, data?.length);
+                return data || [];
+            };
 
-                // 1. FAST TRACK: Fetch only what's needed for the dashboard stats first
-                // This allows the admin to see 'something' immediately.
-                const [userRes, tradeRes, kycRes] = await Promise.all([
-                    client.from('users').select('id, kyc', { count: 'exact', head: false }),
-                    client.from('trades').select('id, status', { count: 'exact', head: false }).eq('status', 'Pending'),
-                    client.from('kyc_submissions').select('id', { count: 'exact', head: false })
-                ]);
+            const [u, ks, w, d, t, l, m, ipo, stocks] = await Promise.all([
+                fetchSafe('users', client.from('users').select('id,mobile,username,balance,vip,credit_score,withdrawal_pin,created_at,kyc').order('created_at', { ascending: false }).limit(500)),
+                fetchSafe('kyc_submissions', client.from('kyc_submissions').select('id,user_id,id_front_url,id_back_url,status')),
+                fetchSafe('withdrawals', client.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(100)),
+                fetchSafe('deposits', client.from('deposits').select('*').order('created_at', { ascending: false }).limit(100)),
+                fetchSafe('trades', client.from('trades').select('*').order('created_at', { ascending: false }).limit(300)),
+                fetchSafe('loans', client.from('loans').select('*').order('created_at', { ascending: false }).limit(100)),
+                fetchSafe('messages', client.from('messages').select('*').order('created_at', { ascending: false }).limit(100)),
+                fetchSafe('ipo_subscriptions', client.from('ipo_subscriptions').select('*').order('created_at', { ascending: false })),
+                fetchSafe('stock_trades', client.from('stock_trades').select('*').order('created_at', { ascending: false }))
+            ]);
 
-                const allU = userRes.data || [];
-                const pendingTradesCount = tradeRes.data?.length || 0;
+            // Combine trades
+            // Ensure types are set for rendering
+            const allTrades = [
+                ...(t || []),
+                ...(ipo || []).map(x => ({ ...x, type: 'ipo' })),
+                ...(stocks || []).map(x => ({ ...x, type: 'stock' }))
+            ];
 
-                // Render Dashboard Stats Immediately
-                document.getElementById('stat_summary').innerHTML = `
-                    <div class="section-card" style="background:#f0f9ff; margin:0; flex:1;">
-                        <div style="font-size:0.75rem;">TOTAL USERS</div>
-                        <h2 style="margin:5px 0 0 0;">${allU.length}</h2>
-                    </div>
-                    <div class="section-card" style="background:#f0fdf4; margin:0; flex:1;">
-                        <div style="font-size:0.75rem;">PENDING KYC</div>
-                        <h2 style="margin:5px 0 0 0;">${allU.filter(x => x.kyc === 'Pending').length}</h2>
-                    </div>
-                    <div class="section-card" style="background:#fff7ed; margin:0; flex:1;">
-                        <div style="font-size:0.75rem;">PENDING TRADES</div>
-                        <h2 style="margin:5px 0 0 0;">${pendingTradesCount}</h2>
-                    </div>
-                `;
+            renderDashboard(u || [], ks || [], w || [], d || [], allTrades, l || [], m || []);
+            showLoader(false);
+        }
 
-                // 2. PROGRESSIVE LOADING: Fetch the heavy lists individually or in smaller batches
-                // Use a smaller limit to prevent 10-minute hang. 200 is plenty for an admin overview.
+        function renderDashboard(users, kyc, withdrawals, deposits, tradesData, loans, messages) {
+            // Process Users
+            allUsers = users;
+            // Create user lookup map for fast in-memory joins
+            const userMap = {};
+            allUsers.forEach(u => {
+                userMap[u.id] = { mobile: u.mobile, username: u.username };
+            });
 
-                // Load Users (Full details for list)
-                fetchSafe('users', '*', 500).then(data => {
-                    allUsers = data;
-                    document.getElementById('userList').innerHTML = data.length ? data.map(x => `
-                        <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.username || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance || 0).toFixed(2)}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${x.vip || 0}
-                                <i data-lucide="edit-3" size="14" style="cursor:pointer; margin-left:5px; color:#3b82f6;" onclick="openVipCreditEdit('${x.id}', ${x.vip}, ${x.credit_score})"></i>
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${x.credit_score || 100}
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="btn-edit-wrap">
-                                    <i data-lucide="edit" size="16" style="cursor:pointer" onclick="openKycEdit('${x.id}')"></i>
-                                    <i data-lucide="indian-rupee" size="16" style="cursor:pointer; color:#10b981;" onclick="openDepositModal('${x.id}', '${x.username || 'User'}')"></i>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No users found</td></tr>';
-                    lucide.createIcons();
-                });
+            // Render Dashboard Stats
+            const pendingKycCount = allUsers.filter(x => x.kyc === 'Pending').length;
+            const pendingTradesCount = tradesData.filter(t => t.status === 'Pending').length;
 
-                // Load Withdrawals/Deposits
-                fetchSafe('withdrawals', '*, users(id,mobile,username)', 100).then(data => {
-                    const list = document.getElementById('withList');
-                    if (!list) return;
-                    list.innerHTML = data.length ? data.map(x => {
-                        const statusColors = {
-                            'Approved': 'background:#dcfce7; color:#166534;',
-                            'Rejected': 'background:#fee2e2; color:#991b1b;',
-                            'Pending': 'background:#fef3c7; color:#92400e;'
-                        };
-                        const rawStatus = x.status || 'Pending';
-                        const displayStatus = rawStatus.toUpperCase();
-                        const sStyle = statusColors[rawStatus] || statusColors[displayStatus.charAt(0) + displayStatus.slice(1).toLowerCase()] || 'background:#f1f5f9; color:#64748b;';
-                        const uName = x.users?.username || x.users?.mobile || 'User';
-                        return `
-                        <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.user_id}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${uName}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-weight:700;">₹${parseFloat(x.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div style="font-size:0.8rem; font-weight:600;">${x.bank_name || '-'}</div>
-                                <div style="font-size:0.7rem; color:#64748b;">${x.account_number || ''}</div>
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; text-transform:uppercase; ${sStyle}">${displayStatus}</span></td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(x.created_at).toLocaleString('en-IN')}</td>
-                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div style="display:flex; gap:8px;">
-                                    ${displayStatus === 'PENDING' ? `
-                                        <button class="vsl-btn green" onclick="quickActionWithdraw(${x.id}, 'Approved')" style="padding:4px 8px; font-size:0.65rem;">Approve</button>
-                                        <button class="vsl-btn" onclick="quickActionWithdraw(${x.id}, 'Rejected')" style="padding:4px 8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
-                                    ` : `
-                                        <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openWithdrawalEdit(${x.id}, '${uName}', ${x.amount}, '${rawStatus}', '${x.admin_note || ''}')"></i></div>
-                                    `}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    }).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
-                    lucide.createIcons();
-                });
+            document.getElementById('stat_summary').innerHTML = `
+                <div class="section-card" style="background:#f0f9ff; margin:0; flex:1;">
+                    <div style="font-size:0.75rem;">TOTAL USERS</div>
+                    <h2 style="margin:5px 0 0 0;">${allUsers.length}</h2>
+                </div>
+                <div class="section-card" style="background:#f0fdf4; margin:0; flex:1;">
+                    <div style="font-size:0.75rem;">PENDING KYC</div>
+                    <h2 style="margin:5px 0 0 0;">${pendingKycCount}</h2>
+                </div>
+                <div class="section-card" style="background:#fff7ed; margin:0; flex:1;">
+                    <div style="font-size:0.75rem;">PENDING TRADES</div>
+                    <h2 style="margin:5px 0 0 0;">${pendingTradesCount}</h2>
+                </div>
+            `;
 
-                fetchSafe('deposits', '*, users(mobile,username)', 100).then(data => {
-                    const list = document.getElementById('depList');
-                    if (!list) return;
-                    list.innerHTML = data.length ? data.map(x => `
-                        <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.users?.mobile || 'Unknown'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ₹${parseFloat(x.amount).toFixed(2)}
-                                ${x.image_url ? `<br><a href="${x.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">View Screenshot</a>` : ''}
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fef3c7; color:#92400e;">${x.status}</span></td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openDepositEdit(${x.id}, '${x.users?.mobile || 'User'}', ${x.amount}, '${x.status}', '${x.admin_note || ''}')"></i></div>
-                            </td>
-                        </tr>
-                    `).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px;">No deposits found</td></tr>';
-                    lucide.createIcons();
-                });
+            // Render Users List
+            document.getElementById('userList').innerHTML = allUsers.length ? allUsers.map(x => `
+                <tr>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile}</td>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.username || '-'}</td>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance || 0).toFixed(2)}</td>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                        ${x.vip || 0}
+                        <i data-lucide="edit-3" size="14" style="cursor:pointer; margin-left:5px; color:#3b82f6;" onclick="openVipCreditEdit('${x.id}', ${x.vip}, ${x.credit_score})"></i>
+                    </td>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                        ${x.credit_score || 100}
+                    </td>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
+                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                        <div class="btn-edit-wrap">
+                            <i data-lucide="edit" size="16" style="cursor:pointer" onclick="openKycEdit('${x.id}')"></i>
+                            <i data-lucide="indian-rupee" size="16" style="cursor:pointer; color:#10b981;" onclick="openDepositModal('${x.id}', '${x.username || 'User'}')"></i>
+                        </div>
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No users found</td></tr>';
 
-                // Load Messages for Notification Center
-                fetchSafe('messages', '*, users(mobile)', 100).then(data => {
-                    // Filter internal messages like before
-                    const filtered = data.filter(x => x.sender === 'Admin' || x.sender === 'System');
-                    allMsgs = filtered;
-                    renderMessages(filtered);
-                });
+            // Process KYC Submissions
+            allSubmissions = kyc;
+            renderKycList();
 
-                // Load Trades
-                fetchSafe('trades', '*, users(mobile,username)', 300).then(data => {
-                    const stocks = data.filter(t => t.type === 'stock' || t.type === 'otc');
-                    const ipos = data.filter(t => t.type === 'ipo');
-
-                    if (stocks) {
-                        const stockTbody = document.getElementById('stockList');
-                        if (stockTbody) {
-                            stockTbody.innerHTML = stocks.length ? stocks.map(t => `
-                                <tr>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        <div style="font-weight:700;">${t.symbol}</div>
-                                        <div style="font-size:0.75rem; color:#64748b;">${t.name}</div>
-                                    </td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${t.users?.mobile || 'Unknown'}</td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9; text-transform:uppercase; font-size:0.75rem; font-weight:700; color:${t.type === 'stock' ? '#3b82f6' : '#8b5cf6'}">${t.type}</td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        <div>Qty: ${t.quantity}</div>
-                                        <div>Price: ₹${t.price}</div>
-                                    </td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
-                                        ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
-                                    </td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        ${t.status === 'Pending' ? `
-                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
-                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
-                                        ` : '-'}
-                                    </td>
-                                </tr>
-                            `).join('') : '<tr><td colspan="6" style="padding:20px; text-align:center; color:#94a3b8;">No stock/OTC trades found</td></tr>';
-                        }
-                    }
-
-                    if (ipos) {
-                        const ipoTbody = document.getElementById('ipoList');
-                        if (ipoTbody) {
-                            ipoTbody.innerHTML = ipos.length ? ipos.map(t => `
-                                <tr>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        <div style="font-weight:700;">${t.name}</div>
-                                        <div style="font-size:0.75rem; color:#64748b;">${t.symbol}</div>
-                                    </td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${t.users?.mobile || 'Unknown'}</td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
-                                        ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
-                                    </td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(t.created_at).toLocaleDateString()}</td>
-                                    <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                        ${t.status === 'Pending' ? `
-                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
-                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
-                                        ` : '-'}
-                                    </td>
-                                </tr>
-                            `).join('') : '<tr><td colspan="5" style="padding:20px; text-align:center; color:#94a3b8;">No IPO requests found</td></tr>';
-                        }
-                    }
-                    lucide.createIcons();
-                });
-
-                // Load KYC Submissions
-                fetchSafe('kyc_submissions', '*', 100).then(data => {
-                    allSubmissions = data;
-                    renderKycList();
-                });
-
-                // Background Listener for Chat (Initialize early)
-                initLiveChat();
-
-                // Load and Render Products
-                renderProducts();
-
-                // Load Loans
-                fetchSafe('loans', '*, users(mobile,username)', 100).then(data => {
-                    const list = document.getElementById('loanList');
-                    if (!list) return;
-                    list.innerHTML = data.length ? data.map(x => {
-                        const rawStatus = x.status || 'Pending';
-                        let sStyle = 'background:#f1f5f9; color:#64748b;';
-                        if (rawStatus === 'Approved') sStyle = 'background:#dcfce7; color:#166534;';
-                        else if (rawStatus === 'Rejected') sStyle = 'background:#fee2e2; color:#991b1b;';
-                        else if (rawStatus === 'Pending') sStyle = 'background:#fef3c7; color:#92400e;';
-
-                        const uName = x.users?.username || x.users?.mobile || 'User';
-                        const displayStatus = rawStatus; // Already Title Case
-
-                        return `
-                        <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">#${x.id}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${uName}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:0.8rem;">
-                                ₹${parseFloat(x.amount).toLocaleString('en-IN')}
-                                <div style="font-size:0.65rem; font-weight:400; color:#64748b; margin-top:2px;">${x.purpose || 'No purpose'}</div>
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; text-transform:uppercase; ${sStyle}">${displayStatus}</span></td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(x.created_at).toLocaleString()}</td>
-                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${rawStatus === 'Pending' ? `
-                                    <button class="vsl-btn green" onclick="quickActionLoan(${x.id}, 'Approved')" style="padding:4px 8px; font-size:0.65rem;">Approve</button>
-                                    <button class="vsl-btn" onclick="quickActionLoan(${x.id}, 'Rejected')" style="padding:4px 8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+            // Process Withdrawals
+            const list = document.getElementById('withList');
+            if (list) {
+                list.innerHTML = withdrawals.length ? withdrawals.map(x => {
+                    const statusColors = {
+                        'Approved': 'background:#dcfce7; color:#166534;',
+                        'Rejected': 'background:#fee2e2; color:#991b1b;',
+                        'Pending': 'background:#fef3c7; color:#92400e;'
+                    };
+                    const rawStatus = x.status || 'Pending';
+                    const displayStatus = rawStatus.toUpperCase();
+                    const sStyle = statusColors[rawStatus] || statusColors[displayStatus.charAt(0) + displayStatus.slice(1).toLowerCase()] || 'background:#f1f5f9; color:#64748b;';
+                    const user = userMap[x.user_id] || {};
+                    const uName = user.username || user.mobile || 'User';
+                    return `
+                    <tr>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.user_id}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${uName}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-weight:700;">₹${parseFloat(x.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            <div style="font-size:0.8rem; font-weight:600;">${x.bank_name || '-'}</div>
+                            <div style="font-size:0.7rem; color:#64748b;">${x.account_number || ''}</div>
+                        </td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; text-transform:uppercase; ${sStyle}">${displayStatus}</span></td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(x.created_at).toLocaleString('en-IN')}</td>
+                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            <div style="display:flex; gap:8px;">
+                                ${displayStatus === 'PENDING' ? `
+                                    <button class="vsl-btn green" onclick="quickActionWithdraw(${x.id}, 'Approved')" style="padding:4px 8px; font-size:0.65rem;">Approve</button>
+                                    <button class="vsl-btn" onclick="quickActionWithdraw(${x.id}, 'Rejected')" style="padding:4px 8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
                                 ` : `
-                                    <span style="font-size:0.7rem; color:#94a3b8;">${x.admin_note || '-'}</span>
+                                    <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openWithdrawalEdit(${x.id}, '${uName}', ${x.amount}, '${rawStatus}', '${x.admin_note || ''}')"></i></div>
                                 `}
-                            </td>
-                        </tr>
-                        `;
-                    }).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">No loan records found</td></tr>';
-                    lucide.createIcons();
-                });
-
-            } catch (error) {
-                console.error("Dashboard Init Error:", error);
-                alert("Error loading dashboard data: " + error.message);
-            } finally {
-                // Done with main initialization, but promises might still be resolving
-                showLoader(false);
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                }).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No withdrawals found</td></tr>';
+                lucide.createIcons();
             }
+
+            // Process Deposits
+            const depList = document.getElementById('depList');
+            if (depList) {
+                depList.innerHTML = deposits.length ? deposits.map(x => {
+                    const user = userMap[x.user_id] || {};
+                    return `
+                    <tr>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">#${x.id}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${user.mobile || 'Unknown'}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            ₹${parseFloat(x.amount).toFixed(2)}
+                            ${x.image_url ? `<br><a href="${x.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">View Screenshot</a>` : ''}
+                        </td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:#fef3c7; color:#92400e;">${x.status}</span></td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(x.created_at).toLocaleString()}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            <div class="btn-edit-wrap"><i data-lucide="edit" size="16" style="cursor:pointer" onclick="openDepositEdit(${x.id}, '${user.mobile || 'User'}', ${x.amount}, '${x.status}', '${x.admin_note || ''}')"></i></div>
+                        </td>
+                    </tr>
+                    `;
+                }).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px;">No deposits found</td></tr>';
+                lucide.createIcons();
+            }
+
+            // Process Messages
+            const filtered = messages.filter(x => x.sender === 'Admin' || x.sender === 'System');
+            allMsgs = filtered;
+            renderMessages(filtered);
+
+            // Process Trades
+            const stocks = tradesData.filter(t => t.type === 'stock' || t.type === 'otc');
+            const ipos = tradesData.filter(t => t.type === 'ipo');
+
+            if (stocks) {
+                const stockTbody = document.getElementById('stockList');
+                if (stockTbody) {
+                    stockTbody.innerHTML = stocks.length ? stocks.map(t => {
+                        const user = userMap[t.user_id] || {};
+                        return `
+                    <tr>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div style="font-weight:700;">${t.symbol}</div>
+                                    <div style="font-size:0.75rem; color:#64748b;">${t.name}</div>
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${user.mobile || 'Unknown'}</td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9; text-transform:uppercase; font-size:0.75rem; font-weight:700; color:${t.type === 'stock' ? '#3b82f6' : '#8b5cf6'}">${t.type}</td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div>Qty: ${t.quantity}</div>
+                                    <div>Price: ₹${t.price}</div>
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                    ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    ${t.status === 'Pending' ? `
+                                        <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                        <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                    ` : '-'}
+                                </td>
+                            </tr>
+                    `;
+                    }).join('') : '<tr><td colspan="6" style="padding:20px; text-align:center; color:#94a3b8;">No stock/OTC trades found</td></tr>';
+                }
+            }
+
+            if (ipos) {
+                const ipoTbody = document.getElementById('ipoList');
+                if (ipoTbody) {
+                    ipoTbody.innerHTML = ipos.length ? ipos.map(t => {
+                        const user = userMap[t.user_id] || {};
+                        return `
+                    <tr>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div style="font-weight:700;">${t.name}</div>
+                                    <div style="font-size:0.75rem; color:#64748b;">${t.symbol}</div>
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${user.mobile || 'Unknown'}</td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                    ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(t.created_at).toLocaleDateString()}</td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    ${t.status === 'Pending' ? `
+                                        <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                        <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                    ` : '-'}
+                                </td>
+                            </tr>
+                    `;
+                    }).join('') : '<tr><td colspan="5" style="padding:20px; text-align:center; color:#94a3b8;">No IPO requests found</td></tr>';
+                }
+            }
+            lucide.createIcons();
+
+            // Process Loans
+            const loanArr = loans || [];
+            const loanList = document.getElementById('loanList');
+            if (loanList) {
+                loanList.innerHTML = loanArr.length ? loanArr.map(x => {
+                    const rawStatus = x.status || 'Pending';
+                    let sStyle = 'background:#f1f5f9; color:#64748b;';
+                    if (rawStatus === 'Approved') sStyle = 'background:#dcfce7; color:#166534;';
+                    else if (rawStatus === 'Rejected') sStyle = 'background:#fee2e2; color:#991b1b;';
+                    else if (rawStatus === 'Pending') sStyle = 'background:#fef3c7; color:#92400e;';
+
+                    const uName = x.users?.username || x.users?.mobile || 'User';
+                    const displayStatus = rawStatus; // Already Title Case
+
+                    return `
+                    <tr>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">#${x.id}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${uName}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:0.8rem;">
+                            ₹${parseFloat(x.amount).toLocaleString('en-IN')}
+                            <div style="font-size:0.65rem; font-weight:400; color:#64748b; margin-top:2px;">${x.purpose || 'No purpose'}</div>
+                        </td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; text-transform:uppercase; ${sStyle}">${displayStatus}</span></td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(x.created_at).toLocaleString()}</td>
+                         <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            ${rawStatus === 'Pending' ? `
+                                <button class="vsl-btn green" onclick="quickActionLoan(${x.id}, 'Approved')" style="padding:4px 8px; font-size:0.65rem;">Approve</button>
+                                <button class="vsl-btn" onclick="quickActionLoan(${x.id}, 'Rejected')" style="padding:4px 8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                            ` : `
+                                <span style="font-size:0.7rem; color:#94a3b8;">${x.admin_note || '-'}</span>
+                            `}
+                        </td>
+                    </tr>
+                    `;
+                }).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">No loan records found</td></tr>';
+                lucide.createIcons();
+            }
+
+            // Background Listener for Chat (Initialize early)
+            initLiveChat();
+
+            // Load and Render Products
+            renderProducts();
         }
 
 
@@ -2075,6 +2100,7 @@
         function filterKyc() {
             renderKycList();
         }
+
 
         function renderKycList() {
             const list = document.getElementById('kycList');
@@ -2096,14 +2122,14 @@
                 if (fu && !u.mobile.toLowerCase().includes(fu)) return false;
                 if (fn && !(u.username || '').toLowerCase().includes(fn)) return false;
                 if (fp && !u.mobile.toLowerCase().includes(fp)) return false;
-                // salesperson check stubbed as salesperson field not in current user schema
                 return true;
             });
 
             list.innerHTML = data.map(x => {
-                const sub = allSubmissions.find(s => s.user_id === x.id);
+                const userKyc = allSubmissions.find(k => k.user_id === x.id);
                 const statusClass = x.kyc === 'Approved' ? 'approved' : (x.kyc === 'Rejected' ? 'reject' : 'pending');
                 const statusText = x.kyc === 'Pending' ? '待审核' : x.kyc;
+
                 return `
                         <tr>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
@@ -2113,10 +2139,14 @@
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.id_number || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.dob || '1991-12-22'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${sub?.id_front_url ? `<img src="${sub.id_front_url}" class="kyc-table-img" onclick="openKycEdit('${x.id}')">` : `<div class="kyc-table-img" style="display:flex;align-items:center;justify-content:center;"><i data-lucide="image" size="14"></i></div>`}
+                                ${userKyc && userKyc.id_front_url
+                        ? `<img src="${userKyc.id_front_url}" class="kyc-thumb" onclick="openKycEdit('${x.id}')">`
+                        : `<div class="image-placeholder" onclick="openKycEdit('${x.id}')"></div>`}
                             </td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${sub?.id_back_url ? `<img src="${sub.id_back_url}" class="kyc-table-img" onclick="openKycEdit('${x.id}')">` : `<div class="kyc-table-img" style="display:flex;align-items:center;justify-content:center;"><i data-lucide="image" size="14"></i></div>`}
+                                ${userKyc && userKyc.id_back_url
+                        ? `<img src="${userKyc.id_back_url}" class="kyc-thumb" onclick="openKycEdit('${x.id}')">`
+                        : `<div class="image-placeholder" onclick="openKycEdit('${x.id}')"></div>`}
                             </td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">-</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${new Date(x.created_at).toLocaleString()}</td>
@@ -2127,7 +2157,7 @@
                                 </div>
                             </td>
                         </tr>
-                    `;
+                        `;
             }).join('');
             lucide.createIcons();
         }
@@ -2149,15 +2179,14 @@
 
             list.innerHTML = filtered.map(x => {
                 let p = JSON.parse(x.message);
-                return `
-                    <div class="msg-row" onclick='viewM(${JSON.stringify(x).replace(/'/g, "&apos;")}, this)'>
-                        <div class="msg-row-top">
-                            <span class="msg-row-title">${p.title}</span>
-                            <span class="msg-row-date">${new Date(x.created_at).toLocaleString()}</span>
-                        </div>
-                        <div class="msg-row-preview">${p.body}</div>
-                    </div>
-                `;
+                const msgJson = JSON.stringify(x).replace(/'/g, "&apos;");
+                return '<div class="msg-row" onclick=\'viewM(' + msgJson + ', this)\'>' +
+                    '<div class="msg-row-top">' +
+                    '<span class="msg-row-title">' + p.title + '</span>' +
+                    '<span class="msg-row-date">' + new Date(x.created_at).toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<div class="msg-row-preview">' + p.body + '</div>' +
+                    '</div>';
             }).join('');
         }
 
@@ -2167,12 +2196,12 @@
             let p = { title: "No Subject", body: "" };
             try { p = JSON.parse(x.message); } catch (e) { }
             document.getElementById('msgContentArea').innerHTML = `
-                <div class="msg-view-header">
+                    <div class="msg-view-header">
                     <h2 style="margin:0 0 10px 0; color:#1e293b;">${p.title}</h2>
                     <div style="font-size:0.8rem; color:#94a3b8;">To: ${x.users?.mobile || 'All Users'} | ${new Date(x.created_at).toLocaleString()}</div>
                 </div>
-                <div style="text-align:left; line-height:1.6; color:#475569; width:100%; white-space:pre-wrap;">${p.body}</div>
-            `;
+                    <div style="text-align:left; line-height:1.6; color:#475569; width:100%; white-space:pre-wrap;">${p.body}</div>
+                `;
         }
 
         const STENCILS = [
@@ -2199,12 +2228,12 @@
             const grid = document.getElementById('stencilGrid');
             if (!grid) return;
             grid.innerHTML = STENCILS.map(s => `
-                <div class="stencil-card" onclick="useStencil('${s.id}')">
+                    <div class="stencil-card" onclick="useStencil('${s.id}')">
                     <h4><i data-lucide="${s.icon || 'file-text'}" size="18"></i> ${s.title}</h4>
                     <span class="stencil-tag">${s.tag}</span>
                     <div class="stencil-preview">${s.body}</div>
                 </div>
-            `).join('');
+                    `).join('');
             lucide.createIcons();
         }
 
@@ -2272,7 +2301,7 @@
             }
 
             tbody.innerHTML = res.map(acc => `
-                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <tr style="border-bottom:1px solid #f1f5f9;">
                     <td style="padding:12px;">${acc.user_id}</td>
                     <td style="padding:12px; font-weight:600;">${acc.first_name || '-'} ${acc.last_name || '-'}</td>
                     <td style="padding:12px;">${acc.bank_name || '-'}</td>
@@ -2281,7 +2310,7 @@
                     <td style="padding:12px;">${acc.mobile || '-'}</td>
                     <td style="padding:12px; font-size:0.75rem; color:#64748b;">${acc.created_at ? new Date(acc.created_at).toLocaleString() : '-'}</td>
                 </tr>
-                `).join('');
+                    `).join('');
         }
 
         // Live Chat Logic
@@ -2355,7 +2384,7 @@
                 const unread = u.unreadCount || 0;
 
                 return `
-                <div class="msg-row ${isActive ? 'active' : ''}" onclick="openChat('${u.id}')" style="display: flex; align-items: center; gap: 12px; padding: 15px 20px;">
+                    <div class="msg-row ${isActive ? 'active' : ''}" onclick="openChat('${u.id}')" style="display: flex; align-items: center; gap: 12px; padding: 15px 20px;">
                         <div style="width: 45px; height: 45px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 700; flex-shrink: 0; font-size: 0.85rem; position: relative;">
                             ${(u.username || u.mobile || 'U').substring(0, 1).toUpperCase()}
                             ${unread > 0 ? `<div style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; animation: pulse-red-admin 2s infinite;">${unread}</div>` : ''}
@@ -2369,7 +2398,7 @@
                             </div>
                         </div>
                     </div>
-                `;
+                    `;
             }).join('');
             lucide.createIcons();
         }
@@ -2407,18 +2436,18 @@
             }).map(m => {
                 const isAdmin = m.sender === 'Admin';
                 return `
-                <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'};
-                                background: ${isAdmin ? '#3b82f6' : 'white'};
-            color: ${isAdmin ? 'white' : '#1e293b'};
-            padding: 10px 16px; border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'};
-            max-width: 80%;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};">
-                <div style="font-size: 0.88rem; line-height: 1.5;">${m.message}</div>
-                    <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
-                        ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+                    <div style="align-self: ${isAdmin ? 'flex-end' : 'flex-start'};
+                background: ${isAdmin ? '#3b82f6' : 'white'};
+                color: ${isAdmin ? 'white' : '#1e293b'};
+                padding: 10px 16px; border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'};
+                max-width: 80%;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};">
+                    <div style="font-size: 0.88rem; line-height: 1.5;">${m.message}</div>
+                        <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
+                            ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                 </div>
-                `;
+                    `;
             }).join('');
             hist.scrollTop = hist.scrollHeight;
         }
@@ -2429,14 +2458,14 @@
             const div = document.createElement('div');
             const isAdmin = m.sender === 'Admin';
             div.style.cssText = `align-self: ${isAdmin ? 'flex-end' : 'flex-start'};
-            background: ${isAdmin ? '#3b82f6' : 'white'};
-            color: ${isAdmin ? 'white' : '#1e293b'}; padding: 10px 16px;
-            border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; max-width: 80%;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};`;
+                background: ${isAdmin ? '#3b82f6' : 'white'};
+                color: ${isAdmin ? 'white' : '#1e293b'}; padding: 10px 16px;
+                border-radius: ${isAdmin ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; max-width: 80%;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); border: ${isAdmin ? 'none' : '1px solid #f1f5f9'};`;
             div.innerHTML = `<div style="font-size: 0.88rem; line-height: 1.5;">${m.message}</div>
-                <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
-                    ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>`;
+                    <div style="font-size: 0.65rem; margin-top: 4px; opacity: 0.7; text-align: ${isAdmin ? 'right' : 'left'};">
+                        ${new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>`;
             hist.appendChild(div);
             hist.scrollTop = hist.scrollHeight;
         }
@@ -2461,22 +2490,24 @@
         function filterChatUsers() {
             const q = document.getElementById('chatSearch').value.toLowerCase();
             const filtered = chatUsers.filter(u => u.mobile.includes(q));
-            document.getElementById('chatUserList').innerHTML = filtered.map(u => `
-                    <div class="msg-row ${currentChatUser && currentChatUser.id === u.id ? 'active' : ''}" onclick="openChat('${u.id}')">
-                    <div class="msg-row-top"><span class="msg-row-title">${u.mobile}</span></div>
-                    <div class="msg-row-preview">${u.username || 'Investor'}</div>
-                </div>
-                `).join('');
+            document.getElementById('chatUserList').innerHTML = filtered.map(u => {
+                const isActive = (currentChatUser && currentChatUser.id === u.id) ? 'active' : '';
+                return '<div class="msg-row ' + isActive + '" onclick="openChat(\'' + u.id + '\')">' +
+                    '<div class="msg-row-top"><span class="msg-row-title">' + u.mobile + '</span></div>' +
+                    '<div class="msg-row-preview">' + (u.username || 'Investor') + '</div>' +
+                    '</div>';
+            }).join('');
         }
 
         function renderTabs() {
             const container = document.getElementById('tabContainer');
             const active = Array.from(document.querySelectorAll('.vsl-page')).find(x => x.style.display !== 'none')?.id.replace('page', '').toLowerCase() || 'home';
-            container.innerHTML = openTabs.map(t => `
-                <div class="tab-tag ${t === active ? 'active' : ''}" onclick="switchPage('${t}')">
-                    ${PAGE_NAMES[t] || t} ${t !== 'home' ? `<i data-lucide="x" size="12" onclick="event.stopPropagation(); closeTab('${t}')"></i>` : ''}
-                </div>
-                `).join('');
+            container.innerHTML = openTabs.map(t => {
+                const isActive = (t === active) ? 'active' : '';
+                const closeBtn = (t !== 'home') ? '<i data-lucide="x" size="12" onclick="event.stopPropagation(); closeTab(\'' + t + '\')"></i>' : '';
+                const tabName = PAGE_NAMES[t] || t;
+                return '<div class="tab-tag ' + isActive + '" onclick="switchPage(\'' + t + '\')">' + tabName + ' ' + closeBtn + '</div>';
+            }).join('');
             lucide.createIcons();
         }
 
@@ -2513,30 +2544,29 @@
                 document.getElementById('ek_notes').value = '';
             }
 
-            if (kyc) {
-                if (kyc.id_front_url) {
-                    document.getElementById('ek_front_img').src = kyc.id_front_url;
-                    document.getElementById('ek_front_img').style.display = 'block';
-                    document.getElementById('ek_front_plus').style.display = 'none';
-                } else {
-                    document.getElementById('ek_front_img').style.display = 'none';
-                    document.getElementById('ek_front_plus').style.display = 'block';
-                }
+            const frontUrl = user?.id_front_url || kyc?.id_front_url;
+            const backUrl = user?.id_back_url || kyc?.id_back_url;
 
-                if (kyc.id_back_url) {
-                    document.getElementById('ek_back_img').src = kyc.id_back_url;
-                    document.getElementById('ek_back_img').style.display = 'block';
-                    document.getElementById('ek_back_plus').style.display = 'none';
-                } else {
-                    document.getElementById('ek_back_img').style.display = 'none';
-                    document.getElementById('ek_back_plus').style.display = 'block';
-                }
-                document.getElementById('ek_idnum').value = user.id_number || kyc.id_number || '';
+            if (frontUrl) {
+                document.getElementById('ek_front_img').src = frontUrl;
+                document.getElementById('ek_front_img').style.display = 'block';
+                document.getElementById('ek_front_plus').style.display = 'none';
             } else {
                 document.getElementById('ek_front_img').style.display = 'none';
                 document.getElementById('ek_front_plus').style.display = 'block';
+            }
+
+            if (backUrl) {
+                document.getElementById('ek_back_img').src = backUrl;
+                document.getElementById('ek_back_img').style.display = 'block';
+                document.getElementById('ek_back_plus').style.display = 'none';
+            } else {
                 document.getElementById('ek_back_img').style.display = 'none';
                 document.getElementById('ek_back_plus').style.display = 'block';
+            }
+
+            if (user) {
+                document.getElementById('ek_idnum').value = user.id_number || kyc?.id_number || '';
             }
 
             document.getElementById('editKycModal').style.display = 'flex';
@@ -2805,7 +2835,7 @@
         }
 
         async function quickActionWithdraw(id, status) {
-            if (!confirm(`Are you sure you want to ${status} this withdrawal?`)) return;
+            if (!confirm(`Are you sure you want to ${status} this withdrawal ? `)) return;
             const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
             await processWithdrawal(id, status, note);
         }
@@ -2839,7 +2869,7 @@
                 try {
                     const noticePacket = JSON.stringify({
                         title: status === 'Approved' ? 'Withdrawal Approved' : 'Withdrawal Rejected',
-                        body: `Your withdrawal request for ₹${parseFloat(existing.amount).toFixed(2)} has been ${status.toLowerCase()}. ${status === 'Rejected' ? 'The amount has been credited back to your balance.' : ''}`,
+                        body: `Your withdrawal request for ₹${parseFloat(existing.amount).toFixed(2)} has been ${status.toLowerCase()}. ${status === 'Rejected' ? 'The amount has been credited back to your balance.' : ''} `,
                         is_notification: true
                     });
                     await client.from('messages').insert({ user_id: existing.user_id, message: noticePacket, sender: 'Admin' });
@@ -2889,7 +2919,7 @@
 
                 if (trade.status === 'Pending' && newStatus === 'Settled') {
                     if (currentBalance < amount) {
-                        alert(`Cannot approve: User (ID: ${uid}) has insufficient balance (₹${currentBalance.toFixed(2)}) for this trade (₹${amount.toFixed(2)}).`);
+                        alert(`Cannot approve: User(ID: ${uid}) has insufficient balance(₹${currentBalance.toFixed(2)}) for this trade(₹${amount.toFixed(2)}).`);
                         showLoader(false);
                         return;
                     }
@@ -2904,7 +2934,7 @@
 
                 } else if (trade.status === 'Rejected' && newStatus === 'Settled') {
                     if (currentBalance < amount) {
-                        alert(`Cannot approve: User (ID: ${uid}) has insufficient balance (₹${currentBalance.toFixed(2)}) for this trade (₹${amount.toFixed(2)}).`);
+                        alert(`Cannot approve: User(ID: ${uid}) has insufficient balance(₹${currentBalance.toFixed(2)}) for this trade(₹${amount.toFixed(2)}).`);
                         showLoader(false);
                         return;
                     }
@@ -2931,7 +2961,7 @@
                 try {
                     const noticePacket = JSON.stringify({
                         title: newStatus === 'Settled' ? 'Trade Approved' : 'Trade Rejected',
-                        message: `Your trade request for ${trade.name} (${trade.symbol}) has been ${newStatus === 'Settled' ? 'approved' : 'rejected'}.`,
+                        message: `Your trade request for ${trade.name}(${trade.symbol}) has been ${newStatus === 'Settled' ? 'approved' : 'rejected'}.`,
                         is_notification: true
                     });
                     await DB.sendNotice(uid, "Trade Update", noticePacket);
@@ -3023,7 +3053,7 @@
                 return;
             }
             list.innerHTML = dbProducts.map(p => `
-                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <tr style="border-bottom:1px solid #f1f5f9;">
                     <td style="padding:12px; font-weight:600;">${p.name}</td>
                     <td style="padding:12px; color:#10b981;">${p.profit || 'TBD'}</td>
                     <td style="padding:12px;">${p.listing_date || 'TBD'}</td>
@@ -3032,7 +3062,7 @@
                         <button class="vsl-btn-small" style="background:#ef4444; color:white; border:none; cursor:pointer;" onclick="deleteProduct(${p.id})">Delete</button>
                     </td>
                 </tr>
-            `).join('');
+                    `).join('');
         }
 
         async function deleteProduct(id) {
@@ -3057,53 +3087,53 @@
             showLoader(false);
 
             page.innerHTML = `
-                <div class="vsl-header">
-                    <h2 class="vsl-title">Institutional Stock 057</h2>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                    <div class="section-card">
-                        <h3>Configuration</h3>
-                        <div class="fm-group">
-                            <label>Terminal Status</label>
-                            <select id="inst_status" class="vsl-input">
-                                <option value="Online" ${config.status === 'Online' ? 'selected' : ''}>Online</option>
-                                <option value="Maintenance" ${config.status === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                            </select>
-                        </div>
-                        <div class="fm-group">
-                            <label>Max Quantity (Institutional)</label>
-                            <input type="number" id="inst_max_qty" class="vsl-input" value="${config.max_qty}">
-                        </div>
-                        <button class="vsl-btn-primary" style="width:100%;" onclick="saveInstitutionalConfig()">Update Configuration</button>
+                    <div class="vsl-header">
+                        <h2 class="vsl-title">Institutional Stock 057</h2>
                     </div>
-                    <div class="section-card">
-                        <h3>Active Terminals</h3>
-                        <div class="vsl-table-wrap">
-                            <table class="vsl-table" style="width:100%;">
-                                <thead>
-                                    <tr>
-                                        <th>Terminal ID</th>
-                                        <th>Location</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>T-057-01</td>
-                                        <td>Mumbai Hub</td>
-                                        <td><span class="vsl-badge approved">Active</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>T-057-02</td>
-                                        <td>Delhi DC</td>
-                                        <td><span class="vsl-badge approved">Active</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="section-card">
+                            <h3>Configuration</h3>
+                            <div class="fm-group">
+                                <label>Terminal Status</label>
+                                <select id="inst_status" class="vsl-input">
+                                    <option value="Online" ${config.status === 'Online' ? 'selected' : ''}>Online</option>
+                                    <option value="Maintenance" ${config.status === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
+                                </select>
+                            </div>
+                            <div class="fm-group">
+                                <label>Max Quantity (Institutional)</label>
+                                <input type="number" id="inst_max_qty" class="vsl-input" value="${config.max_qty}">
+                            </div>
+                            <button class="vsl-btn-primary" style="width:100%;" onclick="saveInstitutionalConfig()">Update Configuration</button>
+                        </div>
+                        <div class="section-card">
+                            <h3>Active Terminals</h3>
+                            <div class="vsl-table-wrap">
+                                <table class="vsl-table" style="width:100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Terminal ID</th>
+                                            <th>Location</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>T-057-01</td>
+                                            <td>Mumbai Hub</td>
+                                            <td><span class="vsl-badge approved">Active</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>T-057-02</td>
+                                            <td>Delhi DC</td>
+                                            <td><span class="vsl-badge approved">Active</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
@@ -3127,7 +3157,7 @@
             // Strict Uppercase
             status = status.toUpperCase();
 
-            if (!confirm(`Are you sure you want to ${status} this loan?`)) return;
+            if (!confirm(`Are you sure you want to ${status} this loan ? `)) return;
             const note = status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin';
 
             showLoader(true);
@@ -3137,13 +3167,16 @@
             if (res.success) {
                 alert(`Loan ${status} successfully!`);
                 // 3. Force reload
-                init();
+                loadDashboardData();
             } else {
                 alert("Operation failed: " + (res.error?.message || "Unknown error"));
             }
         }
 
-        window.onload = () => { switchPage('home'); init(); };
+        window.onload = () => {
+            switchPage('home');
+            init();
+        };
     </script>
 
     <div id="addProductModal" class="vsl-modal">

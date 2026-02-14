@@ -132,8 +132,10 @@
             padding: 0.8rem;
             border-radius: 8px;
             font-weight: 600;
-            cursor: not-allowed;
+            cursor: pointer;
             margin-bottom: 1rem;
+            pointer-events: auto !important;
+            opacity: 1 !important;
         }
 
         .error-footer {
@@ -337,7 +339,7 @@
                         style="width: 100%; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
                 </div>
 
-                <button class="submit-btn" id="withdrawSubmitBtn" disabled>Submit Withdrawal</button>
+                <button class="submit-btn" id="withdrawSubmitBtn">Submit Withdrawal</button>
                 <div class="error-footer" id="withdrawErrorMsg" style="display: none;">You cannot withdraw until
                     outstanding balances are cleared.</div>
                 <div class="policy-text">By proceeding, you agree to our deposit terms and conditions.</div>
@@ -790,9 +792,11 @@
                         if (warnBox) warnBox.style.display = 'block';
                         if (errorMsg) errorMsg.style.display = 'block';
                         if (submitBtn) {
-                            submitBtn.disabled = true;
-                            submitBtn.style.background = '#93c5fd';
-                            submitBtn.style.cursor = 'not-allowed';
+                            // Removed disabled logic
+                            submitBtn.disabled = false;
+                            submitBtn.style.cursor = 'pointer';
+                            submitBtn.style.pointerEvents = 'auto';
+                            submitBtn.style.opacity = '1';
                         }
 
                         const wAcc = document.getElementById('wAccountNum');
@@ -804,16 +808,13 @@
                         if (errorMsg) errorMsg.style.display = 'none';
 
                         // Enable button if balance > 0
+                        // Always enable button
                         if (submitBtn) {
-                            if (effectiveBalance >= 100) {
-                                submitBtn.disabled = false;
-                                submitBtn.style.background = '#1e56a0';
-                                submitBtn.style.cursor = 'pointer';
-                            } else {
-                                submitBtn.disabled = true;
-                                submitBtn.style.background = '#93c5fd';
-                                submitBtn.style.cursor = 'not-allowed';
-                            }
+                            submitBtn.disabled = false;
+                            submitBtn.style.background = '#1e56a0';
+                            submitBtn.style.cursor = 'pointer';
+                            submitBtn.style.pointerEvents = 'auto';
+                            submitBtn.style.opacity = '1';
                         }
                     }
 

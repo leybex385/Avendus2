@@ -313,11 +313,29 @@ window.DB = {
     // --- KYC ---
     async submitKYC(userId, kycData) {
         const client = this.getClient();
-        const { data, error } = await client
-            .from('kyc_submissions')
-            .insert([{ user_id: userId, ...kycData }]);
 
-        return { success: !error, error };
+        // Check if user already has a KYC submission
+        const { data: existing } = await client
+            .from('kyc_submissions')
+            .select('id')
+            .eq('user_id', userId)
+            .limit(1);
+
+        let result;
+        if (existing && existing.length > 0) {
+            // Update existing record
+            result = await client
+                .from('kyc_submissions')
+                .update(kycData)
+                .eq('user_id', userId);
+        } else {
+            // Insert new record
+            result = await client
+                .from('kyc_submissions')
+                .insert([{ user_id: userId, ...kycData }]);
+        }
+
+        return { success: !result.error, error: result.error };
     },
 
     async getKycByUserId(userId) {
