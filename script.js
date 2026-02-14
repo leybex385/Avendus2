@@ -1172,6 +1172,31 @@ window.loadUserAssets = async function (userId) {
         const settingsCreditEl = document.getElementById('settingsCredit');
         if (settingsCreditEl) settingsCreditEl.textContent = credit;
 
+        // --- Update Credit Gauge (Me Page) ---
+        const needle = document.getElementById('meGaugeNeedle');
+        if (needle) {
+            const rotation = (credit / 100) * 180;
+            needle.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        const gaugeScore = document.getElementById('meGaugeScore');
+        const gaugeInfo = document.getElementById('meCreditGaugeInfo');
+        if (gaugeInfo) {
+            let category = "Poor";
+            let color = "#ef4444";
+
+            if (credit >= 95) { category = "Excellent"; color = "#10b981"; }
+            else if (credit >= 74) { category = "Good"; color = "#3b82f6"; }
+            else if (credit >= 51) { category = "Fair"; color = "#fde047"; }
+            else if (credit >= 26) { category = "Average"; color = "#f59e0b"; }
+
+            if (gaugeScore) {
+                gaugeScore.textContent = category;
+                gaugeScore.style.color = color;
+            }
+            gaugeInfo.innerHTML = `Based on the latest evaluation, your <b>Credit Score is ${credit}</b>. Your credit profile falls under the <b style="color: ${color};">${category}</b> category.`;
+        }
+
         // Update Credit Profile Text on Me Page (if it exists)
         const creditProfileInfo = document.getElementById('creditProfileInfo');
         if (creditProfileInfo) {
@@ -1260,6 +1285,32 @@ window.syncVipCredit = async function () {
             for (const [id, val] of Object.entries(targets)) {
                 const el = document.getElementById(id);
                 if (el) el.textContent = val;
+            }
+
+            // --- Credit Gauge Specific Updates ---
+            const needle = document.getElementById('meGaugeNeedle');
+            if (needle) {
+                const rotation = (credit / 100) * 180;
+                needle.style.transform = `rotate(${rotation}deg)`;
+            }
+
+            const gaugeScore = document.getElementById('meGaugeScore');
+            const gaugeInfo = document.getElementById('meCreditGaugeInfo');
+            if (gaugeInfo) {
+                let category = "Poor";
+                let color = "#ef4444";
+
+                if (credit >= 95) { category = "Excellent"; color = "#10b981"; }
+                else if (credit >= 74) { category = "Good"; color = "#3b82f6"; }
+                else if (credit >= 51) { category = "Fair"; color = "#fde047"; }
+                else if (credit >= 26) { category = "Average"; color = "#f59e0b"; }
+
+                if (gaugeScore) {
+                    gaugeScore.textContent = category;
+                    gaugeScore.style.color = color;
+                }
+
+                gaugeInfo.innerHTML = `Based on the latest evaluation, your <b>Credit Score is ${credit}</b>. Your credit profile falls under the <b style="color: ${color};">${category}</b> category.`;
             }
 
             // Update Credit Profile Text on Me Page (if it exists)
