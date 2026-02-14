@@ -259,6 +259,110 @@
             text-align: right;
         }
 
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: linear-gradient(145deg, #111111, #1A1A1A);
+            padding: 30px;
+            border-radius: 16px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--gold-primary);
+            text-align: center;
+            position: relative;
+            animation: fadeScale 0.3s ease;
+        }
+
+        @keyframes fadeScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-card.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+        }
+
+        .modal-title {
+            color: var(--gold-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-message {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-cancel {
+            background: #333;
+            color: #ccc;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex: 1;
+        }
+
+        .btn-cancel:hover {
+            background: #444;
+            color: white;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #D4AF37 0%, #AA8C2C 100%);
+            color: black;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex: 1;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
         .gold-txt {
             color: var(--gold-primary);
         }
@@ -350,6 +454,23 @@
                 padding: 1.5rem;
             }
         }
+
+        .modal-icon {
+            margin-bottom: 1rem;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold-primary);
+        }
+
+        .error .modal-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
     </style>
 </head>
 
@@ -417,7 +538,7 @@
                     read and agree to the Loan Terms & Conditions</label>
             </div>
 
-            <button class="submit-btn" onclick="submitApplication()" disabled id="submitBtn">Submit Application</button>
+            <button class="submit-btn" onclick="preSubmitCheck()" disabled id="submitBtn">Submit Application</button>
         </div>
 
         <!-- RIGHT COLUMN: INFO PANEL -->
@@ -466,72 +587,158 @@
         </div>
     </main>
 
+    <!-- CUSTOM MODALS WRAPPER -->
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay" onclick="closeModal(event, 'confirmModal')">
+        <div class="modal-card">
+            <div class="modal-icon"><i data-lucide="help-circle" size="32"></i></div>
+            <h3 class="modal-title">Confirm Application</h3>
+            <p class="modal-message" id="confirmMsg">Are you sure you want to apply?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal(null, 'confirmModal')">Cancel</button>
+                <button class="btn-confirm" onclick="executeSubmission()">Confirm Application</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal-overlay" onclick="closeModal(event, 'successModal')">
+        <div class="modal-card">
+            <div class="modal-icon"><i data-lucide="check-circle" size="32"></i></div>
+            <h3 class="modal-title">Application Submitted</h3>
+            <p class="modal-message">Your loan application has been successfully submitted and is now under review.</p>
+            <div class="modal-actions">
+                <button class="btn-confirm" onclick="closeModal(null, 'successModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal-overlay" onclick="closeModal(event, 'errorModal')">
+        <div class="modal-card error">
+            <div class="modal-icon"><i data-lucide="alert-circle" size="32"></i></div>
+            <h3 class="modal-title" style="color:#ef4444;">Submission Failed</h3>
+            <p class="modal-message" id="errorMsg">An error occurred.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal(null, 'errorModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Agreement Logic
         const agreeCheckbox = document.getElementById('agreeTerms');
         const submitButton = document.getElementById('submitBtn');
 
-        agreeCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                submitButton.disabled = false;
-            } else {
-                submitButton.disabled = true;
-            }
-        });
+        if (agreeCheckbox && submitButton) {
+            agreeCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    submitButton.disabled = false;
+                } else {
+                    submitButton.disabled = true;
+                }
+            });
+        }
 
         // EXISTING LOGIC PRESERVED BELOW
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
             loadHistory();
+
+            // ESC key to close
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-overlay.active').forEach(overlay => {
+                        overlay.classList.remove('active');
+                        setTimeout(() => overlay.style.display = 'none', 300);
+                    });
+                }
+            });
         });
 
+        // Modal Helpers
+        function showModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = 'flex';
+            setTimeout(() => m.classList.add('active'), 10);
+            if (window.lucide) lucide.createIcons();
+        }
 
-        async function submitApplication() {
+        function closeModal(e, id) {
+            if (e && e.target !== e.currentTarget) return; // Prevent closing if clicked inside card (unless strictly overlay click)
+            const m = document.getElementById(id);
+            m.classList.remove('active');
+            setTimeout(() => m.style.display = 'none', 300);
+        }
+
+        // Submission Logic Replaced with Modal Flow
+        let pendingAmount = 0;
+        let pendingPurpose = '';
+
+        function preSubmitCheck() {
             const amount = parseFloat(document.getElementById('loanAmount').value);
             const purpose = document.getElementById('loanPurpose').value;
-            const btn = document.querySelector('.submit-btn');
 
             if (!amount || amount <= 0) {
-                alert("Please enter a valid amount.");
+                document.getElementById('errorMsg').textContent = "Please enter a valid loan amount.";
+                showModal('errorModal');
                 return;
             }
             if (!purpose) {
-                alert("Please enter a purpose.");
+                document.getElementById('errorMsg').textContent = "Please enter a purpose for the loan.";
+                showModal('errorModal');
                 return;
             }
 
             const user = window.DB.getCurrentUser();
             if (!user) {
-                alert("Please login first.");
+                alert("Please login first."); // Fallback for pure auth fail redirect
                 window.location.href = 'login.html';
                 return;
             }
 
-            if (confirm(`Submit loan application for ₹${amount}?`)) {
+            pendingAmount = amount;
+            pendingPurpose = purpose;
+
+            document.getElementById('confirmMsg').textContent = `Are you sure you want to submit this loan application for ₹${amount.toLocaleString('en-IN')}?`;
+            showModal('confirmModal');
+        }
+
+        async function executeSubmission() {
+            closeModal(null, 'confirmModal'); // Close confirm first
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            const user = window.DB.getCurrentUser();
+            const packet = {
+                user_id: user.id,
+                amount: pendingAmount,
+                purpose: pendingPurpose,
+                status: 'Pending',
+                created_at: new Date().toISOString()
+            };
+
+            const { success, error } = await window.DB.submitLoan(packet);
+
+            // btn.disabled = false; // logic would suggest re-enabling, but technically checkbox is checked.
+            // Actually, after success we usually clear form.
+
+            if (success) {
+                document.getElementById('loanAmount').value = '';
+                document.getElementById('loanPurpose').value = '';
+                // Reset Checkbox
+                document.getElementById('agreeTerms').checked = false;
                 btn.disabled = true;
-                btn.textContent = 'Submitting...';
-
-                const packet = {
-                    user_id: user.id,
-                    amount: amount,
-                    purpose: purpose,
-                    status: 'Pending',
-                    created_at: new Date().toISOString()
-                };
-
-                const { success, error } = await window.DB.submitLoan(packet);
-
-                btn.disabled = false;
                 btn.textContent = 'Submit Application';
 
-                if (success) {
-                    alert("Application submitted successfully! It is now under review.");
-                    document.getElementById('loanAmount').value = '';
-                    document.getElementById('loanPurpose').value = '';
-                    loadHistory();
-                } else {
-                    alert("Failed to submit: " + (error?.message || "Unknown error"));
-                }
+                showModal('successModal');
+                loadHistory();
+            } else {
+                btn.disabled = false; // re-enable if failed
+                btn.textContent = 'Submit Application';
+                document.getElementById('errorMsg').textContent = error?.message || "Unknown error occurred.";
+                showModal('errorModal');
             }
         }
 
@@ -543,18 +750,25 @@
             const loans = await window.DB.getLoans(user.id);
 
             if (loans.length === 0) {
-                list.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No applications found.</div>`;
+                list.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2rem; grid-column: 1/-1;">No applications found.</div>`;
                 return;
             }
 
             list.innerHTML = loans.map(L => {
                 const s = L.status || 'Pending';
-                const statusClass = s === 'Approved' ? 'status-approved' :
-                    (s === 'Rejected' ? 'status-rejected' : 'status-pending');
+                let statusClass = 'status-pending';
+                if (s.toLowerCase() === 'approved') statusClass = 'status-approved';
+                if (s.toLowerCase() === 'rejected') statusClass = 'status-rejected';
+
+                // For border color
+                let itemClass = 'pending';
+                if (s.toLowerCase() === 'approved') itemClass = 'approved';
+                if (s.toLowerCase() === 'rejected') itemClass = 'rejected';
+
                 const dateStr = new Date(L.created_at).toLocaleDateString();
 
                 return `
-                    <div class="history-item">
+                    <div class="history-item ${itemClass}">
                         <div class="item-left">
                             <h4>₹${parseFloat(L.amount).toLocaleString('en-IN')}</h4>
                             <p>${dateStr} • ${L.purpose || 'No purpose'}</p>
