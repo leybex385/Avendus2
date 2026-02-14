@@ -85,3 +85,15 @@ CREATE TABLE IF NOT EXISTS trades (
 
 -- 8. Disable RLS for Development (Fixes Update Issues)
 ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+
+-- 9. Create Loans Table
+CREATE TABLE IF NOT EXISTS loans (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    amount DECIMAL(20, 2) NOT NULL,
+    reason TEXT,
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
+    admin_note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP WITH TIME ZONE
+);

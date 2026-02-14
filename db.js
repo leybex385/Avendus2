@@ -539,5 +539,72 @@ window.DB = {
             .upsert({ key, value, updated_at: new Date().toISOString() });
 
         return { success: !error, error };
+    },
+
+    // --- LOANS ---
+    async getLoans(userId) {
+        const client = this.getClient();
+        if (!client) return [];
+        const { data, error } = await client
+            .from('loans')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) console.error("Error fetching loans:", error);
+        return data || [];
+    },
+
+    async getAllLoans() {
+        const client = this.getClient();
+        if (!client) return [];
+        // Requires foreign key relation setup or simple fetch
+        // If users table is separate, we might need manual population if FK is strict
+        // But assuming FK setup:
+        const { data, error } = await client
+            .from('loans')
+            .select(`
+                *,
+                users:user_id(username, mobile)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching all loans (with user details):", error);
+            // Fallback without join if failed
+            const { data: d2 } = await client.from('loans').select('*').order('created_at', { ascending: false });
+            return d2 || [];
+        }
+        return data || [];
+    },
+
+    async submitLoan(loanData) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database disconnected' };
+
+        const { data, error } = await client
+            .from('loans')
+            .insert([loanData])
+            .select()
+            .single();
+
+        return { success: !error, data, error };
+    },
+
+    async updateLoanStatus(id, status, adminNote = '') {
+        const client = this.getClient();
+        if (!client) return { success: false };
+
+        const updateData = {
+            status,
+            admin_note: adminNote,
+            processed_at: new Date().toISOString()
+        };
+        const { data, error } = await client
+            .from('loans')
+            .update(updateData)
+            .eq('id', id);
+
+        return { success: !error, error };
     }
 };

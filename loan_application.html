@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Application - Avendus Capital</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="portfolio-theme.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            /* Dark theme base */
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header-back {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid #1e293b;
+            background: #0f172a;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .main-container {
+            padding: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .loan-card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #334155;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            border-color: #d4af37;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #d4af37, #aa8c2c);
+            color: black;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+
+        .item-left h4 {
+            margin: 0 0 0.3rem 0;
+            font-size: 1rem;
+            color: #f1f5f9;
+        }
+
+        .item-left p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header-back">
+        <button class="back-btn" onclick="window.history.back()"><i data-lucide="arrow-left"></i></button>
+        <div class="header-title">Apply for Loan</div>
+    </header>
+
+    <main class="main-container">
+        <div class="loan-card">
+            <h3 style="margin-top: 0; color: #d4af37;">Personal Credit Loan</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Get instant credit based on your portfolio value and credit score. Low interest rates and flexible
+                repayment.
+            </p>
+
+            <div class="form-group">
+                <label class="form-label">Loan Amount (₹)</label>
+                <input type="number" id="loanAmount" class="form-input" placeholder="e.g. 50000">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Purpose / Reason</label>
+                <input type="text" id="loanPurpose" class="form-input" placeholder="e.g. Personal Use, Investment">
+            </div>
+
+            <button class="submit-btn" onclick="submitApplication()">Submit Application</button>
+        </div>
+
+        <h3 style="color: #f1f5f9; margin-bottom: 1rem;">My Applications</h3>
+        <div id="loanHistory" class="history-list">
+            <!-- Populated via JS -->
+            <div style="text-align: center; color: #64748b; padding: 2rem;">Loading history...</div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadHistory();
+        });
+
+        async function submitApplication() {
+            const amount = parseFloat(document.getElementById('loanAmount').value);
+            const purpose = document.getElementById('loanPurpose').value;
+            const btn = document.querySelector('.submit-btn');
+
+            if (!amount || amount <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+            }
+            if (!purpose) {
+                alert("Please enter a purpose.");
+                return;
+            }
+
+            const user = window.DB.getCurrentUser();
+            if (!user) {
+                alert("Please login first.");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (confirm(`Submit loan application for ₹${amount}?`)) {
+                btn.disabled = true;
+                btn.textContent = 'Submitting...';
+
+                const packet = {
+                    user_id: user.id,
+                    amount: amount,
+                    purpose: purpose,
+                    status: 'Pending',
+                    created_at: new Date().toISOString()
+                };
+
+                const { success, error } = await window.DB.submitLoan(packet);
+
+                btn.disabled = false;
+                btn.textContent = 'Submit Application';
+
+                if (success) {
+                    alert("Application submitted successfully! It is now under review.");
+                    document.getElementById('loanAmount').value = '';
+                    document.getElementById('loanPurpose').value = '';
+                    loadHistory();
+                } else {
+                    alert("Failed to submit: " + (error?.message || "Unknown error"));
+                }
+            }
+        }
+
+        async function loadHistory() {
+            const user = window.DB.getCurrentUser();
+            if (!user) return;
+
+            const list = document.getElementById('loanHistory');
+            const loans = await window.DB.getLoans(user.id);
+
+            if (loans.length === 0) {
+                list.innerHTML = `<div style="text-align: center; color: #64748b; padding: 2rem;">No applications found.</div>`;
+                return;
+            }
+
+            list.innerHTML = loans.map(L => {
+                const s = L.status || 'Pending';
+                const statusClass = s === 'Approved' ? 'status-approved' :
+                    (s === 'Rejected' ? 'status-rejected' : 'status-pending');
+                const dateStr = new Date(L.created_at).toLocaleDateString();
+
+                return `
+                    <div class="history-item">
+                        <div class="item-left">
+                            <h4>₹${parseFloat(L.amount).toLocaleString('en-IN')}</h4>
+                            <p>${dateStr} • ${L.purpose || 'No purpose'}</p>
+                            ${L.admin_note ? `<p style="color: #ef4444; margin-top: 4px; font-size: 0.75rem;">Note: ${L.admin_note}</p>` : ''}
+                        </div>
+                        <span class="status-badge ${statusClass}">${L.status}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+
+</html>

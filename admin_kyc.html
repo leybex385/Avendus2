@@ -1922,6 +1922,44 @@
                 // Load and Render Products
                 renderProducts();
 
+                // Load Loans
+                fetchSafe('loans', '*, users(mobile,username)', 100).then(data => {
+                    const list = document.getElementById('loanList');
+                    if (!list) return;
+                    list.innerHTML = data.length ? data.map(x => {
+                        const rawStatus = x.status || 'Pending';
+                        let sStyle = 'background:#f1f5f9; color:#64748b;';
+                        if (rawStatus === 'Approved') sStyle = 'background:#dcfce7; color:#166534;';
+                        else if (rawStatus === 'Rejected') sStyle = 'background:#fee2e2; color:#991b1b;';
+                        else if (rawStatus === 'Pending') sStyle = 'background:#fef3c7; color:#92400e;';
+
+                        const uName = x.users?.username || x.users?.mobile || 'User';
+                        const displayStatus = rawStatus; // Already Title Case
+
+                        return `
+                        <tr>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">#${x.id}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${uName}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:0.8rem;">
+                                ₹${parseFloat(x.amount).toLocaleString('en-IN')}
+                                <div style="font-size:0.65rem; font-weight:400; color:#64748b; margin-top:2px;">${x.purpose || 'No purpose'}</div>
+                            </td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; text-transform:uppercase; ${sStyle}">${displayStatus}</span></td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(x.created_at).toLocaleString()}</td>
+                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                ${rawStatus === 'Pending' ? `
+                                    <button class="vsl-btn green" onclick="quickActionLoan(${x.id}, 'Approved')" style="padding:4px 8px; font-size:0.65rem;">Approve</button>
+                                    <button class="vsl-btn" onclick="quickActionLoan(${x.id}, 'Rejected')" style="padding:4px 8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                ` : `
+                                    <span style="font-size:0.7rem; color:#94a3b8;">${x.admin_note || '-'}</span>
+                                `}
+                            </td>
+                        </tr>
+                        `;
+                    }).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">No loan records found</td></tr>';
+                    lucide.createIcons();
+                });
+
             } catch (error) {
                 console.error("Dashboard Init Error:", error);
                 alert("Error loading dashboard data: " + error.message);
@@ -2989,6 +3027,22 @@
                 renderStock057();
             } else {
                 alert("Failed to update configuration: " + (error?.message || "Unknown error"));
+            }
+        }
+
+        async function quickActionLoan(id, status) {
+            if (!confirm(`Are you sure you want to ${status} this loan?`)) return;
+            const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
+
+            showLoader(true);
+            const res = await DB.updateLoanStatus(id, status, note);
+            showLoader(false);
+
+            if (res.success) {
+                alert(`Loan ${status} successfully!`);
+                init(); // Refresh
+            } else {
+                alert("Operation failed: " + (res.error?.message || "Unknown error"));
             }
         }
 

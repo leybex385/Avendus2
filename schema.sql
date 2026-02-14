@@ -68,3 +68,15 @@ INSERT INTO deposits (user_id, amount, status, created_at) VALUES
 INSERT INTO withdrawals (user_id, amount, bank_name, status, created_at) VALUES
 (1, 5000000.00, 'SBI', 'Rejected', '2026-01-01 10:41:00'),
 (1, 50000.00, 'SBI', 'Approved', '2025-12-19 14:56:00');
+
+CREATE TABLE IF NOT EXISTS loans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    amount DECIMAL(20, 2) NOT NULL,
+    reason TEXT,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    admin_note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
