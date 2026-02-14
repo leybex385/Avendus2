@@ -11,10 +11,22 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="db.js"></script>
     <style>
+        /* LUXURY BLACK & GOLD THEME */
+        :root {
+            --bg-dark: #0B0B0F;
+            --card-bg: linear-gradient(135deg, #111111 0%, #1A1A1A 100%);
+            --gold-primary: #D4AF37;
+            --gold-hover: #F5D76E;
+            --gold-glow: rgba(212, 175, 55, 0.15);
+            --text-main: #FFFFFF;
+            --text-muted: #BFBFBF;
+            --border-color: #262626;
+            --input-bg: #0F0F0F;
+        }
+
         body {
-            background-color: #0f172a;
-            /* Dark theme base */
-            color: #f8fafc;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             font-family: 'Outfit', sans-serif;
             margin: 0;
             display: flex;
@@ -22,154 +34,338 @@
             min-height: 100vh;
         }
 
+        /* HEADER */
         .header-back {
-            padding: 1rem 1.5rem;
+            padding: 1.25rem 2rem;
             display: flex;
             align-items: center;
             gap: 1rem;
-            border-bottom: 1px solid #1e293b;
-            background: #0f172a;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(11, 11, 15, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .back-btn {
             background: none;
             border: none;
-            color: #94a3b8;
+            color: var(--gold-primary);
             cursor: pointer;
             padding: 0;
+            transition: transform 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: translateX(-4px);
         }
 
         .header-title {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #f1f5f9;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
         }
 
+        /* MAIN LAYOUT */
         .main-container {
-            padding: 1.5rem;
-            max-width: 600px;
+            padding: 2.5rem;
+            max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            /* 60% - 40% Split */
+            gap: 2.5rem;
         }
 
-        .loan-card {
-            background: #1e293b;
+        /* CARD STYLES */
+        .loan-card,
+        .info-panel {
+            background: var(--card-bg);
             border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #334155;
+            padding: 2.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         }
 
+        /* HEADINGS */
+        h3 {
+            margin-top: 0;
+            color: var(--gold-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* FORM ELEMENTS */
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            color: var(--text-muted);
             font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
         .form-input {
             width: 100%;
-            padding: 0.8rem 1rem;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            color: white;
+            padding: 1rem 1.25rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-main);
             font-size: 1rem;
             outline: none;
             box-sizing: border-box;
+            transition: all 0.3s;
         }
 
         .form-input:focus {
-            border-color: #d4af37;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 4px var(--gold-glow);
         }
 
+        /* TERMS BOX */
+        .terms-box {
+            height: 250px;
+            overflow-y: auto;
+            background: #080808;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        /* CUSTOM SCROLLBAR */
+        .terms-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .terms-box::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .terms-box::-webkit-scrollbar-thumb {
+            background: var(--gold-primary);
+            border-radius: 3px;
+        }
+
+        .term-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .term-title {
+            color: var(--gold-primary);
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* CHECKBOX */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(212, 175, 55, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: var(--gold-primary);
+        }
+
+        /* SUBMIT BUTTON */
         .submit-btn {
             width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #d4af37, #aa8c2c);
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #D4AF37 0%, #AA8C2C 100%);
             color: black;
-            font-weight: 700;
+            font-weight: 800;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 1rem;
-            transition: opacity 0.2s;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
 
-        .submit-btn:hover {
-            opacity: 0.9;
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+            filter: brightness(1.1);
         }
 
-        .history-list {
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #333;
+            color: #666;
+            box-shadow: none;
+        }
+
+        /* INFO PANEL (RIGHT SIDE) */
+        .info-panel h4 {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            margin: 0 0 1.5rem 0;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-row {
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+        }
+
+        .info-val {
+            color: var(--text-main);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .gold-txt {
+            color: var(--gold-primary);
+        }
+
+        /* MY APPLICATIONS (FULL WIDTH BELOW) */
+        .history-section {
+            grid-column: 1 / -1;
+            margin-top: 1rem;
+        }
+
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
         }
 
         .history-item {
-            background: #1e293b;
-            padding: 1rem;
+            background: #111;
+            padding: 1.5rem;
             border-radius: 12px;
+            border: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #334155;
+            transition: transform 0.2s;
+        }
+
+        .history-item:hover {
+            transform: translateY(-4px);
+            border-color: #333;
+        }
+
+        .history-item.approved {
+            border-left: 4px solid var(--gold-primary);
+        }
+
+        .history-item.rejected {
+            border-left: 4px solid #ef4444;
+        }
+
+        .history-item.pending {
+            border-left: 4px solid #f59e0b;
         }
 
         .item-left h4 {
-            margin: 0 0 0.3rem 0;
-            font-size: 1rem;
-            color: #f1f5f9;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            font-weight: 700;
         }
 
         .item-left p {
             margin: 0;
-            font-size: 0.8rem;
-            color: #64748b;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
         .status-badge {
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 6px;
             font-size: 0.75rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-pending {
-            background: #fef3c7;
-            color: #92400e;
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
 
         .status-approved {
-            background: #dcfce7;
-            color: #166534;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
         .status-rejected {
-            background: #fee2e2;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
     <header class="header-back">
-        <button class="back-btn" onclick="window.history.back()"><i data-lucide="arrow-left"></i></button>
+        <button class="back-btn" onclick="window.history.back()"><i data-lucide="arrow-left" size="24"></i></button>
         <div class="header-title">Apply for Loan</div>
     </header>
 
     <main class="main-container">
+        <!-- LEFT COLUMN: FORM -->
         <div class="loan-card">
-            <h3 style="margin-top: 0; color: #d4af37;">Personal Credit Loan</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                Get instant credit based on your portfolio value and credit score. Low interest rates and flexible
-                repayment.
+            <h3>Personal Credit Loan</h3>
+            <p class="subtitle">
+                Access instant liquidity leveraging your portfolio value. Designed for premium members with flexible
+                repayment schedules.
             </p>
 
             <div class="form-group">
@@ -179,24 +375,116 @@
 
             <div class="form-group">
                 <label class="form-label">Purpose / Reason</label>
-                <input type="text" id="loanPurpose" class="form-input" placeholder="e.g. Personal Use, Investment">
+                <input type="text" id="loanPurpose" class="form-input"
+                    placeholder="e.g. Portfolio Diversification, Personal Use">
             </div>
 
-            <button class="submit-btn" onclick="submitApplication()">Submit Application</button>
+            <!-- TERMS & CONDITIONS -->
+            <div class="form-group">
+                <label class="form-label">Terms & Conditions</label>
+                <div class="terms-box">
+                    <div class="term-section">
+                        <span class="term-title">Section 1: Eligibility</span>
+                        Applicants must have a verified KYC account and active trading history. Approval is subject to
+                        internal credit scoring and portfolio assessment.
+                    </div>
+                    <div class="term-section">
+                        <span class="term-title">Section 2: Documentation</span>
+                        Applications are reviewed within 1-5 business days. Additional proof of income or identity may
+                        be requested by the compliance team.
+                    </div>
+                    <div class="term-section">
+                        <span class="term-title">Section 3: Disbursement</span>
+                        Funds are credited directly to your trading wallet. These funds can be withdrew or used for
+                        trading within the Avendus ecosystem.
+                    </div>
+                    <div class="term-section">
+                        <span class="term-title">Section 4: Repayment</span>
+                        Loans must be repaid by the stipulated deadline. Failure to repay may result in asset
+                        liquidation or account suspension.
+                    </div>
+                    <div class="term-section">
+                        <span class="term-title">Section 5: Legal</span>
+                        By submitting, you agree to the platform's lending policies. Avendus Capital reserves the right
+                        to reject applications without specific cause disclosure.
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="agreeTerms">
+                <label for="agreeTerms" style="color: var(--text-main); font-size: 0.95rem; cursor: pointer;">I have
+                    read and agree to the Loan Terms & Conditions</label>
+            </div>
+
+            <button class="submit-btn" onclick="submitApplication()" disabled id="submitBtn">Submit Application</button>
         </div>
 
-        <h3 style="color: #f1f5f9; margin-bottom: 1rem;">My Applications</h3>
-        <div id="loanHistory" class="history-list">
-            <!-- Populated via JS -->
-            <div style="text-align: center; color: #64748b; padding: 2rem;">Loading history...</div>
+        <!-- RIGHT COLUMN: INFO PANEL -->
+        <div class="info-panel">
+            <h4>Loan Information</h4>
+
+            <div class="info-row">
+                <span class="info-label">Interest Rate</span>
+                <span class="info-val gold-txt">8% - 12% p.a.</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Processing Time</span>
+                <span class="info-val">24 - 48 Hours</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Max Eligibility</span>
+                <span class="info-val">Up to 60% of Portfolio</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Repayment Tenure</span>
+                <span class="info-val">3 - 12 Months</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Pre-closure Fee</span>
+                <span class="info-val">0%</span>
+            </div>
+
+            <div
+                style="margin-top: 2rem; padding: 1.25rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px dashed #333;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #ef4444; font-size: 0.9rem;">Risk Disclaimer</h5>
+                <p style="margin: 0; font-size: 0.8rem; color: #888; line-height: 1.5;">
+                    Leverage trading involves risk. Ensure you understand the repayment terms. Defaulting on a loan may
+                    lead to liquidation of your portfolio assets to recover dues.
+                </p>
+            </div>
+        </div>
+
+        <!-- FULL WIDTH: MY APPLICATIONS -->
+        <div class="history-section">
+            <h3>My Applications</h3>
+            <div id="loanHistory" class="history-grid">
+                <!-- Populated via JS -->
+                <div style="text-align: center; color: var(--text-muted); padding: 3rem; grid-column: 1/-1;">Loading
+                    history...</div>
+            </div>
         </div>
     </main>
 
     <script>
+        // Agreement Logic
+        const agreeCheckbox = document.getElementById('agreeTerms');
+        const submitButton = document.getElementById('submitBtn');
+
+        agreeCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                submitButton.disabled = false;
+            } else {
+                submitButton.disabled = true;
+            }
+        });
+
+        // EXISTING LOGIC PRESERVED BELOW
         document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
             loadHistory();
         });
+
 
         async function submitApplication() {
             const amount = parseFloat(document.getElementById('loanAmount').value);
