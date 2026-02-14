@@ -224,18 +224,32 @@ window.DB = {
             return [];
         }
 
-        return (data || []).map(m => {
+        // FILTER: Only return records that have is_notification: true in their JSON payload
+        const filtered = (data || []).filter(m => {
+            try {
+                if (m.message && m.message.startsWith('{')) {
+                    const p = JSON.parse(m.message);
+                    return p.is_notification === true || p.title !== undefined;
+                }
+            } catch (e) { }
+            return false;
+        });
+
+        return filtered.map(m => {
             let title = 'Notification';
             let body = m.message;
             let type = 'GENERAL';
 
             try {
-                if (m.message && m.message.startsWith('{')) {
-                    const p = JSON.parse(m.message);
-                    if (p.title) title = p.title;
-                    if (p.body) body = p.body;
-                    if (p.type) type = p.type;
-                }
+                const p = JSON.parse(m.message);
+                if (p.title) title = p.title;
+
+                // Priority for body text: message > body > content
+                if (p.message) body = p.message;
+                else if (p.body) body = p.body;
+                else if (p.content) body = p.content;
+
+                if (p.type) type = p.type;
             } catch (e) { }
 
             return {
@@ -244,7 +258,7 @@ window.DB = {
                 title: title,
                 message: body,
                 type: type,
-                is_read: m.is_read || false, // Renamed to is_read in updates, verify column name
+                is_read: m.is_read || false,
                 created_at: m.created_at
             };
         });
@@ -256,13 +270,27 @@ window.DB = {
 
         const numericId = await this._getNumericUserId(userId);
 
-        const { count, error } = await client
+        // Fetch all potential notifications (messages from Admin/System)
+        // Then filter in-memory because is_notification flag is inside JSON
+        const { data, error } = await client
             .from('messages')
-            .select('*', { count: 'exact', head: true })
+            .select('*')
             .eq('user_id', numericId)
             .eq('is_read', false);
 
-        return error ? 0 : count;
+        if (error || !data) return 0;
+
+        const count = data.filter(m => {
+            try {
+                if (m.message && m.message.startsWith('{')) {
+                    const p = JSON.parse(m.message);
+                    return p.is_notification === true || p.title !== undefined;
+                }
+            } catch (e) { }
+            return false;
+        }).length;
+
+        return count;
     },
 
     async markAllNotificationsRead(userId) {

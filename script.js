@@ -1488,17 +1488,35 @@ function renderNotices(notices) {
     if (count) count.textContent = `${notices.length} Messages`;
 
     list.innerHTML = notices.map(n => {
+        let displayTitle = n.title || 'Notification';
+        let displayBody = n.message || '';
+        let displayTag = n.type || 'GENERAL';
+
+        // Detect if content is a JSON string (safely)
+        try {
+            if (displayBody && typeof displayBody === 'string' && displayBody.trim().startsWith('{')) {
+                const p = JSON.parse(displayBody);
+                if (p.title) displayTitle = p.title;
+                if (p.message) displayBody = p.message;
+                else if (p.body) displayBody = p.body;
+                else if (p.content) displayBody = p.content;
+                if (p.type) displayTag = p.type;
+            }
+        } catch (e) {
+            // Parsing failed, fallback to plain text (already in displayBody)
+        }
+
         return `
         <div class="notif-card" id="notif-${n.id}" onclick="toggleNotifView('${n.id}', event)">
             <div class="notif-timeline ${n.is_read ? '' : 'unread'}"></div>
             <div class="notif-header">
                 <div class="notif-main-info">
-                    <div class="notif-title">${n.title || 'Notification'} <span class="notif-tag" style="font-size:10px; margin-left:5px;">${n.type || 'GENERAL'}</span></div>
+                    <div class="notif-title">${displayTitle} <span class="notif-tag" style="font-size:10px; margin-left:5px;">${displayTag}</span></div>
                     <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
                 </div>
                 <button class="notif-delete-btn" onclick="deleteMessage('${n.id}', this); event.stopPropagation();">Delete</button>
             </div>
-            <div class="notif-body">${n.message || ''}</div>
+            <div class="notif-body">${displayBody}</div>
         </div>
         `;
     }).join('');
@@ -1673,7 +1691,11 @@ let isChatSubscribed = false;
 window.openCS = function () {
     if (window.closeSettings) window.closeSettings();
     const modal = document.getElementById('csModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.style.display = 'flex';
+        // Ensure it opens maximized
+        window.maximizeCS();
+    }
     localStorage.setItem('avendus_cs_open', 'true');
     loadCSMessages();
 };
@@ -1682,6 +1704,41 @@ window.closeCS = function () {
     const modal = document.getElementById('csModal');
     if (modal) modal.style.display = 'none';
     localStorage.setItem('avendus_cs_open', 'false');
+};
+
+window.minimizeCS = function () {
+    const content = document.querySelector('#csModal .settings-content');
+    const minimized = document.getElementById('csMinimizedBar');
+    if (content && minimized) {
+        content.style.display = 'none';
+        minimized.style.display = 'flex';
+        // Adjust parent container
+        const modal = document.getElementById('csModal');
+        modal.style.height = 'auto';
+        modal.style.width = '300px';
+        modal.style.background = 'transparent';
+        modal.style.pointerEvents = 'none';
+        minimized.style.pointerEvents = 'auto';
+    }
+};
+
+window.maximizeCS = function () {
+    const content = document.querySelector('#csModal .settings-content');
+    const minimized = document.getElementById('csMinimizedBar');
+    if (content && minimized) {
+        content.style.display = 'flex';
+        minimized.style.display = 'none';
+        // Adjust parent container
+        const modal = document.getElementById('csModal');
+        modal.style.height = '600px';
+        modal.style.width = '500px';
+        modal.style.background = 'transparent'; // Modal background is usually the overlay, let's keep it clean
+        modal.style.pointerEvents = 'auto';
+
+        // Preserve scroll
+        const chatBox = document.getElementById('chatBox');
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    }
 };
 
 async function loadCSMessages() {
@@ -1778,17 +1835,22 @@ function appendSingleMessage(m) {
 
     const div = document.createElement('div');
     const isUser = m.sender === 'User' || m.sender === 'user';
-
     div.className = `chat-bubble ${isUser ? 'user' : 'support'}`;
 
-    // Handle JSON messages if admin sends structured data
-    let content = m.message;
+    let content = m.message || '';
     try {
         if (content.startsWith('{')) {
-            const parsed = JSON.parse(content);
-            content = `<strong>${parsed.title || ''}</strong><br>${parsed.body || parsed.message || ''}`;
+            const p = JSON.parse(content);
+            if (p.type === 'image') {
+                content = `<img src="${p.content}" style="max-width: 250px; border-radius: 8px; cursor: pointer; display: block;" onclick="window.open(this.src, '_blank')">`;
+                if (p.caption) content += `<div style="margin-top: 5px; font-size: 0.9rem;">${p.caption}</div>`;
+            } else {
+                content = p.content || p.message || p.body || content;
+            }
         }
-    } catch (e) { }
+    } catch (e) {
+        // Fallback for non-JSON or weirdly formatted message
+    }
 
     div.innerHTML = `
         <div class="message-text">${content}</div>
@@ -1803,12 +1865,30 @@ window.sendCSMessage = async () => {
     const input = document.getElementById('csInput');
     const text = input ? input.value.trim() : '';
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
-    if (!text || !user) return;
+    const previewArea = document.getElementById('csImagePreviewArea');
+    const hasImage = previewArea && previewArea.dataset.base64;
+
+    if (!text && !hasImage || !user) return;
 
     if (input) input.value = '';
 
+    let messageData = text;
+    if (hasImage) {
+        messageData = JSON.stringify({
+            type: 'image',
+            content: previewArea.dataset.base64,
+            caption: text
+        });
+        // Clear preview
+        if (previewArea) {
+            previewArea.innerHTML = '';
+            delete previewArea.dataset.base64;
+            previewArea.style.display = 'none';
+        }
+    }
+
     if (window.DB && window.DB.sendMessage) {
-        const { success, error } = await window.DB.sendMessage(user.id, text, 'User');
+        const { success, error } = await window.DB.sendMessage(user.id, messageData, 'User');
         if (!success) {
             console.error("Chat Error:", error);
             await window.CustomUI.alert("Message failed to send. Please try again.", "Send Error");
@@ -1826,7 +1906,11 @@ window.toggleEmojiPicker = function () {
 window.insertEmoji = function (emoji) {
     const input = document.getElementById('csInput');
     if (input) {
-        input.value += emoji;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const oldText = input.value;
+        input.value = oldText.substring(0, start) + emoji + oldText.substring(end);
+        input.selectionStart = input.selectionEnd = start + emoji.length;
         input.focus();
     }
     // Close picker
@@ -1846,25 +1930,33 @@ window.handleCSImageUpload = async function (input) {
         }
 
         const reader = new FileReader();
-        reader.onload = async function (e) {
+        reader.onload = function (e) {
             const base64 = e.target.result;
-            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
-
-            if (user && window.DB && window.DB.sendMessage) {
-                // Send as an IMG tag
-                const imgMsg = `<img src="${base64}" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src, '_blank')">`;
-
-                // Show uploading state? Or just send.
-                const { success, error } = await window.DB.sendMessage(user.id, imgMsg, 'User');
-                if (!success) {
-                    await window.CustomUI.alert("Failed to send image.", "Send Error");
-                }
+            const previewArea = document.getElementById('csImagePreviewArea');
+            if (previewArea) {
+                previewArea.dataset.base64 = base64;
+                previewArea.innerHTML = `
+                    <div style="position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid #d4af37;">
+                        <img src="${base64}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <button onclick="window.clearCSImagePreview()" style="position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.5); color: white; border: none; padding: 2px; cursor: pointer; border-radius: 0 0 0 8px;">&times;</button>
+                    </div>
+                `;
+                previewArea.style.display = 'flex';
             }
         };
         reader.readAsDataURL(file);
     }
     // Reset input so same file can be selected again if needed
     input.value = '';
+};
+
+window.clearCSImagePreview = function () {
+    const preview = document.getElementById('csImagePreviewArea');
+    if (preview) {
+        preview.innerHTML = '';
+        delete preview.dataset.base64;
+        preview.style.display = 'none';
+    }
 };
 
 function playNotificationSound() {
