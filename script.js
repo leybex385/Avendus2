@@ -556,7 +556,7 @@ window.openEditNameModal = function () {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (!user) return;
     const input = document.getElementById('editNameInput');
-    if (input) input.value = user.full_name || user.username || '';
+    if (input) input.value = user.username || '';
     const modal = document.getElementById('editNameModal');
     if (modal) modal.style.display = 'flex';
     if (window.lucide) lucide.createIcons();
@@ -1123,8 +1123,8 @@ window.loadUserAssets = async function (userId) {
         localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(dbUser));
 
         // --- Sync Profile Information (Name & Avatar) ---
-        const fullName = dbUser.full_name || dbUser.username || 'User';
-        const initials = (fullName.charAt(0) || 'U').toUpperCase();
+        const displayName = dbUser.username || 'User';
+        const initials = (displayName.charAt(0) || 'U').toUpperCase();
 
         // Update Name Displays across pages
         const nameTargets = [
@@ -1138,16 +1138,20 @@ window.loadUserAssets = async function (userId) {
         nameTargets.forEach(el => {
             if (el) {
                 if (el.tagName === 'H3' && el.parentElement.classList.contains('user-text')) {
-                    el.textContent = 'Welcome ' + fullName;
+                    el.textContent = displayName;
                 } else if (el.id === 'meFullName') {
-                    el.textContent = dbUser.full_name || '-';
+                    el.textContent = displayName; // Use username even for this field as requested
                 } else if (el.id === 'meUsername') {
                     el.textContent = dbUser.username || '-';
                 } else {
-                    el.textContent = fullName;
+                    el.textContent = displayName;
                 }
             }
         });
+
+        // Hide phone display in settings header
+        const sPhone = document.getElementById('settingsPhone');
+        if (sPhone) sPhone.style.display = 'none';
 
         // Update Avatar Displays across pages
         const activeAvatar = dbUser.avatar_url || dbUser.profile_image;
@@ -1332,7 +1336,9 @@ if (!window.syncUserData) {
             // I'll leave the basic profile update logic here for script.js, but minimal.
             const settingsRoot = document.getElementById('settingsModal');
             const setName = settingsRoot ? settingsRoot.querySelector('.settings-name') : null;
-            if (setName) setName.textContent = user.full_name || 'Set Name';
+            if (setName) setName.textContent = user.username || 'User';
+            const sPhone = document.getElementById('settingsPhone');
+            if (sPhone) sPhone.style.display = 'none';
         }
     };
 }
