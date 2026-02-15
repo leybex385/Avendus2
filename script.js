@@ -1342,29 +1342,15 @@ if (!window.syncUserData) {
 }
 
 // --- Loan Application Logic (My Applications) ---
-window.fetchUserLoans = async function (userId) {
+// State for applications filtering
+window.userLoansData = [];
+window.activeLoanTab = "All";
+
+window.renderUserLoans = function () {
     const list = document.getElementById('myApplicationsList');
     if (!list) return;
 
-    if (!window.DB) return;
-    const client = window.DB.getClient();
-    if (!client) return;
-
-    // 5. User My Applications: SELECT * FROM loans WHERE user_id = current_user_id
-    // No caching, direct fetch.
-    const { data: loans, error } = await client
-        .from('loans')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error("Error fetching user loans:", error);
-        list.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error loading applications.</div>';
-        return;
-    }
-
-    if (!loans || loans.length === 0) {
+    if (!window.userLoansData || window.userLoansData.length === 0) {
         // Reset to "No Data" view
         list.className = "no-data-wrap";
         list.style.display = 'flex';
@@ -1376,15 +1362,40 @@ window.fetchUserLoans = async function (userId) {
         return;
     }
 
+    const filteredApplications = window.userLoansData.filter(app => {
+        const status = (app.status || 'Pending').toUpperCase().trim();
+        const activeTab = window.activeLoanTab;
+
+        if (activeTab === "All") return true;
+        if (activeTab === "Approved") return status === "APPROVED";
+        if (activeTab === "Pending") return status === "PENDING";
+        if (activeTab === "Rejected") return status === "REJECTED";
+        if (activeTab === "Awaiting") return status === "AWAITING";
+        if (activeTab === "Repayment") return status === "REPAYMENT";
+
+        return false;
+    });
+
+    if (filteredApplications.length === 0) {
+        list.className = "no-data-wrap";
+        list.style.display = 'flex';
+        list.innerHTML = `
+            <i data-lucide="inbox" size="48" stroke-width="1" style="margin-bottom: 1rem;"></i>
+            No applications in this category.
+        `;
+        if (window.lucide) window.lucide.createIcons();
+        return;
+    }
+
     // Render List
     list.className = ""; // Remove no-data centering
     list.style.display = 'block';
     list.style.overflowY = 'auto';
-    list.style.flex = '1'; // Fill space
+    list.style.flex = '1';
 
-    list.innerHTML = loans.map(loan => {
+    list.innerHTML = filteredApplications.map(loan => {
         const rawStatus = loan.status || 'Pending';
-        let statusClass = 'pending'; // Default style
+        let statusClass = 'pending';
         const s = rawStatus.toUpperCase();
         if (s === 'APPROVED') statusClass = 'approved';
         else if (s === 'REJECTED') statusClass = 'rejected';
@@ -1414,6 +1425,30 @@ window.fetchUserLoans = async function (userId) {
         `;
     }).join('');
 };
+
+window.fetchUserLoans = async function (userId) {
+    if (!window.DB) return;
+    const client = window.DB.getClient();
+    if (!client) return;
+
+    // Fetch User My Applications
+    const { data: loans, error } = await client
+        .from('loans')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching user loans:", error);
+        const list = document.getElementById('myApplicationsList');
+        if (list) list.innerHTML = '<div style="padding:20px; text-align:center; color:#ef4444;">Error loading applications.</div>';
+        return;
+    }
+
+    window.userLoansData = loans || [];
+    window.renderUserLoans();
+};
+
 
 // --- Message Center Logic ---
 // --- Message Center Logic (Notices) ---

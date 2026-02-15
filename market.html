@@ -4436,7 +4436,6 @@
             <div class="me-right-col">
                 <!-- Applications Card -->
                 <div class="me-card" style="height: 100%; display: flex; flex-direction: column;">
-                    <div class="me-card-tag"><i data-lucide="rotate-cw" size="18"></i></div>
                     <div class="me-apps-header">
                         <div class="me-title-row" style="margin-bottom: 0;">
                             <i data-lucide="layout-list"></i> Applications
@@ -4447,9 +4446,7 @@
                         <div class="app-pill">Awaiting</div>
                         <div class="app-pill">Approved</div>
                         <div class="app-pill">Rejected</div>
-                        <div class="app-pill">Using</div>
                         <div class="app-pill">Repayment</div>
-                        <div class="app-pill">Recycled</div>
                     </div>
                     <div class="no-data-wrap" id="myApplicationsList">
                         <i data-lucide="inbox" size="48" stroke-width="1" style="margin-bottom: 1rem;"></i>
@@ -4813,6 +4810,10 @@
             pill.addEventListener('click', () => {
                 document.querySelectorAll('.app-pill').forEach(p => p.classList.remove('active'));
                 pill.classList.add('active');
+
+                // Fix Filtering Logic
+                window.activeLoanTab = pill.innerText.trim();
+                if (window.renderUserLoans) window.renderUserLoans();
             });
         });
 
