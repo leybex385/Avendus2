@@ -3399,7 +3399,7 @@ justify-content: flex-end;
     border: 1px solid var(--gold-border);
     border-radius: 4px;
     box-shadow: var(--gold-shadow);
-    z-index: 1000;
+    z-index: 10001;
     max-height: 400px;
     overflow-y: auto;
     display: none;
@@ -3408,6 +3408,7 @@ justify-content: flex-end;
 .search-item {
     padding: 12px 16px;
     cursor: pointer;
+    pointer-events: auto;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;

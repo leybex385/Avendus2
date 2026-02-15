@@ -4178,9 +4178,79 @@
                         labels.innerHTML = data.map(d => `<span style="flex: 1; text-align: center; font-size: 0.65rem;">${d.date}</span>`).join('');
                     }
 
-                    // Initial chart load
+                    // Initial chart load & Deep Link Handling
                     document.addEventListener('DOMContentLoaded', () => {
                         switchChartData('weekly');
+
+                        // Check for Deep Link (Search Result Redirect)
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const view = urlParams.get('view');
+                        const symbol = urlParams.get('symbol');
+                        const type = urlParams.get('type') || 'stock';
+
+                        if (view === 'detail' && symbol) {
+                            // Ensure dependencies are loaded
+                            setTimeout(() => {
+                                // Polyfill openStockDetail if missing (to ensure view opens)
+                                if (typeof window.openStockDetail !== 'function') {
+                                    window.openStockDetail = function (sym, name, exchange, price, change, color, type) {
+                                        // Hide other views
+                                        if (document.getElementById('discoverView')) document.getElementById('discoverView').style.display = 'none';
+                                        if (document.getElementById('portfolioView')) document.getElementById('portfolioView').style.display = 'none';
+                                        if (document.getElementById('meView')) document.getElementById('meView').style.display = 'none';
+
+                                        // Show Detail View
+                                        const detailView = document.getElementById('stockDetailView');
+                                        if (detailView) {
+                                            detailView.style.display = 'block';
+
+                                            // Populate Data
+                                            if (document.getElementById('detName')) document.getElementById('detName').innerText = name;
+                                            if (document.getElementById('detSymbol')) document.getElementById('detSymbol').innerText = sym;
+                                            if (document.getElementById('detPrice')) document.getElementById('detPrice').innerText = price;
+
+                                            const chgEl = document.getElementById('detChange');
+                                            if (chgEl) {
+                                                chgEl.innerText = change;
+                                                // Simple color logic if not provided strictly
+                                                if (color) {
+                                                    chgEl.style.color = color;
+                                                    chgEl.className = `index-chg ${color.includes('10b981') ? 'green' : 'red'}`;
+                                                }
+                                            }
+
+                                            // Update Buy Button Context
+                                            const buyBtn = document.getElementById('buyBtn');
+                                            if (buyBtn) {
+                                                buyBtn.onclick = () => {
+                                                    // Trigger buy logic (available in trading.js or inline)
+                                                    if (typeof window.executePurchase === 'function') {
+                                                        window.executePurchase(sym, type);
+                                                    } else {
+                                                        // Fallback alert or predefined function
+                                                        alert("Buying " + sym);
+                                                    }
+                                                };
+                                            }
+
+                                            // Handle Subscribe/Buy Text
+                                            const isSub = (type === 'IPO' || type === 'OTC');
+                                            if (buyBtn) buyBtn.innerText = isSub ? 'Subscribe' : 'Buy';
+                                        }
+                                    };
+                                }
+
+                                // Trigger Selection via existing flow
+                                if (typeof window.selectStock === 'function') {
+                                    // Use the existing function which handles API or static data lookup
+                                    // We pass the name properly if we have it, else symbol
+                                    const name = urlParams.get('name') || symbol;
+                                    window.selectStock(symbol, name, type);
+                                } else {
+                                    console.error("selectStock function not found.");
+                                }
+                            }, 300);
+                        }
                     });
                 </script>
             </div>

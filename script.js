@@ -284,28 +284,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.globalSelectStock = (symbol, name, type) => {
         console.log("Global Select Stock:", symbol, name, type);
-        const product = { symbol, name, type: (type || 'stock').toLowerCase() };
 
-        if (product.type === 'stock') {
-            if (typeof window.openStockTrade === 'function') {
-                window.openStockTrade(product);
-            }
-        } else if (product.type === 'otc') {
-            if (typeof window.openOTCSubscribe === 'function') {
-                window.openOTCSubscribe(product);
-            }
-        } else if (product.type === 'ipo') {
-            if (typeof window.openIPOSubscribe === 'function') {
-                window.openIPOSubscribe(product);
-            }
-        } else {
-            // Fallback for types not explicitly caught
-            if (typeof window.openStockTrade === 'function') {
-                window.openStockTrade(product);
-            }
-        }
+        let cleanType = (type || 'stock').toLowerCase();
+        if (cleanType === 'ins.stock') cleanType = 'stock';
 
-        // Close results
+        // User requested routing:
+        // INS.STOCK -> DISCOVER BUY & SELL (discover.html with stock detail)
+        // OTC/IPO -> SUBSCRIBE PAGE (discover.html with subscribe view - same view logic)
+
+        const targetUrl = `discover.html?view=detail&symbol=${encodeURIComponent(symbol)}&type=${encodeURIComponent(cleanType)}`;
+        window.location.href = targetUrl;
+
         const globalSearchResults = document.getElementById('searchResults');
         if (globalSearchResults) globalSearchResults.style.display = 'none';
         const globalSearchInput = document.getElementById('globalSearchInput');
