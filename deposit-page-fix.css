@@ -492,12 +492,14 @@ button.btn-primary:hover {
     box-shadow: 0 0 12px rgba(212, 175, 55, 0.6) !important;
 }
 
-/* Links */
-a {
+/* Links - scoped to deposit content */
+.deposit-container a,
+.deposit-navbar a {
     color: #D4AF37 !important;
 }
 
-a:hover {
+.deposit-container a:hover,
+.deposit-navbar a:hover {
     color: #FFD700 !important;
 }
 
@@ -506,23 +508,23 @@ a:hover {
    ======================================== */
 
 /* Labels */
-label {
+.deposit-container label {
     color: #D4AF37 !important;
     font-weight: 700 !important;
 }
 
 /* Input fields */
-input,
-select,
-textarea {
+.deposit-container input,
+.deposit-container select,
+.deposit-container textarea {
     background: #141414 !important;
     color: #FFFFFF !important;
     border: 1px solid #333 !important;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
+.deposit-container input:focus,
+.deposit-container select:focus,
+.deposit-container textarea:focus {
     border-color: #D4AF37 !important;
     box-shadow: 0 0 6px rgba(212, 175, 55, 0.5) !important;
     outline: none !important;
@@ -540,24 +542,25 @@ aside {
     color: #FFFFFF !important;
 }
 
-/* All headings */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* All headings - scoped to avoid leaking into modals */
+.deposit-container h1,
+.deposit-container h2,
+.deposit-container h3,
+.deposit-container h4,
+.deposit-container h5,
+.deposit-container h6,
+.deposit-navbar h1 {
     color: #FFFFFF !important;
 }
 
 /* Paragraphs */
-p {
+.deposit-container p {
     color: #B3B3B3 !important;
 }
 
 /* Strong/bold text */
-strong,
-b {
+.deposit-container strong,
+.deposit-container b {
     color: #D4AF37 !important;
 }
 

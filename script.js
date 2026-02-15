@@ -1707,7 +1707,7 @@ window.closeCS = function () {
 };
 
 window.minimizeCS = function () {
-    const content = document.querySelector('#csModal .settings-content');
+    const content = document.querySelector('#csModal .cs-modal-content');
     const minimized = document.getElementById('csMinimizedBar');
     if (content && minimized) {
         content.style.display = 'none';
@@ -1723,16 +1723,15 @@ window.minimizeCS = function () {
 };
 
 window.maximizeCS = function () {
-    const content = document.querySelector('#csModal .settings-content');
+    const content = document.querySelector('#csModal .cs-modal-content');
     const minimized = document.getElementById('csMinimizedBar');
     if (content && minimized) {
         content.style.display = 'flex';
         minimized.style.display = 'none';
-        // Adjust parent container
         const modal = document.getElementById('csModal');
         modal.style.height = '600px';
         modal.style.width = '500px';
-        modal.style.background = 'transparent'; // Modal background is usually the overlay, let's keep it clean
+        modal.style.background = 'transparent';
         modal.style.pointerEvents = 'auto';
 
         // Preserve scroll
