@@ -586,11 +586,9 @@ window.saveName = async function () {
         const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
         if (!user) return;
         const result = await window.DB.updateUser(user.id, {
-            full_name: newName,
             username: newName
         });
         if (result.success) {
-            user.full_name = newName;
             user.username = newName;
             localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(user));
 
@@ -908,7 +906,6 @@ window.submitKYC = async function () {
         // 1. Update User Profile (Primary data goes to 'users' table)
         const userResult = await window.DB.updateUser(user.id, {
             full_name: name,
-            username: name, // For admin panel visibility
             id_number: idNum,
             kyc: 'Pending'
         });
@@ -919,7 +916,6 @@ window.submitKYC = async function () {
 
         // Update local "Memory" (Local Storage) so data persists across refreshes
         user.full_name = name;
-        user.username = name;
         user.id_number = idNum;
         user.kyc = 'Pending';
         localStorage.setItem('avendus_current_user', JSON.stringify(user));

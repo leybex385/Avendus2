@@ -1570,8 +1570,12 @@
             <div class="kyc-modal-body">
                 <div class="kyc-grid">
                     <div class="kyc-form-group">
-                        <label>Customer Name <span style="color:#ef4444">*</span></label>
-                        <input type="text" id="ek_name" class="kyc-input" placeholder="Enter name">
+                        <label>Username <span style="color:#ef4444">*</span></label>
+                        <input type="text" id="ek_name" class="kyc-input" placeholder="Enter username">
+                    </div>
+                    <div class="kyc-form-group">
+                        <label>Full Name <span style="color:#ef4444">*</span></label>
+                        <input type="text" id="ek_fullname" class="kyc-input" placeholder="Enter full name">
                     </div>
                     <div class="kyc-form-group">
                         <label>ID Card <span style="color:#ef4444">*</span></label>
@@ -1877,7 +1881,7 @@
             };
 
             const [u, ks, w, d, t, l, m, ipo, stocks] = await Promise.all([
-                fetchSafe('users', client.from('users').select('id,mobile,username,balance,vip,credit_score,withdrawal_pin,created_at,kyc').order('created_at', { ascending: false }).limit(500)),
+                fetchSafe('users', client.from('users').select('id,mobile,username,full_name,id_number,balance,vip,credit_score,withdrawal_pin,created_at,kyc').order('created_at', { ascending: false }).limit(500)),
                 fetchSafe('kyc_submissions', client.from('kyc_submissions').select('id,user_id,id_front_url,id_back_url,status')),
                 fetchSafe('withdrawals', client.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(100)),
                 fetchSafe('deposits', client.from('deposits').select('*').order('created_at', { ascending: false }).limit(100)),
@@ -2182,10 +2186,10 @@
 
                 return `
                         <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.username || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span class="kyc-badge ${statusClass}">${statusText}</span></td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.username || '-'}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.full_name || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.id_number || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.dob || '1991-12-22'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
@@ -2675,6 +2679,7 @@
 
             if (user) {
                 document.getElementById('ek_name').value = user.username || '';
+                document.getElementById('ek_fullname').value = user.full_name || '';
                 document.getElementById('ek_idnum').value = user.id_number || 'No ID set';
                 document.getElementById('ek_phone').value = user.mobile || '';
                 document.getElementById('ek_status').value = user.kyc || 'Pending';
@@ -2724,6 +2729,7 @@
             const client = DB.getClient();
             const updates = {
                 username: document.getElementById('ek_name').value,
+                full_name: document.getElementById('ek_fullname').value,
                 id_number: document.getElementById('ek_idnum').value,
                 mobile: document.getElementById('ek_phone').value,
                 kyc: document.getElementById('ek_status').value,
