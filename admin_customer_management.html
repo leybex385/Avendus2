@@ -1148,9 +1148,6 @@
                                         ID number</th>
                                     <th
                                         style="padding:12px; font-size:0.7rem; color:#1e293b; border-bottom:1px solid #e2e8f0;">
-                                        Date of birth</th>
-                                    <th
-                                        style="padding:12px; font-size:0.7rem; color:#1e293b; border-bottom:1px solid #e2e8f0;">
                                         ID photo (front view)</th>
                                     <th
                                         style="padding:12px; font-size:0.7rem; color:#1e293b; border-bottom:1px solid #e2e8f0;">
@@ -1585,7 +1582,7 @@
                         <label>phone number <span style="color:#ef4444">*</span></label>
                         <input type="text" id="ek_phone" class="kyc-input" placeholder="Enter phone">
                     </div>
-                    <div class="kyc-form-group">
+                    <div class="kyc-form-group" style="display: none;">
                         <label>Date of birth <span style="color:#ef4444">*</span></label>
                         <input type="date" id="ek_dob" class="kyc-input">
                     </div>
@@ -2173,8 +2170,8 @@
                     if (kycStatusFilter !== 'NotSubmitted' && u.kyc !== kycStatusFilter) return false;
                 }
                 // String Search Filters
-                if (fu && !u.mobile.toLowerCase().includes(fu)) return false;
-                if (fn && !(u.username || '').toLowerCase().includes(fn)) return false;
+                if (fu && !(u.username || '').toLowerCase().includes(fu)) return false;
+                if (fn && !(u.full_name || '').toLowerCase().includes(fn)) return false;
                 if (fp && !u.mobile.toLowerCase().includes(fp)) return false;
                 return true;
             });
@@ -2191,7 +2188,6 @@
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.full_name || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.id_number || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.dob || '1991-12-22'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                 ${userKyc && userKyc.id_front_url
                         ? `<img src="${userKyc.id_front_url}" class="kyc-thumb" onclick="openKycEdit('${x.id}')">`
