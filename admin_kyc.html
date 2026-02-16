@@ -831,6 +831,7 @@
                 <span id="chat_badge"
                     style="display:none; background:#ef4444; color:white; font-size:10px; padding:2px 6px; border-radius:10px; margin-left:auto; min-width: 15px; text-align: center; font-weight: 700; box-shadow: 0 0 0 rgba(239, 68, 68, 0.4); animation: pulse-red-admin 2s infinite;">0</span>
             </div>
+
             <style>
                 @keyframes pulse-red-admin {
                     0% {
@@ -848,21 +849,130 @@
                         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
                     }
                 }
+
+                .admin-user-menu {
+                    position: relative;
+                    display: inline-block;
+                    cursor: pointer;
+                }
+
+                .admin-trigger {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 5px;
+                    border-radius: 20px;
+                    transition: background 0.2s;
+                }
+
+                .admin-trigger:hover {
+                    background: #f1f5f9;
+                }
+
+                .admin-avatar {
+                    width: 32px;
+                    height: 32px;
+                    background: #3b82f6;
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.85rem;
+                }
+
+                .dropdown-arrow {
+                    font-size: 0.7rem;
+                    color: #64748b;
+                }
+
+                .admin-dropdown {
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    background: white;
+                    min-width: 160px;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 5px 0;
+                    z-index: 1000;
+                    margin-top: 5px;
+                }
+
+                .admin-dropdown.active {
+                    display: block;
+                }
+
+                .admin-dropdown a,
+                .admin-dropdown button {
+                    display: block;
+                    width: 100%;
+                    padding: 10px 15px;
+                    text-align: left;
+                    background: none;
+                    border: none;
+                    color: #1e293b;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    text-decoration: none;
+                    box-sizing: border-box;
+                    font-family: inherit;
+                }
+
+                .admin-dropdown a:hover,
+                .admin-dropdown button:hover {
+                    background: #f8fafc;
+                    color: #3b82f6;
+                }
+
+                .admin-dropdown hr {
+                    border: 0;
+                    border-top: 1px solid #e2e8f0;
+                    margin: 5px 0;
+                }
             </style>
         </nav>
     </aside>
 
     <main>
         <header>
-            <div style="font-size: 0.85rem; display: flex; align-items: center; gap: 15px;">
-                Welcome, <b>admin</b>
+            <div style="display:flex; align-items:center; gap:15px; margin-left:auto;">
                 <button onclick="init()"
-                    style="background:none; border:none; color:#f97316; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;"><i
-                        data-lucide="refresh-cw" size="14"></i> Refresh Data</button>
-                <button onclick="adminLogout()"
-                    style="background:none; border:none; color:#ef4444; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;"><i
-                        data-lucide="power" size="14"></i> Logout</button>
+                    style="background:none; border:none; color:#f97316; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <i data-lucide="refresh-cw" size="14"></i>
+                </button>
+
+                <div class="admin-user-menu" id="adminUserMenu">
+                    <div class="admin-trigger" onclick="toggleAdminMenu()">
+                        <div class="admin-avatar">AD</div>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+
+                    <div class="admin-dropdown" id="adminDropdown">
+                        <a href="admin_settings_account.html">Account Settings</a>
+                        <a href="admin_settings_account.html#security">Security</a>
+                        <hr>
+                        <button id="dropdownLogoutBtn" onclick="adminLogout()">Logout</button>
+                    </div>
+                </div>
             </div>
+
+            <script>
+                function toggleAdminMenu() {
+                    document.getElementById('adminDropdown').classList.toggle('active');
+                }
+                // Close dropdown when clicking outside
+                window.addEventListener('click', function (e) {
+                    const menu = document.getElementById('adminUserMenu');
+                    const dropdown = document.getElementById('adminDropdown');
+                    if (menu && !menu.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+            </script>
         </header>
 
         <div class="page-tabs" id="tabContainer"></div>

@@ -100,7 +100,7 @@
             if (window.DB && window.DB.getProducts) {
                 try {
                     const data = await window.DB.getProducts();
-                    this.dbProducts = data.map(p => ({
+                    this.dbProducts = data.filter(p => p.status === 'Active').map(p => ({
                         symbol: p.name.split(' ')[0].toUpperCase() + '-IPO',
                         name: p.name,
                         price: parseFloat(p.price) || 0,

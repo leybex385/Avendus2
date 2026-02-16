@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avendus Capital - Admin Suite</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>const supabasejs = window.supabase;</script>
+    <script src="db.js"></script>
+    <script src="db_patch.js"></script>
+    <style>
+        :root {
+            --sidebar-bg: #ffffff;
+            --main-bg: #f5f7fb;
+            --primary-orange: #f97316;
+            --primary-blue: #3b82f6;
+            --primary-green: #10b981;
+            --border-color: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: var(--main-bg);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        aside {
+            width: 260px;
+            background: white;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .logo-area {
+            padding: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-box {
+            width: 30px;
+            height: 30px;
+            background: #6366f1;
+            border-radius: 6px;
+        }
+
+        .nav-menu {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            margin-bottom: 2px;
+            cursor: pointer;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: #eff6ff;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 30px;
+            gap: 20px;
+        }
+
+        .container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .vsl-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .vsl-btn:hover {
+            background: #f8fafc;
+        }
+
+        .vsl-btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+        }
+
+        .vsl-btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .vsl-btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+
+        .vsl-btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .vsl-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .vsl-input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-upload {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <aside>
+        <div class="logo-area">
+            <div class="logo-box"></div> Avendus Capital
+        </div>
+        <nav class="nav-menu">
+            <a href="admin_customer_management.html" class="menu-item"><i data-lucide="home" size="18"></i> Front
+                Page</a>
+            <a href="admin_customer_management.html" class="menu-item"><i data-lucide="user-check" size="18"></i>
+                Real-name authentication</a>
+            <a href="admin_customer_management.html" class="menu-item"><i data-lucide="users" size="18"></i> Customer
+                Management</a>
+            <a href="admin_customer_management.html" class="menu-item"><i data-lucide="credit-card" size="18"></i> Bank
+                Accounts</a>
+            <a href="admin_customer_management.html" class="menu-item"><i data-lucide="box" size="18"></i> Product
+                Management</a>
+            <a href="admin_customer_management.html" class="menu-item"><i data-lucide="trending-up" size="18"></i>
+                Institutional Stock 057</a>
+
+            <style>
+                .admin-user-menu {
+                    position: relative;
+                    display: inline-block;
+                    cursor: pointer;
+                }
+
+                .admin-trigger {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 5px;
+                    border-radius: 20px;
+                    transition: background 0.2s;
+                }
+
+                .admin-trigger:hover {
+                    background: #f1f5f9;
+                }
+
+                .admin-avatar {
+                    width: 32px;
+                    height: 32px;
+                    background: #3b82f6;
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.85rem;
+                }
+
+                .dropdown-arrow {
+                    font-size: 0.7rem;
+                    color: #64748b;
+                }
+
+                .admin-dropdown {
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    right: 0;
+                    background: white;
+                    min-width: 160px;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 5px 0;
+                    z-index: 1000;
+                    margin-top: 5px;
+                }
+
+                .admin-dropdown.active {
+                    display: block;
+                }
+
+                .admin-dropdown a,
+                .admin-dropdown button {
+                    display: block;
+                    width: 100%;
+                    padding: 10px 15px;
+                    text-align: left;
+                    background: none;
+                    border: none;
+                    color: #1e293b;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    text-decoration: none;
+                    box-sizing: border-box;
+                    font-family: inherit;
+                }
+
+                .admin-dropdown a:hover,
+                .admin-dropdown button:hover {
+                    background: #f8fafc;
+                    color: #3b82f6;
+                }
+
+                .admin-dropdown hr {
+                    border: 0;
+                    border-top: 1px solid #e2e8f0;
+                    margin: 5px 0;
+                }
+            </style>
+        </nav>
+    </aside>
+
+    <main>
+        <header>
+            <div class="admin-user-menu" id="adminUserMenu">
+                <div class="admin-trigger" onclick="toggleAdminMenu()">
+                    <div class="admin-avatar">AD</div>
+                    <span class="dropdown-arrow">▼</span>
+                </div>
+
+                <div class="admin-dropdown" id="adminDropdown">
+                    <a href="admin_settings_account.html">Account Settings</a>
+                    <a href="admin_settings_account.html#security">Security</a>
+                    <hr>
+                    <button id="dropdownLogoutBtn" onclick="adminLogout()">Logout</button>
+                </div>
+            </div>
+
+            <script>
+                function toggleAdminMenu() {
+                    document.getElementById('adminDropdown').classList.toggle('active');
+                }
+                // Close dropdown when clicking outside
+                window.addEventListener('click', function (e) {
+                    const menu = document.getElementById('adminUserMenu');
+                    const dropdown = document.getElementById('adminDropdown');
+                    if (menu && !menu.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+
+                function adminLogout() {
+                    if (confirm("Logout from admin terminal?")) {
+                        sessionStorage.removeItem('admin_auth');
+                        window.location.href = 'admin_login.html';
+                    }
+                }
+            </script>
+        </header>
+
+        <div class="container">
+            <div class="section-card">
+                <h2 class="form-group" style="margin-top:0">Account Settings</h2>
+
+                <!-- Change Display Name & Profile Picture -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Display Name</label>
+                        <input type="text" id="displayNameInput" class="vsl-input" value="Admin User">
+                        <button id="btnUpdateName" class="vsl-btn vsl-btn-primary">Update Name</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Profile Picture</label>
+                        <div class="profile-upload">
+                            <img src="https://ui-avatars.com/api/?name=Admin" class="profile-preview"
+                                id="profileImgPreview">
+                            <input type="file" id="profileFileInput" class="vsl-input" style="width: auto;">
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 20px 0;">
+
+                <!-- Change Email -->
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="emailInput" class="vsl-input" value="admin@avendus.com">
+                    <button id="btnUpdateEmail" class="vsl-btn vsl-btn-primary">Update Email</button>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 20px 0;">
+
+                <!-- Change Password -->
+                <h3 class="form-label" style="font-size: 1rem;">Change Password</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" id="currentPassword" class="vsl-input">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="newPassword" class="vsl-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" class="vsl-input">
+                    </div>
+                </div>
+                <button id="btnUpdatePassword" class="vsl-btn vsl-btn-primary">Update Password</button>
+
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 20px 0;">
+
+                <!-- 2FA -->
+                <div class="form-group"
+                    style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+                    <div>
+                        <div style="font-weight:600; color:#1e293b;">Two-Factor Authentication (2FA)</div>
+                        <div style="font-size:0.85rem; color:#64748b;">Secure your account with 2FA.</div>
+                    </div>
+                    <label style="position:relative; display:inline-block; width:50px; height:24px;">
+                        <input type="checkbox" style="opacity:0; width:0; height:0;">
+                        <span
+                            style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:.4s; border-radius:34px;"></span>
+                        <span
+                            style="position:absolute; content:''; height:16px; width:16px; left:4px; bottom:4px; background-color:white; transition:.4s; border-radius:50%;"></span>
+                    </label>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 20px 0;">
+
+                <!-- Login Activity -->
+                <div class="form-group">
+                    <h3 class="form-label" style="font-size: 1rem;">Recent Login Activity</h3>
+                    <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.9rem;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #e2e8f0; color:#64748b;">
+                                <th style="padding:10px;">Device</th>
+                                <th style="padding:10px;">Location</th>
+                                <th style="padding:10px;">IP Address</th>
+                                <th style="padding:10px;">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">Chrome - Windows</td>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">Mumbai, India</td>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">192.168.1.1</td>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">Just now</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">Safari - iPhone</td>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">Delhi, India</td>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">10.0.0.5</td>
+                                <td style="padding:10px; border-bottom:1px solid #f1f5f9;">2 hours ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button id="btnLogoutAll" class="vsl-btn vsl-btn-danger" style="margin-top:20px;">Force Logout All
+                    Sessions</button>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_settings_account.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

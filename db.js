@@ -2,13 +2,17 @@
  * User Database Utility (Supabase Backend)
  */
 
+// --- SUPABASE CONFIGURATION ---
+const SUPABASE_URL = "https://gipxccfydceahzmqdoks.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpcHhjY2Z5ZGNlYWh6bXFkb2tzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjI2NDQsImV4cCI6MjA4NjAzODY0NH0.evPHM1GdBOufR2v2KYARiG8r81McUtUAPNVovn6P6-s";
+
 window.DB = {
     // Local Storage Keys
     CURRENT_USER_KEY: 'avendus_current_user',
 
     // --- SUPABASE CONFIGURATION ---
-    SUPABASE_URL: 'https://gipxccfydceahzmqdoks.supabase.co',
-    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpcHhjY2Z5ZGNlYWh6bXFkb2tzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjI2NDQsImV4cCI6MjA4NjAzODY0NH0.evPHM1GdBOufR2v2KYARiG8r81McUtUAPNVovn6P6-s',
+    SUPABASE_URL: SUPABASE_URL,
+    SUPABASE_KEY: SUPABASE_ANON_KEY,
     client: null,
 
     getClient() {
@@ -20,7 +24,16 @@ window.DB = {
         }
         console.log("Supabase Project URL:", this.SUPABASE_URL);
         this.client = supabase.createClient(this.SUPABASE_URL, this.SUPABASE_KEY);
+        console.log("ACTIVE SUPABASE PROJECT:", this.client?.supabaseUrl);
+        console.log("ACTIVE SUPABASE URL:", SUPABASE_URL);
         return this.client;
+    },
+
+    async update(table, data, match) {
+        const client = this.getClient();
+        if (!client) return { error: 'No client' };
+        const { error } = await client.from(table).update(data).match(match);
+        return { success: !error, error };
     },
 
     // --- AUTHENTICATION ---
@@ -165,6 +178,16 @@ window.DB = {
     async deleteMessage(id) {
         const client = this.getClient();
         const { error } = await client.from('messages').delete().eq('id', id);
+        return { success: !error, error };
+    },
+
+    async deleteUserConversation(userId) {
+        const client = this.getClient();
+        // Delete all non-system messages (chat history)
+        const { error } = await client.from('messages')
+            .delete()
+            .eq('user_id', userId)
+            .neq('sender', 'System');
         return { success: !error, error };
     },
 
@@ -426,6 +449,7 @@ window.DB = {
                 .from('bank_accounts')
                 .select('*')
                 .eq('user_id', userId)
+                .or('is_deleted.is.null,is_deleted.eq.false')
                 .order('created_at', { ascending: false });
 
             if (!error && data) onlineData = data;
@@ -485,8 +509,17 @@ window.DB = {
         }
 
         const client = this.getClient();
-        const { error } = await client.from('bank_accounts').delete().eq('id', id);
-        return { success: !error, error };
+        // Soft delete: set is_deleted = true
+        const { error } = await client
+            .from('bank_accounts')
+            .update({ is_deleted: true })
+            .eq('id', id);
+
+        if (error) {
+            console.error("Soft delete failed:", error);
+            return { success: false, error };
+        }
+        return { success: true };
     },
 
     // ADMIN: Get ALL bank accounts (Online + Offline)
@@ -497,6 +530,7 @@ window.DB = {
             const { data, error } = await client
                 .from('bank_accounts')
                 .select('*')
+                .or('is_deleted.is.null,is_deleted.eq.false')
                 .order('created_at', { ascending: false });
 
             if (!error && data) onlineData = data;
@@ -695,7 +729,15 @@ window.DB = {
     async deleteProduct(id) {
         const client = this.getClient();
         if (!client) return { success: false };
+        // Hard delete as requested to remove from admin table
         const { error } = await client.from('products').delete().eq('id', id);
+        return { success: !error, error };
+    },
+
+    async updateProductStatus(id, newStatus) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { error } = await client.from('products').update({ status: newStatus }).eq('id', id);
         return { success: !error, error };
     },
 
@@ -730,36 +772,37 @@ window.DB = {
     async getLoans(userId) {
         const client = this.getClient();
         if (!client) return [];
-        const { data, error } = await client
+        const query = client
             .from('loans')
             .select('*')
             .eq('user_id', userId)
+            .or('is_deleted.is.null,is_deleted.eq.false')
             .order('created_at', { ascending: false });
 
-        if (error) console.error("Error fetching loans:", error);
+        const { data, error } = await query;
+        if (error) {
+            console.error("Error fetching loans:", error);
+            if (error.code === 'PGRST204') {
+                const { data: fallbackData } = await client.from('loans').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+                return fallbackData || [];
+            }
+        }
         return data || [];
     },
 
     async getAllLoans() {
         const client = this.getClient();
-        if (!client) return [];
-        // Requires foreign key relation setup or simple fetch
-        // If users table is separate, we might need manual population if FK is strict
-        // But assuming FK setup:
+
         const { data, error } = await client
             .from('loans')
-            .select(`
-                *,
-                users:user_id(username, mobile)
-            `)
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error("Error fetching all loans (with user details):", error);
-            // Fallback without join if failed
-            const { data: d2 } = await client.from('loans').select('*').order('created_at', { ascending: false });
-            return d2 || [];
+            console.error('Loan fetch error:', error);
+            return [];
         }
+
         return data || [];
     },
 
@@ -791,5 +834,20 @@ window.DB = {
             .eq('id', id);
 
         return { success: !error, error };
+    },
+
+    async deleteLoanRecord(id) {
+        // Soft delete using the update helper on 'loans' table
+        return await this.update('loans', { is_deleted: true }, { id });
+    },
+
+    async deleteDeposit(id) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { error } = await client.from('deposits').delete().eq('id', id);
+        return { success: !error, error };
     }
 };
+
+console.log("SUPABASE DEBUG URL:", SUPABASE_URL);
+console.log("SUPABASE DEBUG KEY PREFIX:", SUPABASE_ANON_KEY?.substring(0, 20));
