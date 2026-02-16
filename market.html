@@ -640,10 +640,13 @@
             border: 1px solid #2d2e32;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.25rem;
+            /* Slightly reduced gap */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
+            min-height: 250px;
+            /* Ensure minimum card height */
         }
 
         .premium-trade-card:hover {
@@ -656,6 +659,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            min-height: 65px;
+            /* Fixed height for top area */
         }
 
         .premium-asset-info {
@@ -663,10 +668,19 @@
         }
 
         .premium-asset-name {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
+            /* Slightly smaller to fit better */
             font-weight: 700;
             margin-bottom: 0.25rem;
             color: #fcfcfc;
+            /* Fixed height for alignment */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.6rem;
+            line-height: 1.3;
         }
 
         .premium-asset-meta {
@@ -729,6 +743,8 @@
             align-items: center;
             justify-content: center;
             width: 100%;
+            margin-top: auto;
+            /* Push button to bottom */
         }
 
         .premium-subscribe-btn:hover {
@@ -6522,7 +6538,9 @@
                 modal.style.display = 'flex';
                 if (window.lucide) lucide.createIcons();
             } else {
-                if (confirm(msg)) callback();
+                window.CustomUI.confirm(msg).then(confirmed => {
+                    if (confirmed) callback();
+                });
             }
         }
         function closeSettleConfirm(confirmed) {

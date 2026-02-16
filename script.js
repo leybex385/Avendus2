@@ -1,18 +1,22 @@
 
 // --- Custom UI Alerts & Modals System ---
+// --- Custom UI Alerts & Modals System (Premium Style) ---
 window.CustomUI = {
     init: function () {
         if (document.getElementById('customAlertOverlay')) return;
         const overlay = document.createElement('div');
         overlay.id = 'customAlertOverlay';
-        overlay.className = 'custom-alert-overlay';
+        overlay.className = 'confirm-modal-overlay';
         overlay.innerHTML = `
-            <div class="custom-alert-box">
-                <div class="custom-alert-title" id="customAlertTitle">Notification</div>
-                <div class="custom-alert-message" id="customAlertMessage">Message content goes here...</div>
-                <div class="custom-alert-actions" id="customAlertActions">
-                    <button class="custom-alert-btn secondary" id="customAlertCancel" style="display:none;">Cancel</button>
-                    <button class="custom-alert-btn primary" id="customAlertOk">OK</button>
+            <div class="confirm-modal-card">
+                <div class="confirm-modal-icon-box" id="customAlertIconBox">
+                    <i id="customAlertIcon" data-lucide="info" size="44"></i>
+                </div>
+                <h3 class="confirm-modal-title" id="customAlertTitle">Notification</h3>
+                <p class="confirm-modal-message" id="customAlertMessage">Message content goes here...</p>
+                <div class="confirm-modal-footer" id="customAlertActions">
+                    <button class="confirm-modal-btn secondary" id="customAlertCancel" style="display:none;">Cancel</button>
+                    <button class="confirm-modal-btn primary" id="customAlertOk">OK</button>
                 </div>
             </div>
         `;
@@ -22,23 +26,27 @@ window.CustomUI = {
         this.msgEl = overlay.querySelector('#customAlertMessage');
         this.okBtn = overlay.querySelector('#customAlertOk');
         this.cancelBtn = overlay.querySelector('#customAlertCancel');
+        this.iconEl = overlay.querySelector('#customAlertIcon');
+        this.iconBox = overlay.querySelector('#customAlertIconBox');
     },
-    alert: function (message, title = 'Notification') {
+    alert: function (message, title = 'Notification', type = 'info') {
         this.init();
+        this.updateStyle(type);
         return new Promise((resolve) => {
-            this.titleEl.innerText = title;
-            this.msgEl.innerText = message;
+            if (this.titleEl) this.titleEl.innerText = title;
+            if (this.msgEl) this.msgEl.innerText = message;
             this.okBtn.innerText = 'OK';
             this.cancelBtn.style.display = 'none';
             this.okBtn.onclick = () => { this.hide(); resolve(true); };
             this.show();
         });
     },
-    confirm: function (message, title = 'Confirm Action') {
+    confirm: function (message, title = 'Confirm Action', type = 'warning') {
         this.init();
+        this.updateStyle(type);
         return new Promise((resolve) => {
-            this.titleEl.innerText = title;
-            this.msgEl.innerText = message;
+            if (this.titleEl) this.titleEl.innerText = title;
+            if (this.msgEl) this.msgEl.innerText = message;
             this.okBtn.innerText = 'Confirm';
             this.cancelBtn.innerText = 'Cancel';
             this.cancelBtn.style.display = 'block';
@@ -47,13 +55,50 @@ window.CustomUI = {
             this.show();
         });
     },
+    updateStyle: function (type) {
+        let iconName = 'info';
+        let color = '#3b82f6';
+        let bgColor = '#eff6ff';
+
+        if (type === 'success') {
+            iconName = 'check-circle';
+            color = '#10b981';
+            bgColor = '#ecfdf5';
+        } else if (type === 'error') {
+            iconName = 'x-circle';
+            color = '#ef4444';
+            bgColor = '#fef2f2';
+        } else if (type === 'warning') {
+            iconName = 'alert-triangle';
+            color = '#f59e0b';
+            bgColor = '#fffbeb';
+        }
+
+        if (this.iconEl) {
+            this.iconEl.setAttribute('data-lucide', iconName);
+            this.iconEl.style.color = color;
+        }
+        if (this.iconBox) this.iconBox.style.background = bgColor;
+        if (this.okBtn) this.okBtn.style.background = color;
+
+        if (window.lucide) lucide.createIcons();
+    },
     show: function () {
         this.overlay.style.display = 'flex';
-        setTimeout(() => this.overlay.classList.add('show'), 10);
+        setTimeout(() => this.overlay.classList.add('active'), 10);
     },
     hide: function () {
-        this.overlay.classList.remove('show');
+        this.overlay.classList.remove('active');
         setTimeout(() => this.overlay.style.display = 'none', 300);
+    }
+};
+
+// Global Alert Override to prevent "This page says" browser popups
+window.alert = function (message) {
+    if (window.CustomUI) {
+        window.CustomUI.alert(message);
+    } else {
+        console.warn("CustomUI not initialized, falling back to console log for alert:", message);
     }
 };
 
@@ -1600,7 +1645,7 @@ window.deleteSelected = async function () {
     const selected = Array.from(document.querySelectorAll('.mc-chk:checked')).map(c => c.value);
     if (selected.length === 0) return;
 
-    if (!confirm(`Delete ${selected.length} notifications?`)) return;
+    if (!await window.CustomUI.confirm(`Delete ${selected.length} notifications?`)) return;
 
     for (const id of selected) {
         if (window.DB && window.DB.deleteNotification) {
@@ -1661,7 +1706,7 @@ window.makeAllRead = async function () {
 };
 
 window.deleteAllMessages = async function () {
-    if (!confirm("Are you sure you want to delete ALL notifications? This cannot be undone.")) return;
+    if (!await window.CustomUI.confirm("Are you sure you want to delete ALL notifications? This cannot be undone.")) return;
 
     const cards = document.querySelectorAll('.notif-card');
     if (cards.length === 0) return;
@@ -1690,7 +1735,7 @@ window.deleteAllMessages = async function () {
 };
 
 window.deleteMessage = async function (id, btn) {
-    if (!confirm("Delete this notification?")) return;
+    if (!await window.CustomUI.confirm("Delete this notification?")) return;
 
     if (window.DB && window.DB.deleteNotification) {
         await window.DB.deleteNotification(id);
