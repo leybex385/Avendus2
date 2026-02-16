@@ -7,6 +7,8 @@
     <title>Avendus Capital - Admin Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
     <style>
         body {
             background-color: #f1f5f9;
@@ -144,28 +146,78 @@
     <script>
         lucide.createIcons();
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
             const err = document.getElementById('errorMsg');
+            const btn = document.querySelector('.login-btn');
 
-            // Simple Admin Authentication
-            // In a real production app, this should be validated against a database.
-            // For now, we use a basic check to restore access.
-            if (user === 'admin' && pass === 'admin123') {
-                sessionStorage.setItem('admin_auth', 'true');
+            err.style.display = 'none';
+            btn.textContent = 'Authenticating...';
+            btn.disabled = true;
 
-                const btn = document.querySelector('.login-btn');
-                btn.textContent = 'Authenticating...';
-                btn.style.opacity = '0.7';
+            try {
+                const client = window.DB.getClient();
+                let admin = null;
 
-                setTimeout(() => {
-                    window.location.href = 'admin_customer_management.html';
-                }, 800);
-            } else {
+                if (client) {
+                    try {
+                        // 1. Try to login with database credentials
+                        const { data, error } = await client
+                            .from('admins')
+                            .select('*')
+                            .eq('username', user)
+                            .eq('password', pass)
+                            .single();
+
+                        if (data && !error) {
+                            admin = data;
+                        } else {
+                            // 2. If login failed, check if any admin exists in the table
+                            // (We only fall back to admin123 if the table is empty or missing)
+                            const { count, error: countErr } = await client
+                                .from('admins')
+                                .select('*', { count: 'exact', head: true });
+
+                            // If table exists and has entries, then we shouldn't fallback to admin123
+                            const hasAdmins = !countErr && count > 0;
+
+                            if (!hasAdmins && user === 'admin' && pass === 'admin123') {
+                                admin = { id: 1, username: 'admin' };
+                            }
+                        }
+                    } catch (dbErr) {
+                        console.error("DB check failed:", dbErr);
+                        // Fallback if DB is unreachable
+                        if (user === 'admin' && pass === 'admin123') {
+                            admin = { id: 1, username: 'admin' };
+                        }
+                    }
+                } else {
+                    // Fallback for primary admin if client is not initialized
+                    if (user === 'admin' && pass === 'admin123') {
+                        admin = { id: 1, username: 'admin' };
+                    }
+                }
+
+                if (!admin) {
+                    throw new Error("Invalid credentials");
+                }
+
+                // Store full admin object
+                sessionStorage.setItem('admin_auth', JSON.stringify(admin));
+
+                // Immediate redirect
+                window.location.href = 'admin_customer_management.html';
+
+            } catch (error) {
+                console.error("Login Error:", error);
                 err.style.display = 'block';
-                // Shake animation effect
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+
+                // Shake effect
                 const card = document.querySelector('.login-card');
                 card.style.transform = 'translateX(5px)';
                 setTimeout(() => card.style.transform = 'translateX(-5px)', 100);

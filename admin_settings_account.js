@@ -9,15 +9,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Check local admin session
+    const adminAuth = sessionStorage.getItem('admin_auth');
+    if (!adminAuth) {
+        window.location.href = 'admin_login.html';
+        return;
+    }
+
+    let adminUser;
+    try {
+        adminUser = JSON.parse(adminAuth);
+        if (!adminUser || !adminUser.id) throw new Error("Invalid admin data");
+    } catch (e) {
+        console.error("Session invalid:", e);
+        window.location.href = 'admin_login.html';
+        return;
+    }
+
     // --- Selectors ---
-    const displayNameInput = document.querySelector('input[value="Admin User"]');
-    const updateNameBtn = displayNameInput.nextElementSibling;
-
-    const emailInput = document.querySelector('input[type="email"]');
-    const updateEmailBtn = emailInput.nextElementSibling;
-
-    const profileImg = document.querySelector('.profile-preview');
-    const fileInput = document.querySelector('input[type="file"]');
 
     // Password fields are in a grid, selecting by type
     const passwordInputs = document.querySelectorAll('input[type="password"]');
@@ -40,147 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // But since I have to "Implement button functionality in admin_settings_account.html", I can modify HTML in the same turn.
     // I will write this JS file assuming I will update the HTML with IDs for clarity.
 
-    const logoutAllBtn = document.querySelector('.vsl-btn-danger');
+
 
     // --- Load User Info ---
-    async function loadUserInfo() {
-        const { data: { user } } = await client.auth.getUser();
-        if (user) {
-            emailInput.value = user.email || '';
-
-            // Get profile data from 'profiles' table or metadata
-            // Assuming a 'profiles' table exists as per standard Supabase patterns for extra user data
-            const { data: profile } = await client
-                .from('profiles')
-                .select('display_name, avatar_url')
-                .eq('id', user.id)
-                .single();
-
-            if (profile) {
-                if (profile.display_name) displayNameInput.value = profile.display_name;
-                if (profile.avatar_url) profileImg.src = profile.avatar_url;
-            } else {
-                // Try metadata if no profile table entry yet
-                if (user.user_metadata?.full_name) displayNameInput.value = user.user_metadata.full_name;
-                if (user.user_metadata?.avatar_url) profileImg.src = user.user_metadata.avatar_url;
-            }
-        }
-    }
-
-    await loadUserInfo();
-
-    // --- 1. Update Display Name ---
-    updateNameBtn.addEventListener('click', async () => {
-        const newName = displayNameInput.value.trim();
-        if (!newName) return alert("Please enter a display name.");
-
-        updateNameBtn.textContent = 'Updating...';
-        updateNameBtn.disabled = true;
-
-        try {
-            const { data: { user } } = await client.auth.getUser();
-            if (!user) throw new Error("No user logged in.");
-
-            // Update user metadata
-            const { error: metaError } = await client.auth.updateUser({
-                data: { full_name: newName }
-            });
-            if (metaError) throw metaError;
-
-            // Also update profiles table if exists
-            const { error: profileError } = await client
-                .from('profiles')
-                .upsert({ id: user.id, display_name: newName, updated_at: new Date() });
-
-            // If profiles table doesn't exist, it might error, we ignore or log.
-            // Supabase instruction said "Modify database schema except adding 'profiles' table if not exists"
-            // So we assume it might work or allow it.
-
-            alert("Display name updated successfully.");
-        } catch (e) {
-            console.error(e);
-            alert("Error updating name: " + e.message);
-        } finally {
-            updateNameBtn.textContent = 'Update Name';
-            updateNameBtn.disabled = false;
-        }
-    });
-
-    // --- 2. Update Email ---
-    updateEmailBtn.addEventListener('click', async () => {
-        const newEmail = emailInput.value.trim();
-        if (!newEmail) return alert("Please enter an email address.");
-
-        showConfirm(`Are you sure you want to change your email to ${newEmail}? You may need to verify it.`, async () => {
-            updateEmailBtn.textContent = 'Updating...';
-            updateEmailBtn.disabled = true;
-
-            try {
-                const { error } = await client.auth.updateUser({ email: newEmail });
-                if (error) throw error;
-
-                alert("Email update initiated. Please check your new email for a verification link.");
-            } catch (e) {
-                console.error(e);
-                alert("Error updating email: " + e.message);
-            } finally {
-                updateEmailBtn.textContent = 'Update Email';
-                updateEmailBtn.disabled = false;
-            }
-        }, "Update Email");
-    });
-
-    // --- 3. Profile Picture Upload ---
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Validations
-        if (file.size > 2 * 1024 * 1024) return alert("File size too big (max 2MB).");
-        if (!file.type.startsWith('image/')) return alert("Please upload an image file.");
-
-        try {
-            const { data: { user } } = await client.auth.getUser();
-            if (!user) throw new Error("No user logged in");
-
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-            const filePath = `avatars/${fileName}`;
-
-            // Upload to Storage
-            const { error: uploadError } = await client.storage
-                .from('avatars')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            // Get Public URL
-            const { data: { publicUrl } } = client.storage
-                .from('avatars')
-                .getPublicUrl(filePath);
-
-            // Update Profile & Medata
-            await client.auth.updateUser({
-                data: { avatar_url: publicUrl }
-            });
-
-            await client
-                .from('profiles')
-                .upsert({ id: user.id, avatar_url: publicUrl, updated_at: new Date() });
-
-            // Update UI
-            profileImg.src = publicUrl;
-            alert("Profile picture updated successfully.");
-
-        } catch (e) {
-            console.error(e);
-            alert("Error uploading image: " + e.message);
-            // Fallback hint
-            if (e.message && e.message.includes('bucket')) {
-                alert("Please ensure 'avatars' storage bucket exists and is public.");
-            }
-        }
-    });
 
     // --- 4. Update Password ---
     // Make sure we select the button correctly. 
@@ -195,27 +66,63 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newPass = document.getElementById('newPassword').value;
             const confirmPass = document.getElementById('confirmPassword').value;
 
-            if (!newPass || !confirmPass) return alert("Please fill in the new password fields.");
-            if (newPass !== confirmPass) return alert("Passwords do not match.");
-            if (newPass.length < 6) return alert("Password must be at least 6 characters.");
+            if (!newPass || !confirmPass) return showAlert('warning', "Please fill in the new password fields.");
+            if (newPass !== confirmPass) return showAlert('warning', "Passwords do not match.");
+            if (newPass.length < 6) return showAlert('warning', "Password must be at least 6 characters.");
 
             btnUpdatePass.textContent = 'Updating...';
             btnUpdatePass.disabled = true;
 
             try {
-                const { error } = await client.auth.updateUser({ password: newPass });
-                if (error) throw error;
+                // Re-validate session
+                const adminAuthStr = sessionStorage.getItem('admin_auth');
+                if (!adminAuthStr) {
+                    showAlert('error', 'Admin session not found. Please login again.');
+                    window.location.href = 'admin_login.html';
+                    return;
+                }
 
-                alert("Password updated successfully.");
+                let adminData;
+                try {
+                    adminData = JSON.parse(adminAuthStr);
+                } catch (e) {
+                    throw new Error("Invalid session format");
+                }
+
+                if (!adminData || !adminData.id) {
+                    showAlert('error', 'Admin ID not found in session. Please login again.');
+                    window.location.href = 'admin_login.html';
+                    return;
+                }
+
+                const adminId = parseInt(adminData.id);
+                if (isNaN(adminId)) {
+                    throw new Error("Invalid admin ID format in session");
+                }
+
+                // Update password in 'admins' table (NOT 'users' table)
+                const { error } = await client
+                    .from('admins')
+                    .update({ password: newPass })
+                    .eq('id', adminId);
+
+                if (error) {
+                    if (error.message.includes('Could not find the table')) {
+                        throw new Error("The 'admins' table is missing in your Supabase database. Please run the SQL patch in 'create_admins_table.sql' to create it.");
+                    }
+                    throw error;
+                }
+
+                showAlert('success', "Password updated successfully.");
 
                 // Clear inputs
-                document.getElementById('currentPassword').value = ''; // Note: Supabase doesn't need current pass for logged in users usually, but good to have in UI even if unused by API directly for strict re-auth unless we use reauthenticate()
+                document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
 
             } catch (e) {
                 console.error(e);
-                alert("Error updating password: " + e.message);
+                showAlert('error', "Error updating password: " + e.message);
             } finally {
                 btnUpdatePass.textContent = 'Update Password';
                 btnUpdatePass.disabled = false;
@@ -224,23 +131,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- 5. Logout All Sessions ---
-    if (logoutAllBtn) {
-        logoutAllBtn.addEventListener('click', async () => {
-            showConfirm("Are you sure? This will log you out from all devices.", async () => {
-                logoutAllBtn.textContent = 'Logging out...';
-                logoutAllBtn.disabled = true;
 
-                try {
-                    const { error } = await client.auth.signOut({ scope: 'global' });
-                    if (error) throw error;
-
-                    window.location.href = 'admin_login.html'; // Redirect
-                } catch (e) {
-                    console.error(e);
-                    // Fallback standard logout
-                    window.DB.logout();
-                }
-            }, "Force Logout All Sessions");
-        });
-    }
 });

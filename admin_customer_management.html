@@ -1595,7 +1595,7 @@
 
                     <div class="admin-dropdown" id="adminDropdown">
                         <a href="admin_settings_account.html">Account Settings</a>
-                        <a href="admin_settings_account.html#security">Security</a>
+
                         <hr>
                         <button id="dropdownLogoutBtn" onclick="adminLogout()">Logout</button>
                     </div>
@@ -2538,7 +2538,17 @@
 
 
         // Main Admin Script
-        if (sessionStorage.getItem('admin_auth') !== 'true') window.location.href = 'admin_login.html';
+        const adminSession = sessionStorage.getItem('admin_auth');
+        if (!adminSession) {
+            window.location.href = 'admin_login.html';
+        } else {
+            try {
+                const adminData = JSON.parse(adminSession);
+                if (!adminData || !adminData.id) window.location.href = 'admin_login.html';
+            } catch (e) {
+                window.location.href = 'admin_login.html';
+            }
+        }
         const DB = window.DB;
         lucide.createIcons();
 
