@@ -765,8 +765,189 @@
             font-size: 0.7rem;
             border-radius: 4px;
             z-index: 10;
-            font-weight: 400;
             pointer-events: none;
+        }
+
+        /* Custom Success Modal Styling */
+        .success-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(6px);
+            transition: all 0.3s ease;
+        }
+
+        .success-modal-card {
+            background: white;
+            width: 380px;
+            padding: 35px 25px;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .success-modal-overlay.active {
+            display: flex;
+        }
+
+        .success-modal-overlay.active .success-modal-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .success-modal-icon-box {
+            width: 72px;
+            height: 72px;
+            background: #ecfdf5;
+            color: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .success-modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 10px 0;
+        }
+
+        .success-modal-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0 0 25px 0;
+        }
+
+        .success-modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .success-modal-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Custom Confirm Modal Styling */
+        .confirm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            backdrop-filter: blur(6px);
+            transition: all 0.3s ease;
+        }
+
+        .confirm-modal-card {
+            background: white;
+            width: 400px;
+            padding: 35px 25px;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .confirm-modal-overlay.active {
+            display: flex;
+        }
+
+        .confirm-modal-overlay.active .confirm-modal-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .confirm-modal-icon-box {
+            width: 72px;
+            height: 72px;
+            background: #fff1f2;
+            color: #e11d48;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .confirm-modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 10px 0;
+        }
+
+        .confirm-modal-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0 0 25px 0;
+        }
+
+        .confirm-modal-footer {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .confirm-modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .confirm-modal-btn.cancel {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .confirm-modal-btn.cancel:hover {
+            background: #e2e8f0;
+        }
+
+        .confirm-modal-btn.delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .confirm-modal-btn.delete:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
         }
     </style>
 </head>
@@ -2569,40 +2750,71 @@
 
         async function saveEditKyc() {
             if (!targetKycUser) return;
-            showLoader(true);
-            const client = DB.getClient();
-            const updates = {
-                username: document.getElementById('ek_name').value,
-                full_name: document.getElementById('ek_fullname').value,
-                id_number: document.getElementById('ek_idnum').value,
-                mobile: document.getElementById('ek_phone').value,
-                kyc: document.getElementById('ek_status').value,
-                withdrawal_pin: document.getElementById('ek_pin').value
-            };
+            const newStatus = document.getElementById('ek_status').value;
 
-            const kycUpdates = {
-                status: updates.kyc,
-                id_front_url: document.getElementById('ek_front_img').src,
-                id_back_url: document.getElementById('ek_back_img').src
-            };
+            showConfirm(`Are you sure you want to update KYC status to ${newStatus}? Changes will be applied immediately.`, async () => {
+                showLoader(true);
+                const client = DB.getClient();
 
-            // Clean URLs (don't save placeholder or data uris if needed, but here we assume URLs)
-            if (kycUpdates.id_front_url.includes('placeholder')) delete kycUpdates.id_front_url;
-            if (kycUpdates.id_back_url.includes('placeholder')) delete kycUpdates.id_back_url;
+                try {
+                    const updates = {
+                        username: document.getElementById('ek_name').value,
+                        full_name: document.getElementById('ek_fullname').value,
+                        id_number: document.getElementById('ek_idnum').value,
+                        mobile: document.getElementById('ek_phone').value,
+                        kyc: document.getElementById('ek_status').value,
+                        withdrawal_pin: document.getElementById('ek_pin').value
+                    };
 
-            await client.from('users').update(updates).eq('id', targetKycUser);
+                    const kycUpdates = {
+                        status: updates.kyc,
+                        id_front_url: document.getElementById('ek_front_img').src,
+                        id_back_url: document.getElementById('ek_back_img').src
+                    };
 
-            // Check if kyc_submissions exists
-            const { data: existing } = await client.from('kyc_submissions').select('id').eq('user_id', targetKycUser).limit(1);
-            if (existing && existing.length > 0) {
-                await client.from('kyc_submissions').update(kycUpdates).eq('user_id', targetKycUser);
-            } else {
-                await client.from('kyc_submissions').insert({ user_id: targetKycUser, ...kycUpdates });
-            }
+                    // Clean URLs
+                    if (kycUpdates.id_front_url.includes('placeholder')) delete kycUpdates.id_front_url;
+                    if (kycUpdates.id_back_url.includes('placeholder')) delete kycUpdates.id_back_url;
 
-            alert("Investor KYC details updated successfully!");
-            closeEditKyc();
-            init();
+                    const { error: uErr } = await client.from('users').update(updates).eq('id', targetKycUser);
+                    if (uErr) throw uErr;
+
+                    // Check if kyc_submissions exists
+                    const { data: existing } = await client.from('kyc_submissions').select('id').eq('user_id', targetKycUser).limit(1);
+                    if (existing && existing.length > 0) {
+                        const { error: kErr } = await client.from('kyc_submissions').update(kycUpdates).eq('user_id', targetKycUser);
+                        if (kErr) throw kErr;
+                    } else {
+                        const { error: iErr } = await client.from('kyc_submissions').insert({ user_id: targetKycUser, ...kycUpdates });
+                        if (iErr) throw iErr;
+                    }
+
+                    showSuccess("Investor KYC details updated successfully!");
+                    closeEditKyc();
+                    init();
+                } catch (e) {
+                    console.error("Save KYC Error:", e);
+                    alert("Failed to update status: " + (e.message || "Unknown error"));
+                    showLoader(false);
+                }
+            }, "Update KYC Status");
+        }
+
+        function showSuccess(msg) {
+            const modal = document.getElementById('successModal');
+            const msgEl = document.getElementById('successModalMsg');
+            msgEl.textContent = msg;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         async function uploadKycFile(input, side) {
@@ -2703,6 +2915,31 @@
             document.getElementById('depositModal').style.display = 'none';
         }
 
+        function showConfirm(msg, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            const msgEl = document.getElementById('confirmModalMsg');
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+
+            msgEl.textContent = msg;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+
+            deleteBtn.onclick = () => {
+                closeConfirmModal();
+                onConfirm();
+            };
+
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
         function openWithdrawalEdit(id, uname, amount, status, note) {
             document.getElementById('wd_id').value = id;
             document.getElementById('wd_username').value = uname;
@@ -2738,96 +2975,97 @@
             const isEdit = !!depId;
             const actionText = isEdit ? 'UPDATE' : (type === 'deposit' ? 'DEPOSIT (Add)' : 'SET BALANCE TO');
 
-            if (!confirm(`Are you sure you want to ${actionText} ₹${amount} with status ${status}?`)) return;
+            showConfirm(`Are you sure you want to ${actionText} ₹${amount} with status ${status}?`, async () => {
+                showLoader(true);
+                const client = DB.getClient();
 
-            showLoader(true);
-            const client = DB.getClient();
+                try {
+                    let actualUid = uid;
+                    let oldStatus = 'Pending';
+                    let oldAmount = 0;
 
-            try {
-                let actualUid = uid;
-                let oldStatus = 'Pending';
-                let oldAmount = 0;
-
-                if (isEdit) {
-                    const { data: existing, error: getErr } = await client.from('deposits').select('*').eq('id', depId).single();
-                    if (getErr) throw getErr;
-                    actualUid = existing.user_id;
-                    oldStatus = existing.status;
-                    oldAmount = parseFloat(existing.amount);
-                }
-
-                // 1. Manage User Balance if status becomes APPROVED
-                if (status === 'Approved' && oldStatus !== 'Approved') {
-                    const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
-                    if (uErr) throw uErr;
-
-                    const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
-                    let newBalance = currentBalance;
-
-                    if (type === 'deposit') {
-                        newBalance = currentBalance + amount;
-                    } else if (type === 'set') {
-                        newBalance = amount;
-                    }
-
-                    const updates = { balance: newBalance };
-                    if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
-
-                    const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
-                    if (upErr) throw upErr;
-                }
-                // Handle case where it was Approved but now changed to something else (e.g. error correction)
-                else if (status !== 'Approved' && oldStatus === 'Approved') {
-                    const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
-                    if (uErr) throw uErr;
-
-                    const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
-                    const newBalance = currentBalance - oldAmount; // Reverse previous add
-
-                    const updates = { balance: newBalance };
-                    if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
-
-                    const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
-                    if (upErr) throw upErr;
-                }
-
-                // 2. Insert or Update 'deposits' record (ONLY if type is 'deposit')
-                if (type === 'deposit') {
                     if (isEdit) {
-                        const { error: upErr } = await client.from('deposits').update({
-                            amount: amount,
-                            status: status,
-                            admin_note: note,
-                            processed_at: new Date().toISOString()
-                        }).eq('id', depId);
-                        if (upErr) throw upErr;
-                    } else {
-                        const { error: insErr } = await client.from('deposits').insert({
-                            user_id: parseInt(actualUid),
-                            amount: amount,
-                            status: status,
-                            admin_note: note,
-                            created_at: new Date().toISOString()
-                        });
-                        if (insErr) throw insErr;
+                        const { data: existing, error: getErr } = await client.from('deposits').select('*').eq('id', depId).single();
+                        if (getErr) throw getErr;
+                        actualUid = existing.user_id;
+                        oldStatus = existing.status;
+                        oldAmount = parseFloat(existing.amount);
                     }
-                }
 
-                alert("Transaction successful!");
-                closeDepositModal();
-                init();
-            } catch (e) {
-                console.error(e);
-                alert("Error processing transaction: " + e.message);
-            } finally {
-                showLoader(false);
-            }
+                    // 1. Manage User Balance if status becomes APPROVED
+                    if (status === 'Approved' && oldStatus !== 'Approved') {
+                        const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
+                        if (uErr) throw uErr;
+
+                        const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
+                        let newBalance = currentBalance;
+
+                        if (type === 'deposit') {
+                            newBalance = currentBalance + amount;
+                        } else if (type === 'set') {
+                            newBalance = amount;
+                        }
+
+                        const updates = { balance: newBalance };
+                        if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
+
+                        const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
+                        if (upErr) throw upErr;
+                    }
+                    // Handle case where it was Approved but now changed to something else (e.g. error correction)
+                    else if (status !== 'Approved' && oldStatus === 'Approved') {
+                        const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
+                        if (uErr) throw uErr;
+
+                        const currentBalance = (typeof user.available_balance !== 'undefined') ? (parseFloat(user.available_balance) || 0) : (parseFloat(user.balance) || 0);
+                        const newBalance = currentBalance - oldAmount; // Reverse previous add
+
+                        const updates = { balance: newBalance };
+                        if (typeof user.available_balance !== 'undefined') updates.available_balance = newBalance;
+
+                        const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
+                        if (upErr) throw upErr;
+                    }
+
+                    // 2. Insert or Update 'deposits' record (ONLY if type is 'deposit')
+                    if (type === 'deposit') {
+                        if (isEdit) {
+                            const { error: upErr } = await client.from('deposits').update({
+                                amount: amount,
+                                status: status,
+                                admin_note: note,
+                                processed_at: new Date().toISOString()
+                            }).eq('id', depId);
+                            if (upErr) throw upErr;
+                        } else {
+                            const { error: insErr } = await client.from('deposits').insert({
+                                user_id: parseInt(actualUid),
+                                amount: amount,
+                                status: status,
+                                admin_note: note,
+                                created_at: new Date().toISOString()
+                            });
+                            if (insErr) throw insErr;
+                        }
+                    }
+
+                    alert("Transaction successful!");
+                    closeDepositModal();
+                    init();
+                } catch (e) {
+                    console.error(e);
+                    alert("Error processing transaction: " + e.message);
+                } finally {
+                    showLoader(false);
+                }
+            });
         }
 
         async function quickActionWithdraw(id, status) {
-            if (!confirm(`Are you sure you want to ${status} this withdrawal?`)) return;
-            const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
-            await processWithdrawal(id, status, note);
+            showConfirm(`Are you sure you want to ${status} this withdrawal?`, async () => {
+                const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
+                await processWithdrawal(id, status, note);
+            });
         }
 
         async function processWithdrawal(wdId, status, note) {
@@ -2881,10 +3119,11 @@
             const note = document.getElementById('wd_note').value;
 
             if (!wdId) return;
-            if (!confirm(`Update withdrawal status to ${status}?`)) return;
 
-            await processWithdrawal(wdId, status, note);
-            closeWithdrawalModal();
+            showConfirm(`Update withdrawal status to ${status}?`, async () => {
+                await processWithdrawal(wdId, status, note);
+                closeWithdrawalModal();
+            });
         }
 
         async function updateTradeStatus(id, newStatus) {
@@ -2968,7 +3207,12 @@
             }
         }
 
-        function adminLogout() { if (confirm("Logout from admin terminal?")) { sessionStorage.removeItem('admin_auth'); window.location.href = 'admin_login.html'; } }
+        function adminLogout() {
+            showConfirm("Logout from admin terminal?", () => {
+                sessionStorage.removeItem('admin_auth');
+                window.location.href = 'admin_login.html';
+            }, "Confirm Logout");
+        }
         function toggleSub(id) { document.getElementById(id + 'Sub').classList.toggle('show'); }
         function showLoader(s) { document.getElementById('vslLoader').style.display = s ? 'flex' : 'none'; }
 
@@ -3056,15 +3300,16 @@
         }
 
         async function deleteProduct(id) {
-            if (!confirm("Are you sure you want to delete this product?")) return;
-            showLoader(true);
-            const { success, error } = await window.DB.deleteProduct(id);
-            showLoader(false);
-            if (success) {
-                renderProducts();
-            } else {
-                alert("Failed to delete product: " + (error?.message || "Unknown error"));
-            }
+            showConfirm("Are you sure you want to delete this product?", async () => {
+                showLoader(true);
+                const { success, error } = await window.DB.deleteProduct(id);
+                showLoader(false);
+                if (success) {
+                    renderProducts();
+                } else {
+                    alert("Failed to delete product: " + (error?.message || "Unknown error"));
+                }
+            }, "Permanently Delete Product");
         }
 
         // --- Institutional Stock 057 Logic ---
@@ -3147,20 +3392,49 @@
             // Strict Uppercase
             status = status.toUpperCase();
 
-            if (!confirm(`Are you sure you want to ${status} this loan?`)) return;
-            const note = status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin';
+            showConfirm(`Are you sure you want to ${status} this loan?`, async () => {
+                const note = status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin';
 
-            showLoader(true);
-            const res = await window.DB.updateLoanStatus(id, status, note);
-            showLoader(false);
+                showLoader(true);
+                const res = await window.DB.updateLoanStatus(id, status, note);
+                showLoader(false);
 
-            if (res.success) {
-                alert(`Loan ${status} successfully!`);
-                // 3. Force reload
-                init();
-            } else {
-                alert("Operation failed: " + (res.error?.message || "Unknown error"));
-            }
+                if (res.success) {
+                    alert(`Loan ${status} successfully!`);
+                    // 3. Force reload
+                    init();
+                } else {
+                    alert("Operation failed: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Confirm Loan Action");
+        }
+
+        // Shared Confirm Logic
+        function showConfirm(msg, onConfirm, title = "Confirm Action") {
+            const modal = document.getElementById('confirmModal');
+            const msgEl = document.getElementById('confirmModalMsg');
+            const titleEl = document.getElementById('confirmModalTitle');
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = msg;
+
+            deleteBtn.onclick = () => {
+                closeConfirmModal();
+                onConfirm();
+            };
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         window.onload = () => { switchPage('home'); init(); };
@@ -3220,6 +3494,33 @@
                 <button onclick="closeProductModal()" class="vsl-btn-small"
                     style="background:#f1f5f9; color:#64748b;">Cancel</button>
                 <button onclick="saveProduct()" class="vsl-btn-primary">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="success-modal-overlay">
+        <div class="success-modal-card">
+            <div class="success-modal-icon-box">
+                <i data-lucide="check-circle" size="44"></i>
+            </div>
+            <h3 class="success-modal-title">Success!</h3>
+            <p id="successModalMsg" class="success-modal-message"></p>
+            <button class="success-modal-btn" onclick="closeSuccessModal()">Done</button>
+        </div>
+    </div>
+
+    <!-- CONFIRM ACTION MODAL -->
+    <div id="confirmModal" class="confirm-modal-overlay">
+        <div class="confirm-modal-card">
+            <div class="confirm-modal-icon-box">
+                <i data-lucide="alert-triangle" size="44"></i>
+            </div>
+            <h3 id="confirmModalTitle" class="confirm-modal-title">Confirm Action</h3>
+            <p id="confirmModalMsg" class="confirm-modal-message"></p>
+            <div class="confirm-modal-footer">
+                <button class="confirm-modal-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button id="confirmDeleteBtn" class="confirm-modal-btn delete">Confirm</button>
             </div>
         </div>
     </div>

@@ -680,8 +680,89 @@
             font-size: 0.7rem;
             border-radius: 4px;
             z-index: 10;
-            font-weight: 400;
             pointer-events: none;
+        }
+
+        /* Custom Success Modal Styling */
+        .success-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(6px);
+            transition: all 0.3s ease;
+        }
+
+        .success-modal-card {
+            background: white;
+            width: 380px;
+            padding: 35px 25px;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .success-modal-overlay.active {
+            display: flex;
+        }
+
+        .success-modal-overlay.active .success-modal-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .success-modal-icon-box {
+            width: 72px;
+            height: 72px;
+            background: #ecfdf5;
+            color: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .success-modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 10px 0;
+        }
+
+        .success-modal-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0 0 25px 0;
+        }
+
+        .success-modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .success-modal-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
         }
     </style>
 </head>
@@ -1875,9 +1956,26 @@
                 await client.from('kyc_submissions').insert({ user_id: targetKycUser, ...kycUpdates });
             }
 
-            alert("Investor KYC details updated successfully!");
+            showSuccess("Investor KYC details updated successfully!");
             closeEditKyc();
             init();
+        }
+
+        function showSuccess(msg) {
+            const modal = document.getElementById('successModal');
+            const msgEl = document.getElementById('successModalMsg');
+            msgEl.textContent = msg;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         async function uploadKycFile(input, side) {
@@ -2135,6 +2233,18 @@
             <div id="msgBadge"
                 style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; width:10px; height:10px; border-radius:50%; display:none; border:2px solid white;">
             </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="success-modal-overlay">
+        <div class="success-modal-card">
+            <div class="success-modal-icon-box">
+                <i data-lucide="check-circle" size="44"></i>
+            </div>
+            <h3 class="success-modal-title">Success!</h3>
+            <p id="successModalMsg" class="success-modal-message"></p>
+            <button class="success-modal-btn" onclick="closeSuccessModal()">Done</button>
         </div>
     </div>
 

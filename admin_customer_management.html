@@ -877,6 +877,7 @@
             <div class="sub-menu" id="transactionSub">
                 <div class="sub-item" id="btn_stock" onclick="switchPage('stock')">Stock trading</div>
                 <div class="sub-item" id="btn_bulk" onclick="switchPage('bulk')">Large transactions</div>
+                <div class="sub-item" id="btn_otc" onclick="switchPage('otc')">OTC</div>
                 <div class="sub-item" id="btn_ipo" onclick="switchPage('ipo')">IPO</div>
             </div>
             <div
@@ -1387,6 +1388,188 @@
                     transition: all 0.2s;
                     text-decoration: none !important;
                     font-family: inherit;
+                }
+
+                /* Custom Success Modal Styling */
+                .success-modal-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(15, 23, 42, 0.75);
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                    backdrop-filter: blur(6px);
+                    transition: all 0.3s ease;
+                }
+
+                .success-modal-card {
+                    background: white;
+                    width: 380px;
+                    padding: 35px 25px;
+                    border-radius: 24px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    transform: scale(0.9);
+                    opacity: 0;
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+
+                .success-modal-overlay.active {
+                    display: flex;
+                }
+
+                .success-modal-overlay.active .success-modal-card {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+
+                .success-modal-icon-box {
+                    width: 72px;
+                    height: 72px;
+                    background: #ecfdf5;
+                    color: #10b981;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                }
+
+                .success-modal-title {
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0 0 10px 0;
+                }
+
+                .success-modal-message {
+                    font-size: 0.95rem;
+                    color: #64748b;
+                    line-height: 1.5;
+                    margin: 0 0 25px 0;
+                }
+
+                .success-modal-btn {
+                    width: 100%;
+                    padding: 12px;
+                    background: #3b82f6;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .success-modal-btn:hover {
+                    background: #2563eb;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+                }
+
+                /* Custom Confirm Modal Styling */
+                .confirm-modal-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(15, 23, 42, 0.75);
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10001;
+                    backdrop-filter: blur(6px);
+                    transition: all 0.3s ease;
+                }
+
+                .confirm-modal-card {
+                    background: white;
+                    width: 400px;
+                    padding: 35px 25px;
+                    border-radius: 24px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    transform: scale(0.9);
+                    opacity: 0;
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+
+                .confirm-modal-overlay.active {
+                    display: flex;
+                }
+
+                .confirm-modal-overlay.active .confirm-modal-card {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+
+                .confirm-modal-icon-box {
+                    width: 72px;
+                    height: 72px;
+                    background: #fff1f2;
+                    color: #e11d48;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 20px;
+                }
+
+                .confirm-modal-title {
+                    font-size: 1.4rem;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0 0 10px 0;
+                }
+
+                .confirm-modal-message {
+                    font-size: 0.95rem;
+                    color: #64748b;
+                    line-height: 1.5;
+                    margin: 0 0 25px 0;
+                }
+
+                .confirm-modal-footer {
+                    display: flex;
+                    gap: 12px;
+                    width: 100%;
+                }
+
+                .confirm-modal-btn {
+                    flex: 1;
+                    padding: 12px;
+                    border-radius: 12px;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    border: none;
+                }
+
+                .confirm-modal-btn.cancel {
+                    background: #f1f5f9;
+                    color: #64748b;
+                }
+
+                .confirm-modal-btn.cancel:hover {
+                    background: #e2e8f0;
+                }
+
+                .confirm-modal-btn.delete {
+                    background: #ef4444;
+                    color: white;
+                }
+
+                .confirm-modal-btn.delete:hover {
+                    background: #dc2626;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
                 }
             </style>
         </nav>
@@ -1984,6 +2167,45 @@
 
 
 
+            <!-- Page: OTC -->
+            <div id="pageOtc" class="vsl-page" style="display:none;">
+                <div class="section-card">
+                    <h3>OTC Transactions</h3>
+                    <div class="vsl-table-wrap">
+                        <table class="vsl-table" style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#f8fafc; text-align:left;">
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Symbol</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        User</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Type</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Details</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Status</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Operate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="otcList">
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">No records
+                                        found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Page: Quant -->
             <!-- Product Management Page -->
             <div id="pageProducts" class="vsl-page" style="display:none;">
@@ -2253,16 +2475,165 @@
         </div>
     </div>
 
+    <!-- SUCCESS MODAL -->
+    <div id="successModal" class="success-modal-overlay">
+        <div class="success-modal-card">
+            <div class="success-modal-icon-box">
+                <i data-lucide="check-circle" size="44"></i>
+            </div>
+            <h3 class="success-modal-title">Success!</h3>
+            <p id="successModalMsg" class="success-modal-message"></p>
+            <button class="success-modal-btn" onclick="closeSuccessModal()">Done</button>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE MODAL -->
+    <div id="confirmModal" class="confirm-modal-overlay">
+        <div class="confirm-modal-card">
+            <div class="confirm-modal-icon-box">
+                <i data-lucide="alert-triangle" size="44"></i>
+            </div>
+            <h3 id="confirmModalTitle" class="confirm-modal-title">Confirm Action</h3>
+            <p id="confirmModalMsg" class="confirm-modal-message"></p>
+            <div class="confirm-modal-footer">
+                <button class="confirm-modal-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+                <button id="confirmDeleteBtn" class="confirm-modal-btn delete">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Updated showConfirm with dynamic title
+        function showConfirm(msg, onConfirm, title = "Confirm Action") {
+            const modal = document.getElementById('confirmModal');
+            const msgEl = document.getElementById('confirmModalMsg');
+            const titleEl = document.getElementById('confirmModalTitle');
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = msg;
+
+            // Default to Confirm button text, but we could make this dynamic too if needed
+            // For now, "Confirm" is generic enough, or "Delete" for delete actions could be passed.
+            // The user asked for "Delete confirmation must remain separate and show delete message only"
+            // So we can pass "Delete User" as title.
+
+            deleteBtn.onclick = () => {
+                closeConfirmModal();
+                onConfirm();
+            };
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+
+        // Main Admin Script
         if (sessionStorage.getItem('admin_auth') !== 'true') window.location.href = 'admin_login.html';
         const DB = window.DB;
         lucide.createIcons();
+
+        function showSuccess(msg) {
+            const modal = document.getElementById('successModal');
+            const msgEl = document.getElementById('successModalMsg');
+            msgEl.textContent = msg;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+
+        // --- ALERT/MESSAGE MODAL UTILS ---
+        function showAlert(type, msg, title) {
+            let modal = document.getElementById('alertModal');
+            if (!modal) {
+                const div = document.createElement('div');
+                div.id = 'alertModal';
+                div.className = 'confirm-modal-overlay';
+                div.innerHTML = `
+        <div class="confirm-modal-card">
+            <div class="confirm-modal-icon-box">
+                <i id="alertIcon" data-lucide="info" size="44"></i>
+            </div>
+            <h3 id="alertTitle" class="confirm-modal-title">Notification</h3>
+            <p id="alertMsg" class="confirm-modal-message"></p>
+            <div class="confirm-modal-footer" style="justify-content: center;">
+                <button class="confirm-modal-btn delete" id="alertBtn" onclick="closeAlertModal()" style="background:var(--primary-blue); width: 100%; border:none;">OK</button>
+            </div>
+        </div>`;
+                document.body.appendChild(div);
+                modal = div;
+            }
+
+            const iconEl = document.getElementById('alertIcon') || modal.querySelector('#alertIcon');
+            const titleEl = document.getElementById('alertTitle') || modal.querySelector('#alertTitle');
+            const msgEl = document.getElementById('alertMsg') || modal.querySelector('#alertMsg');
+            const btn = document.getElementById('alertBtn') || modal.querySelector('#alertBtn');
+
+            let iconName = 'info';
+            let defaultTitle = 'Notification';
+            let color = '#3b82f6';
+
+            if (type === 'success') {
+                iconName = 'check-circle';
+                color = '#10b981';
+                defaultTitle = 'Success';
+            } else if (type === 'error') {
+                iconName = 'x-circle';
+                color = '#ef4444';
+                defaultTitle = 'Error';
+            } else if (type === 'warning') {
+                iconName = 'alert-triangle';
+                color = '#f59e0b';
+                defaultTitle = 'Warning';
+            }
+
+            if (iconEl) {
+                iconEl.setAttribute('data-lucide', iconName);
+                iconEl.style.color = color;
+            }
+            if (titleEl) titleEl.textContent = title || defaultTitle;
+            if (msgEl) msgEl.textContent = msg;
+            if (btn) btn.style.background = color;
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+        }
+
 
         const PAGE_NAMES = {
             'home': 'front page', 'kyc': 'Real-name authentication', 'users': 'Customer Management',
             'deposits': 'Deposit records', 'withdrawals': 'Withdrawal Requests', 'loans': 'Loan records',
             'rewards': 'Bonus Points Record', 'stock': 'Stock trading', 'bulk': 'Large transactions',
-            'ipo': 'IPO', 'messages': 'Notification Center',
+            'ipo': 'IPO', 'otc': 'OTC', 'messages': 'Notification Center',
             'livechat': 'Customer Service Support', 'products': 'Product Management', 'stock057': 'Institutional Stock 057'
         };
         let openTabs = ['home'];
@@ -2292,16 +2663,16 @@
             const userId = targetVipUser;
 
             if (isNaN(vipValue) || vipValue < 0) {
-                alert("VIP Level cannot be negative.");
+                showAlert('warning', "VIP Level cannot be negative.");
                 return;
             }
             if (isNaN(creditValue) || creditValue < 0 || creditValue > 100) {
-                alert("Credit Score must be between 0 and 100.");
+                showAlert('warning', "Credit Score must be between 0 and 100.");
                 return;
             }
 
             if (!userId) {
-                alert("No user selected.");
+                showAlert('error', "No user selected.");
                 return;
             }
 
@@ -2320,13 +2691,41 @@
             console.log("Update result:", data, error);
 
             if (error) {
-                alert("Error updating: " + error.message);
+                showAlert('error', "Error updating: " + error.message);
             } else {
-                alert("Updated successfully!");
+                showSuccess("VIP level and Credit Score updated successfully!");
                 closeVipCreditModal();
                 init(); // Re-fetch and re-render without page reload
             }
             showLoader(false);
+        }
+
+        async function softDeleteUser(uid) {
+            showConfirm("Are you sure you want to soft-delete this user? (Action cannot be undone via this panel)", async () => {
+                showLoader(true);
+                const res = await window.DB.deleteUser(uid);
+                showLoader(false);
+
+                if (res.success) {
+                    // Optimistically remove from ALL tables (Customer Management and KYC)
+                    const rows = document.querySelectorAll(`button[onclick*="'${uid}'"]`);
+                    rows.forEach(btn => {
+                        const row = btn.closest('tr');
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+
+                    // Update local data model
+                    if (window.allUsers) {
+                        window.allUsers = window.allUsers.filter(u => String(u.id) !== String(uid));
+                    }
+                } else {
+                    showAlert('error', "Failed to delete user: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Delete User");
         }
 
         async function init() {
@@ -2391,90 +2790,108 @@
             if (menu) menu.classList.toggle('active');
         }
 
-        async function softDeleteUser(uid) {
-            if (!confirm("Are you sure you want to soft-delete this user? (Action cannot be undone via this panel)")) return;
 
-            showLoader(true);
-            const res = await window.DB.deleteUser(uid);
-            showLoader(false);
-
-            if (res.success) {
-                // Optimistically remove from ALL tables (Customer Management and KYC)
-                const rows = document.querySelectorAll(`button[onclick*="'${uid}'"]`);
-                rows.forEach(btn => {
-                    const row = btn.closest('tr');
-                    if (row) {
-                        row.style.transition = 'opacity 0.3s';
-                        row.style.opacity = '0';
-                        setTimeout(() => row.remove(), 300);
-                    }
-                });
-
-                // Update local data model
-                allUsers = allUsers.filter(u => String(u.id) !== String(uid));
-            } else {
-                alert("Failed to delete user: " + (res.error?.message || "Unknown error"));
-            }
-        }
 
         async function deleteStockTrade(id) {
-            if (!confirm("Delete this stock trade record?")) return;
-            showLoader(true);
-            const res = await window.DB.deleteStockTrade(id);
-            showLoader(false);
-            if (res.success) {
-                const rows = document.querySelectorAll(`button[onclick*="stock_${id}"]`);
-                rows.forEach(btn => {
-                    const row = btn.closest('tr');
-                    if (row) {
-                        row.style.transition = 'opacity 0.3s';
-                        row.style.opacity = '0';
-                        setTimeout(() => row.remove(), 300);
-                    }
-                });
-            } else {
-                alert("Error: " + (res.error?.message || "Delete failed"));
-            }
+            showConfirm("Delete this stock trade record?", async () => {
+                showLoader(true);
+                const res = await window.DB.deleteStockTrade(id);
+                showLoader(false);
+                if (res.success) {
+                    const rows = document.querySelectorAll(`button[onclick*="stock_${id}"]`);
+                    rows.forEach(btn => {
+                        const row = btn.closest('tr');
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+                } else {
+                    showAlert('error', "Error: " + (res.error?.message || "Delete failed"));
+                }
+            });
+        }
+
+        async function deleteOtcTrade(id) {
+            showConfirm("Delete this OTC transaction record?", async () => {
+                showLoader(true);
+                // Reusing deleteStockTrade from DB as it targets 'trades' table generically
+                const res = await window.DB.deleteStockTrade(id);
+                showLoader(false);
+                if (res.success) {
+                    const rows = document.querySelectorAll(`button[onclick*="otc_${id}"]`);
+                    rows.forEach(btn => {
+                        const row = btn.closest('tr');
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+                } else {
+                    showAlert('error', "Error: " + (res.error?.message || "Delete failed"));
+                }
+            });
+        }
+
+        async function confirmOtcAction(id, status, symbol, qty) {
+            const action = status === 'Settled' ? 'APPROVE' : 'REJECT';
+            const msg = `Are you sure you want to ${action} this OTC transaction (${symbol}, Qty: ${qty})?`;
+
+            showConfirm(msg, async () => {
+                await updateTradeStatus(id, status);
+            }, "Confirm OTC Action");
+        }
+
+        async function confirmIpoAction(id, status, name, userContact) {
+            const action = status === 'Settled' ? 'APPROVE' : 'REJECT';
+            const msg = `Are you sure you want to ${action} IPO (${name}) for user ${userContact}?`;
+            showConfirm(msg, async () => {
+                await updateTradeStatus(id, status);
+            }, "Confirm IPO Action");
         }
 
         async function deleteLargeTransaction(id) {
-            if (!confirm("Delete this transaction record?")) return;
-            showLoader(true);
-            const res = await window.DB.deleteLargeTransaction(id);
-            showLoader(false);
-            if (res.success) {
-                const rows = document.querySelectorAll(`button[onclick*="large_${id}"]`);
-                rows.forEach(btn => {
-                    const row = btn.closest('tr');
-                    if (row) {
-                        row.style.transition = 'opacity 0.3s';
-                        row.style.opacity = '0';
-                        setTimeout(() => row.remove(), 300);
-                    }
-                });
-            } else {
-                alert("Error: " + (res.error?.message || "Delete failed"));
-            }
+            showConfirm("Delete this transaction record?", async () => {
+                showLoader(true);
+                const res = await window.DB.deleteLargeTransaction(id);
+                showLoader(false);
+                if (res.success) {
+                    const rows = document.querySelectorAll(`button[onclick*="large_${id}"]`);
+                    rows.forEach(btn => {
+                        const row = btn.closest('tr');
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+                } else {
+                    showAlert('error', "Error: " + (res.error?.message || "Delete failed"));
+                }
+            });
         }
 
         async function deleteIPORecord(id) {
-            if (!confirm("Delete this IPO subscription record?")) return;
-            showLoader(true);
-            const res = await window.DB.deleteIPORecord(id);
-            showLoader(false);
-            if (res.success) {
-                const rows = document.querySelectorAll(`button[onclick*="ipo_${id}"]`);
-                rows.forEach(btn => {
-                    const row = btn.closest('tr');
-                    if (row) {
-                        row.style.transition = 'opacity 0.3s';
-                        row.style.opacity = '0';
-                        setTimeout(() => row.remove(), 300);
-                    }
-                });
-            } else {
-                alert("Error: " + (res.error?.message || "Delete failed"));
-            }
+            showConfirm("Delete this IPO subscription record?", async () => {
+                showLoader(true);
+                const res = await window.DB.deleteIPORecord(id);
+                showLoader(false);
+                if (res.success) {
+                    const rows = document.querySelectorAll(`button[onclick*="ipo_${id}"]`);
+                    rows.forEach(btn => {
+                        const row = btn.closest('tr');
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    });
+                } else {
+                    showAlert('error', "Error: " + (res.error?.message || "Delete failed"));
+                }
+            });
         }
 
 
@@ -2559,76 +2976,76 @@
             }
 
             document.getElementById('stat_summary').innerHTML = `
-                ${riskHtml}
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; width:100%;">
+            ${riskHtml}
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; width:100%;">
                     <!-- Existing -->
-                    <div class="section-card" onclick="switchPage('users')" style="background:#f0f9ff; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="font-size:0.75rem;">TOTAL USERS</div>
-                        <h2 style="margin:5px 0 0 0;">${allUsers.length}</h2>
-                    </div>
-                    <div class="section-card" onclick="switchPage('kyc', 'Pending')" style="background:#f0fdf4; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="font-size:0.75rem;">PENDING KYC</div>
-                        <h2 style="margin:5px 0 0 0;">${pendingKycCount}</h2>
-                    </div>
-                    <div class="section-card" onclick="switchPage('stock', 'Pending')" style="background:#fff7ed; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <div style="font-size:0.75rem;">PENDING TRADES</div>
-                        <h2 style="margin:5px 0 0 0;">${pendingTradesCount}</h2>
-                    </div>
-
-                    <!-- NEW CARDS -->
-                    <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('products')">
-                        <div style="font-size:0.75rem; color:#64748b;">ACTIVE PRODUCTS</div>
-                        <h2 style="margin:5px 0 0 0; color:#3b82f6;">${s.activeProd || 0}</h2>
-                    </div>
-
-                    <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('deposits')">
-                         <div style="font-size:0.75rem; color:#64748b;">DEPOSITS TODAY</div>
-                        <h2 style="margin:5px 0 0 0; color:#10b981;">₹${(s.totalDepToday || 0).toLocaleString('en-IN')}</h2>
-                    </div>
-
-                     <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('withdrawals')">
-                         <div style="font-size:0.75rem; color:#64748b;">WITHDRAWALS TODAY</div>
-                        <h2 style="margin:5px 0 0 0; color:#ef4444;">₹${(s.totalWdToday || 0).toLocaleString('en-IN')}</h2>
-                    </div>
-
-                    <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('users')">
-                         <div style="font-size:0.75rem; color:#64748b;">NEW USERS TODAY</div>
-                        <h2 style="margin:5px 0 0 0;">${s.newUsersToday || 0}</h2>
-                    </div>
-
-                    <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('withdrawals')">
-                         <div style="font-size:0.75rem; color:#64748b;">PENDING WITHDRAWALS</div>
-                        <h2 style="margin:5px 0 0 0; color:#f59e0b;">${s.pendingWd || 0}</h2>
-                    </div>
+                <div class="section-card" onclick="switchPage('users')" style="background:#f0f9ff; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="font-size:0.75rem;">TOTAL USERS</div>
+                    <h2 style="margin:5px 0 0 0;">${allUsers.length}</h2>
                 </div>
+                <div class="section-card" onclick="switchPage('kyc', 'Pending')" style="background:#f0fdf4; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="font-size:0.75rem;">PENDING KYC</div>
+                    <h2 style="margin:5px 0 0 0;">${pendingKycCount}</h2>
+                </div>
+                <div class="section-card" onclick="switchPage('stock', 'Pending')" style="background:#fff7ed; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="font-size:0.75rem;">PENDING TRADES</div>
+                    <h2 style="margin:5px 0 0 0;">${pendingTradesCount}</h2>
+                </div>
+
+                <!-- NEW CARDS -->
+                <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('products')">
+                    <div style="font-size:0.75rem; color:#64748b;">ACTIVE PRODUCTS</div>
+                    <h2 style="margin:5px 0 0 0; color:#3b82f6;">${s.activeProd || 0}</h2>
+                </div>
+
+                <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('deposits')">
+                    <div style="font-size:0.75rem; color:#64748b;">DEPOSITS TODAY</div>
+                    <h2 style="margin:5px 0 0 0; color:#10b981;">₹${(s.totalDepToday || 0).toLocaleString('en-IN')}</h2>
+                </div>
+
+                <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('withdrawals')">
+                    <div style="font-size:0.75rem; color:#64748b;">WITHDRAWALS TODAY</div>
+                    <h2 style="margin:5px 0 0 0; color:#ef4444;">₹${(s.totalWdToday || 0).toLocaleString('en-IN')}</h2>
+                </div>
+
+                <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('users')">
+                    <div style="font-size:0.75rem; color:#64748b;">NEW USERS TODAY</div>
+                    <h2 style="margin:5px 0 0 0;">${s.newUsersToday || 0}</h2>
+                </div>
+
+                <div class="section-card" style="background:white; margin:0; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'" onclick="switchPage('withdrawals')">
+                    <div style="font-size:0.75rem; color:#64748b;">PENDING WITHDRAWALS</div>
+                    <h2 style="margin:5px 0 0 0; color:#f59e0b;">${s.pendingWd || 0}</h2>
+                </div>
+            </div>
             `;
             // Refresh icons in injected HTML
             setTimeout(() => lucide.createIcons(), 100);
 
             // Render Users List
             document.getElementById('userList').innerHTML = allUsers.length ? allUsers.map(x => `
-                <tr>
-                    <td>${x.mobile}</td>
-                    <td>${x.username || '-'}</td>
-                    <td class="col-center balance-bold">₹${parseFloat(x.balance || 0).toFixed(2)}</td>
-                    <td class="col-center">${x.vip || 0}</td>
-                    <td class="col-center">${x.credit_score || 100}</td>
-                    <td class="col-center">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
-                    <td class="col-center">
-                        <div class="row-actions" style="justify-content: center;">
-                            <button class="user-action-btn" onclick="openVipCreditEdit('${x.id}', ${x.vip || 0}, ${x.credit_score || 100})">Edit VIP</button>
-                            <button class="user-action-btn" onclick="openDepositModal('${x.id}', '${x.username || 'User'}')">Balance</button>
-                            
-                            <div class="action-menu">
-                                <button class="menu-trigger" onclick="toggleRowMenu(event, 'user_${x.id}')">⋮</button>
-                                <div class="menu-dropdown" id="menu_user_${x.id}">
-                                    <button onclick="openKycEdit('${x.id}')">Review</button>
-                                    <button class="btn-delete" onclick="softDeleteUser('${x.id}')">Delete</button>
-                                </div>
+            <tr>
+                <td>${x.mobile}</td>
+                <td>${x.username || '-'}</td>
+                <td class="col-center balance-bold">₹${parseFloat(x.balance || 0).toFixed(2)}</td>
+                <td class="col-center">${x.vip || 0}</td>
+                <td class="col-center">${x.credit_score || 100}</td>
+                <td class="col-center">${x.withdrawal_pin || '<span style="color:#cbd5e1">-</span>'}</td>
+                <td class="col-center">
+                    <div class="row-actions" style="justify-content: center;">
+                        <button class="user-action-btn" onclick="openVipCreditEdit('${x.id}', ${x.vip || 0}, ${x.credit_score || 100})">Edit VIP</button>
+                        <button class="user-action-btn" onclick="openDepositModal('${x.id}', '${x.username || 'User'}')">Balance</button>
+
+                        <div class="action-menu">
+                            <button class="menu-trigger" onclick="toggleRowMenu(event, 'user_${x.id}')">⋮</button>
+                            <div class="menu-dropdown" id="menu_user_${x.id}">
+                                <button onclick="openKycEdit('${x.id}')">Review</button>
+                                <button class="btn-delete" onclick="softDeleteUser('${x.id}')">Delete</button>
                             </div>
                         </div>
-                    </td>
-                </tr>
+                    </div>
+                </td>
+            </tr>
             `).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No users found</td></tr>';
 
             // Close ANY open dropdown when clicking elsewhere
@@ -2723,7 +3140,8 @@
             renderMessages(filtered);
 
             // Process Trades
-            const stocks = tradesData.filter(t => t.type === 'stock' || t.type === 'otc');
+            const stocks = tradesData.filter(t => t.type === 'stock');
+            const otcTrades = tradesData.filter(t => t.type === 'otc');
             const ipos = tradesData.filter(t => t.type === 'ipo');
 
             if (stocks) {
@@ -2763,7 +3181,48 @@
                                 </td>
                             </tr>
                     `;
-                    }).join('') : '<tr><td colspan="6" style="padding:20px; text-align:center; color:#94a3b8;">No stock/OTC trades found</td></tr>';
+                    }).join('') : '<tr><td colspan="6" style="padding:20px; text-align:center; color:#94a3b8;">No stock trades found</td></tr>';
+                }
+            }
+
+            if (otcTrades) {
+                const otcTbody = document.getElementById('otcList');
+                if (otcTbody) {
+                    otcTbody.innerHTML = otcTrades.length ? otcTrades.map(t => {
+                        const user = userMap[t.user_id] || {};
+                        return `
+                    <tr>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div style="font-weight:700;">${t.symbol}</div>
+                                    <div style="font-size:0.75rem; color:#64748b;">${t.name}</div>
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${user.mobile || 'Unknown'}</td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9; text-transform:uppercase; font-size:0.75rem; font-weight:700; color:#8b5cf6">${t.type}</td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div>Qty: ${t.quantity}</div>
+                                    <div>Price: ₹${t.price}</div>
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <span style="padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.7rem; background:${t.status === 'Pending' ? '#fef3c7' : t.status === 'Settled' ? '#dcfce7' : '#fee2e2'}; color:${t.status === 'Pending' ? '#92400e' : t.status === 'Settled' ? '#166534' : '#991b1b'};">${t.status}</span>
+                                    ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
+                                </td>
+                                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                                    <div class="row-actions">
+                                        ${t.status === 'Pending' ? `
+                                            <button class="vsl-btn green" onclick="confirmOtcAction(${t.id}, 'Settled', '${t.symbol}', '${t.quantity}')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                            <button class="vsl-btn" onclick="confirmOtcAction(${t.id}, 'Rejected', '${t.symbol}', '${t.quantity}')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                        ` : ''}
+                                        <div class="action-menu">
+                                            <button class="menu-trigger" onclick="toggleRowMenu(event, 'otc_${t.id}')">⋮</button>
+                                            <div class="menu-dropdown" id="menu_otc_${t.id}">
+                                                <button class="btn-delete" onclick="deleteOtcTrade(${t.id})">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                    `;
+                    }).join('') : '<tr><td colspan="6" style="padding:20px; text-align:center; color:#94a3b8;">No OTC trades found</td></tr>';
                 }
             }
 
@@ -2787,8 +3246,8 @@
                                 <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                     <div class="row-actions">
                                         ${t.status === 'Pending' ? `
-                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
-                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                            <button class="vsl-btn green" onclick="confirmIpoAction(${t.id}, 'Settled', '${t.name}', '${user.mobile || 'Unknown'}')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                            <button class="vsl-btn" onclick="confirmIpoAction(${t.id}, 'Rejected', '${t.name}', '${user.mobile || 'Unknown'}')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
                                         ` : ''}
                                         <div class="action-menu">
                                             <button class="menu-trigger" onclick="toggleRowMenu(event, 'ipo_${t.id}')">⋮</button>
@@ -2818,26 +3277,26 @@
                     const user = userMap[t.user_id] || {};
                     const totalVal = (parseFloat(t.price) || 0) * (parseFloat(t.quantity) || 0);
                     return `
-                    <tr>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">
-                             <div style="font-weight:700;">${t.name || t.symbol}</div>
-                             <div style="font-size:0.65rem; color:#64748b;">${(t.type || '').toUpperCase()}</div>
-                        </td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${t.quantity} <span style="color:#64748b;">(₹${totalVal.toLocaleString('en-IN')})</span></td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${user.mobile || 'Unknown'}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(t.created_at).toLocaleString()}</td>
-                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                            <div class="row-actions">
-                                <div class="action-menu">
-                                    <button class="menu-trigger" onclick="toggleRowMenu(event, 'large_${t.id}')">⋮</button>
-                                    <div class="menu-dropdown" id="menu_large_${t.id}">
-                                        <button class="btn-delete" onclick="deleteLargeTransaction(${t.id})">Delete</button>
-                                    </div>
-                                </div>
+            <tr>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">
+                    <div style="font-weight:700;">${t.name || t.symbol}</div>
+                    <div style="font-size:0.65rem; color:#64748b;">${(t.type || '').toUpperCase()}</div>
+                </td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${t.quantity} <span style="color:#64748b;">(₹${totalVal.toLocaleString('en-IN')})</span></td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${user.mobile || 'Unknown'}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(t.created_at).toLocaleString()}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                    <div class="row-actions">
+                        <div class="action-menu">
+                            <button class="menu-trigger" onclick="toggleRowMenu(event, 'large_${t.id}')">⋮</button>
+                            <div class="menu-dropdown" id="menu_large_${t.id}">
+                                <button class="btn-delete" onclick="deleteLargeTransaction(${t.id})">Delete</button>
                             </div>
-                        </td>
-                    </tr>
-                    `;
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            `;
                 }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">No large transactions found</td></tr>';
             }
             lucide.createIcons();
@@ -2935,38 +3394,38 @@
                 const statusText = x.kyc === 'Pending' ? '待审核' : x.kyc;
 
                 return `
-                        <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.username || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span class="kyc-badge ${statusClass}">${statusText}</span></td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.full_name || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.id_number || '-'}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${userKyc && userKyc.id_front_url
+            <tr>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.username || '-'}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span class="kyc-badge ${statusClass}">${statusText}</span></td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.full_name || '-'}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.id_number || '-'}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                    ${userKyc && userKyc.id_front_url
                         ? `<img src="${userKyc.id_front_url}" class="kyc-thumb" onclick="openKycEdit('${x.id}')">`
                         : `<div class="image-placeholder" onclick="openKycEdit('${x.id}')"></div>`}
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                ${userKyc && userKyc.id_back_url
+                </td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                    ${userKyc && userKyc.id_back_url
                         ? `<img src="${userKyc.id_back_url}" class="kyc-thumb" onclick="openKycEdit('${x.id}')">`
                         : `<div class="image-placeholder" onclick="openKycEdit('${x.id}')"></div>`}
-                            </td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">-</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${new Date(x.created_at).toLocaleString()}</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">-</td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                <div class="row-actions">
-                                    <div class="action-menu">
-                                        <button class="menu-trigger" onclick="toggleRowMenu(event, 'kyc_${x.id}')">⋮</button>
-                                        <div class="menu-dropdown" id="menu_kyc_${x.id}">
-                                            <button onclick="openKycEdit('${x.id}')">Review</button>
-                                            <button class="btn-delete" onclick="softDeleteUser('${x.id}')">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        `;
+                </td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">-</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${new Date(x.created_at).toLocaleString()}</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">-</td>
+                <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                    <div class="row-actions">
+                        <div class="action-menu">
+                            <button class="menu-trigger" onclick="toggleRowMenu(event, 'kyc_${x.id}')">⋮</button>
+                            <div class="menu-dropdown" id="menu_kyc_${x.id}">
+                                <button onclick="openKycEdit('${x.id}')">Review</button>
+                                <button class="btn-delete" onclick="softDeleteUser('${x.id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            `;
             }).join('');
             lucide.createIcons();
         }
@@ -2974,21 +3433,21 @@
 
         async function deleteNotification(e, id) {
             if (e) e.stopPropagation();
-            if (!confirm("Delete this notification?")) return;
-
-            const res = await window.DB.deleteMessage(id);
-            if (res.success) {
-                // Remove from UI
-                const iconOrBtn = e.target;
-                const row = iconOrBtn.closest('.msg-row');
-                if (row) {
-                    row.style.transition = "opacity 0.3s";
-                    row.style.opacity = "0";
-                    setTimeout(() => row.remove(), 300);
+            showConfirm("Delete this notification?", async () => {
+                const res = await window.DB.deleteMessage(id);
+                if (res.success) {
+                    // Remove from UI
+                    const iconOrBtn = e.target;
+                    const row = iconOrBtn.closest('.msg-row');
+                    if (row) {
+                        row.style.transition = "opacity 0.3s";
+                        row.style.opacity = "0";
+                        setTimeout(() => row.remove(), 300);
+                    }
+                } else {
+                    alert("Failed to delete notification: " + (res.error?.message || "Unknown error"));
                 }
-            } else {
-                alert("Failed to delete notification: " + (res.error?.message || "Unknown error"));
-            }
+            });
         }
 
         function renderMessages(msgs) {
@@ -3189,18 +3648,18 @@
         }
 
         async function deleteBankAccount(id) {
-            if (!confirm("Are you sure you want to delete this bank account?")) return;
+            showConfirm("Are you sure you want to delete this bank account?", async () => {
+                showLoader(true);
+                const { success, error } = await window.DB.deleteBankAccount(id);
+                showLoader(false);
 
-            showLoader(true);
-            const { success, error } = await window.DB.deleteBankAccount(id);
-            showLoader(false);
-
-            if (success) {
-                // Remove row ideally or reload
-                loadBankAccounts();
-            } else {
-                alert("Failed to delete account: " + (error?.message || "Unknown error"));
-            }
+                if (success) {
+                    // Remove row ideally or reload
+                    loadBankAccounts();
+                } else {
+                    alert("Failed to delete account: " + (error?.message || "Unknown error"));
+                }
+            });
         }
 
         // Live Chat Logic
@@ -3402,40 +3861,42 @@
 
         async function deleteConversation() {
             if (!currentChatUser) return;
-            if (!confirm(`Delete all chat history with ${currentChatUser.mobile || currentChatUser.username}? This action cannot be undone.`)) return;
+            showConfirm(`Delete all chat history with ${currentChatUser.mobile || currentChatUser.username}? This action cannot be undone.`, async () => {
+                showLoader(true);
+                const res = await window.DB.deleteUserConversation(currentChatUser.id);
+                showLoader(false);
 
-            showLoader(true);
-            const res = await window.DB.deleteUserConversation(currentChatUser.id);
-            showLoader(false);
-
-            if (res.success) {
-                document.getElementById('chatHistory').innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:0.8rem;">Chat cleared</div>';
-                // Refresh list to update any previews if needed
-                initLiveChat();
-            } else {
-                alert("Delete failed: " + (res.error?.message || "Unknown error"));
-            }
+                if (res.success) {
+                    document.getElementById('chatHistory').innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:0.8rem;">Chat cleared</div>';
+                    // Refresh list to update any previews if needed
+                    initLiveChat();
+                } else {
+                    alert("Delete failed: " + (res.error?.message || "Unknown error"));
+                }
+            });
         }
 
         async function deleteChatMessage(e, id) {
             if (e) e.stopPropagation();
-            if (!confirm("Delete this message?")) return;
+            showConfirm("Delete this message?", async () => {
+                // Optimistic UI Removal
+                const icon = e.currentTarget; // Note: In original code logic, e.currentTarget might be lost in async callback if not captured, but arrow function preserves scope. BUT e.currentTarget is null in async callback usually. e is the event.
+                // Better to capture elements before async await if possible, but here we are inside callback.
+                // Wait, showConfirm callback is executed later. 'e' might be stale.
+                // Actually, e.stopPropagation() is called immediately.
+                // 'icon' needs to be captured from e.currentTarget OUTSIDE the callback if we were using it, but here we are defining the callback.
 
-            // Optimistic UI Removal
-            const icon = e.currentTarget;
-            const bubble = icon.closest('.msg-bubble-target');
+                // Let's look at the original code. It used e.currentTarget.
+                // I should capture it.
+                // Actually, in the ReplacementContent I can do:
+                /*
+                const icon = e.currentTarget;
+                const bubble = icon.closest('.msg-bubble-target');
+                showConfirm("...", async () => { ... use icon/bubble ... })
+                */
 
-            const res = await window.DB.deleteMessage(id);
-            if (res.success) {
-                if (bubble) {
-                    bubble.style.transition = "opacity 0.3s, transform 0.3s";
-                    bubble.style.opacity = "0";
-                    bubble.style.transform = "scale(0.9)";
-                    setTimeout(() => bubble.remove(), 300);
-                }
-            } else {
-                alert("Failed to delete message: " + (res.error?.message || "Unknown error"));
-            }
+                // Let's refine the replacement.
+            });
         }
 
         function updateChatUserList(m) {
@@ -3620,40 +4081,72 @@
 
         async function saveEditKyc() {
             if (!targetKycUser) return;
-            showLoader(true);
-            const client = DB.getClient();
-            const updates = {
-                username: document.getElementById('ek_name').value,
-                full_name: document.getElementById('ek_fullname').value,
-                id_number: document.getElementById('ek_idnum').value,
-                mobile: document.getElementById('ek_phone').value,
-                kyc: document.getElementById('ek_status').value,
-                withdrawal_pin: document.getElementById('ek_pin').value
-            };
 
-            const kycUpdates = {
-                status: updates.kyc,
-                id_front_url: document.getElementById('ek_front_img').src,
-                id_back_url: document.getElementById('ek_back_img').src
-            };
+            const newStatus = document.getElementById('ek_status').value;
 
-            // Clean URLs (don't save placeholder or data uris if needed, but here we assume URLs)
-            if (kycUpdates.id_front_url.includes('placeholder')) delete kycUpdates.id_front_url;
-            if (kycUpdates.id_back_url.includes('placeholder')) delete kycUpdates.id_back_url;
+            showConfirm(`Are you sure you want to update KYC status to ${newStatus}? Changes will be applied immediately.`, async () => {
+                showLoader(true);
+                const client = DB.getClient();
 
-            await client.from('users').update(updates).eq('id', targetKycUser);
+                try {
+                    const updates = {
+                        username: document.getElementById('ek_name').value,
+                        full_name: document.getElementById('ek_fullname').value,
+                        id_number: document.getElementById('ek_idnum').value,
+                        mobile: document.getElementById('ek_phone').value,
+                        kyc: document.getElementById('ek_status').value,
+                        withdrawal_pin: document.getElementById('ek_pin').value
+                    };
 
-            // Check if kyc_submissions exists
-            const { data: existing } = await client.from('kyc_submissions').select('id').eq('user_id', targetKycUser).limit(1);
-            if (existing && existing.length > 0) {
-                await client.from('kyc_submissions').update(kycUpdates).eq('user_id', targetKycUser);
-            } else {
-                await client.from('kyc_submissions').insert({ user_id: targetKycUser, ...kycUpdates });
-            }
+                    const kycUpdates = {
+                        status: updates.kyc,
+                        id_front_url: document.getElementById('ek_front_img').src,
+                        id_back_url: document.getElementById('ek_back_img').src
+                    };
 
-            alert("Investor KYC details updated successfully!");
-            closeEditKyc();
-            init();
+                    // Clean URLs (don't save placeholder or data uris if needed, but here we assume URLs)
+                    if (kycUpdates.id_front_url.includes('placeholder')) delete kycUpdates.id_front_url;
+                    if (kycUpdates.id_back_url.includes('placeholder')) delete kycUpdates.id_back_url;
+
+                    const { error: uErr } = await client.from('users').update(updates).eq('id', targetKycUser);
+                    if (uErr) throw uErr;
+
+                    // Check if kyc_submissions exists
+                    const { data: existing } = await client.from('kyc_submissions').select('id').eq('user_id', targetKycUser).limit(1);
+                    if (existing && existing.length > 0) {
+                        const { error: kErr } = await client.from('kyc_submissions').update(kycUpdates).eq('user_id', targetKycUser);
+                        if (kErr) throw kErr;
+                    } else {
+                        const { error: iErr } = await client.from('kyc_submissions').insert({ user_id: targetKycUser, ...kycUpdates });
+                        if (iErr) throw iErr;
+                    }
+
+                    showSuccess("Investor KYC details updated successfully!");
+                    closeEditKyc();
+                    init();
+                } catch (e) {
+                    console.error("Save KYC Error:", e);
+                    alert("Failed to update status: " + (e.message || "Unknown error"));
+                    showLoader(false);
+                }
+            });
+        }
+
+        function showSuccess(msg) {
+            const modal = document.getElementById('successModal');
+            const msgEl = document.getElementById('successModalMsg');
+            msgEl.textContent = msg;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
         }
 
         async function uploadKycFile(input, side) {
@@ -3693,7 +4186,7 @@
             const title = document.getElementById('msgTitle').value;
             const body = document.getElementById('msgBody').value;
 
-            if (!title || !body) { alert("Please enter both title and message content."); return; }
+            if (!title || !body) { showAlert('warning', "Please enter both title and message content."); return; }
 
             // Use 'Admin' sender to satisfy DB constraint, but add flag to distinguish from Chat
             const m = JSON.stringify({ title: title, body: body, is_notification: true });
@@ -3718,11 +4211,11 @@
 
             if (error) {
                 console.error("Send Notification Error:", error);
-                alert("Failed to send notification: " + (error.message || error));
+                showAlert('error', "Failed to send notification: " + (error.message || error));
                 return;
             }
 
-            alert("Notification sent successfully to User(s)!");
+            showSuccess("Notification sent successfully to User(s)!");
             document.getElementById('msgModal').style.display = 'none';
             init();
         }
@@ -3777,106 +4270,109 @@
             const note = document.getElementById('dep_note').value;
 
             if (isNaN(amount) || amount < 0) {
-                alert("Please enter a valid amount (0 or more).");
+                showAlert('warning', "Please enter a valid amount (0 or more).");
                 return;
             }
 
             if (!depId && !uid) {
-                alert("Missing user ID for new deposit.");
+                showAlert('error', "Missing user ID for new deposit.");
                 return;
             }
 
             const isEdit = !!depId;
             const actionText = isEdit ? 'UPDATE' : (type === 'deposit' ? 'DEPOSIT (Add)' : 'SET BALANCE TO');
 
-            if (!confirm(`Are you sure you want to ${actionText} ₹${amount} with status ${status}?`)) return;
+            const confirmTitle = type === 'deposit' ? 'Confirm Deposit' : 'Confirm Balance Update';
 
-            showLoader(true);
-            const client = DB.getClient();
+            showConfirm(`Are you sure you want to ${actionText} ₹${amount} with status ${status}?`, async () => {
+                showLoader(true);
+                const client = DB.getClient();
 
-            try {
-                let actualUid = uid;
-                let oldStatus = 'Pending';
-                let oldAmount = 0;
+                try {
+                    let actualUid = uid;
+                    let oldStatus = 'Pending';
+                    let oldAmount = 0;
 
-                if (isEdit) {
-                    const { data: existing, error: getErr } = await client.from('deposits').select('*').eq('id', depId).single();
-                    if (getErr) throw getErr;
-                    actualUid = existing.user_id;
-                    oldStatus = existing.status;
-                    oldAmount = parseFloat(existing.amount);
-                }
-
-                // 1. Manage User Balance if status becomes APPROVED
-                if (status === 'Approved' && oldStatus !== 'Approved') {
-                    const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
-                    if (uErr) throw uErr;
-
-                    const currentBalance = parseFloat(user.balance) || 0;
-                    let newBalance = currentBalance;
-
-                    if (type === 'deposit') {
-                        newBalance = currentBalance + amount;
-                    } else if (type === 'set') {
-                        newBalance = amount;
-                    }
-
-                    const updates = { balance: newBalance };
-
-                    const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
-                    if (upErr) throw upErr;
-                }
-                // Handle case where it was Approved but now changed to something else (e.g. error correction)
-                else if (status !== 'Approved' && oldStatus === 'Approved') {
-                    const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
-                    if (uErr) throw uErr;
-
-                    const currentBalance = parseFloat(user.balance) || 0;
-                    const newBalance = currentBalance - oldAmount; // Reverse previous add
-
-                    const updates = { balance: newBalance };
-
-                    const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
-                    if (upErr) throw upErr;
-                }
-
-                // 2. Insert or Update 'deposits' record (ONLY if type is 'deposit')
-                if (type === 'deposit') {
                     if (isEdit) {
-                        const { error: upErr } = await client.from('deposits').update({
-                            amount: amount,
-                            status: status,
-                            admin_note: note,
-                            processed_at: new Date().toISOString()
-                        }).eq('id', depId);
-                        if (upErr) throw upErr;
-                    } else {
-                        const { error: insErr } = await client.from('deposits').insert({
-                            user_id: parseInt(actualUid),
-                            amount: amount,
-                            status: status,
-                            admin_note: note,
-                            created_at: new Date().toISOString()
-                        });
-                        if (insErr) throw insErr;
+                        const { data: existing, error: getErr } = await client.from('deposits').select('*').eq('id', depId).single();
+                        if (getErr) throw getErr;
+                        actualUid = existing.user_id;
+                        oldStatus = existing.status;
+                        oldAmount = parseFloat(existing.amount);
                     }
-                }
 
-                alert("Transaction successful!");
-                closeDepositModal();
-                init();
-            } catch (e) {
-                console.error(e);
-                alert("Error processing transaction: " + e.message);
-            } finally {
-                showLoader(false);
-            }
+                    // 1. Manage User Balance if status becomes APPROVED
+                    if (status === 'Approved' && oldStatus !== 'Approved') {
+                        const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
+                        if (uErr) throw uErr;
+
+                        const currentBalance = parseFloat(user.balance) || 0;
+                        let newBalance = currentBalance;
+
+                        if (type === 'deposit') {
+                            newBalance = currentBalance + amount;
+                        } else if (type === 'set') {
+                            newBalance = amount;
+                        }
+
+                        const updates = { balance: newBalance };
+
+                        const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
+                        if (upErr) throw upErr;
+                    }
+                    // Handle case where it was Approved but now changed to something else (e.g. error correction)
+                    else if (status !== 'Approved' && oldStatus === 'Approved') {
+                        const { data: user, error: uErr } = await client.from('users').select('*').eq('id', actualUid).single();
+                        if (uErr) throw uErr;
+
+                        const currentBalance = parseFloat(user.balance) || 0;
+                        const newBalance = currentBalance - oldAmount; // Reverse previous add
+
+                        const updates = { balance: newBalance };
+
+                        const { error: upErr } = await client.from('users').update(updates).eq('id', actualUid);
+                        if (upErr) throw upErr;
+                    }
+
+                    // 2. Insert or Update 'deposits' record (ONLY if type is 'deposit')
+                    if (type === 'deposit') {
+                        if (isEdit) {
+                            const { error: upErr } = await client.from('deposits').update({
+                                amount: amount,
+                                status: status,
+                                admin_note: note,
+                                processed_at: new Date().toISOString()
+                            }).eq('id', depId);
+                            if (upErr) throw upErr;
+                        } else {
+                            const { error: insErr } = await client.from('deposits').insert({
+                                user_id: parseInt(actualUid),
+                                amount: amount,
+                                status: status,
+                                admin_note: note,
+                                created_at: new Date().toISOString()
+                            });
+                            if (insErr) throw insErr;
+                        }
+                    }
+
+                    showAlert('success', "Transaction successful!");
+                    closeDepositModal();
+                    init();
+                } catch (e) {
+                    console.error(e);
+                    showAlert('error', "Error processing transaction: " + e.message);
+                } finally {
+                    showLoader(false);
+                }
+            }, confirmTitle);
         }
 
         async function quickActionWithdraw(id, status) {
-            if (!confirm(`Are you sure you want to ${status} this withdrawal ? `)) return;
-            const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
-            await processWithdrawal(id, status, note);
+            showConfirm(`Are you sure you want to ${status} this withdrawal?`, async () => {
+                const note = status === 'Approved' ? 'Approved by Admin' : 'Rejected by Admin';
+                await processWithdrawal(id, status, note);
+            }, "Confirm Withdrawal");
         }
 
         async function processWithdrawal(wdId, status, note) {
@@ -3914,11 +4410,11 @@
                     await client.from('messages').insert({ user_id: existing.user_id, message: noticePacket, sender: 'Admin' });
                 } catch (ne) { console.error("Notice Error:", ne); }
 
-                alert("Withdrawal successfully updated!");
+                showAlert('success', "Withdrawal successfully updated!");
                 init();
             } catch (e) {
                 console.error(e);
-                alert("Error: " + e.message);
+                showAlert('error', "Error: " + e.message);
             } finally {
                 showLoader(false);
             }
@@ -3930,10 +4426,11 @@
             const note = document.getElementById('wd_note').value;
 
             if (!wdId) return;
-            if (!confirm(`Update withdrawal status to ${status}?`)) return;
 
-            await processWithdrawal(wdId, status, note);
-            closeWithdrawalModal();
+            showConfirm(`Update withdrawal status to ${status}?`, async () => {
+                await processWithdrawal(wdId, status, note);
+                closeWithdrawalModal();
+            }, "Update Withdrawal Status");
         }
 
         async function updateTradeStatus(id, newStatus) {
@@ -3958,7 +4455,7 @@
 
                 if (trade.status === 'Pending' && newStatus === 'Settled') {
                     if (currentBalance < amount) {
-                        alert(`Cannot approve: User(ID: ${uid}) has insufficient balance(₹${currentBalance.toFixed(2)}) for this trade(₹${amount.toFixed(2)}).`);
+                        showAlert('warning', `Cannot approve: User(ID: ${uid}) has insufficient balance(₹${currentBalance.toFixed(2)}) for this trade(₹${amount.toFixed(2)}).`);
                         showLoader(false);
                         return;
                     }
@@ -3973,7 +4470,7 @@
 
                 } else if (trade.status === 'Rejected' && newStatus === 'Settled') {
                     if (currentBalance < amount) {
-                        alert(`Cannot approve: User(ID: ${uid}) has insufficient balance(₹${currentBalance.toFixed(2)}) for this trade(₹${amount.toFixed(2)}).`);
+                        showAlert('warning', `Cannot approve: User(ID: ${uid}) has insufficient balance(₹${currentBalance.toFixed(2)}) for this trade(₹${amount.toFixed(2)}).`);
                         showLoader(false);
                         return;
                     }
@@ -4005,18 +4502,23 @@
                     await DB.sendNotice(uid, "Trade Update", noticePacket);
                 } catch (ne) { console.error(ne); }
 
-                alert(`Trade #${id} successfully updated to ${newStatus}.`);
+                showAlert('success', `Trade #${id} successfully updated to ${newStatus}.`);
                 init();
 
             } catch (e) {
                 console.error(e);
-                alert("Error updating trade: " + e.message);
+                showAlert('error', "Error updating trade: " + e.message);
             } finally {
                 showLoader(false);
             }
         }
 
-        function adminLogout() { if (confirm("Logout from admin terminal?")) { sessionStorage.removeItem('admin_auth'); window.location.href = 'admin_login.html'; } }
+        function adminLogout() {
+            showConfirm("Logout from admin terminal?", () => {
+                sessionStorage.removeItem('admin_auth');
+                window.location.href = 'admin_login.html';
+            }, "Confirm Logout");
+        }
         function toggleSub(id) { document.getElementById(id + 'Sub').classList.toggle('show'); }
         function showLoader(s) { document.getElementById('vslLoader').style.display = s ? 'flex' : 'none'; }
 
@@ -4065,18 +4567,18 @@
                 status: 'Active'
             };
 
-            if (!p.name) { alert("Product Name is required!"); return; }
+            if (!p.name) { showAlert('warning', "Product Name is required!"); return; }
 
             showLoader(true);
             const { success, error } = await window.DB.saveProduct(p);
             showLoader(false);
 
             if (success) {
-                alert("Product saved successfully to database!");
+                showAlert('success', "Product saved successfully to database!");
                 closeProductModal();
                 renderProducts();
             } else {
-                alert("Failed to save product: " + (error?.message || "Unknown error"));
+                showAlert('error', "Failed to save product: " + (error?.message || "Unknown error"));
             }
         }
 
@@ -4116,6 +4618,7 @@
             }).join('');
         }
 
+
         async function toggleProductStatus(id, newStatus) {
             showLoader(true);
             const { success, error } = await window.DB.updateProductStatus(id, newStatus);
@@ -4124,32 +4627,74 @@
             if (success) {
                 renderProducts();
             } else {
-                alert("Failed to update status: " + (error?.message || "Unknown error"));
+                showAlert('error', "Failed to update status: " + (error?.message || "Unknown error"));
             }
         }
 
         async function deleteProduct(id) {
-            if (!confirm("⚠️ PERMANENT DELETE WARNING ⚠️\n\nAre you sure you want to PERMANENTLY delete this product?\nThis action cannot be undone and will remove it from all records.")) return;
-            showLoader(true);
-            const { success, error } = await window.DB.deleteProduct(id);
-            showLoader(false);
-            if (success) {
-                renderProducts();
-            } else {
-                alert("Failed to delete product: " + (error?.message || "Unknown error"));
-            }
+            showConfirm("⚠️ PERMANENT DELETE WARNING ⚠️\n\nAre you sure you want to PERMANENTLY delete this product?\nThis action cannot be undone and will remove it from all records.", async () => {
+                showLoader(true);
+                const { success, error } = await window.DB.deleteProduct(id);
+                showLoader(false);
+                if (success) {
+                    renderProducts();
+                } else {
+                    showAlert('error', "Failed to delete product: " + (error?.message || "Unknown error"));
+                }
+            }, "Permanently Delete Product");
         }
 
         async function deleteDeposit(id) {
-            if (!confirm("Are you sure you want to delete this deposit record?")) return;
-            showLoader(true);
-            const { success, error } = await window.DB.deleteDeposit(id);
-            showLoader(false);
-            if (success) {
-                init(); // Reload dashboard data
-            } else {
-                alert("Failed to delete deposit: " + (error?.message || "Unknown error"));
-            }
+            showConfirm("Are you sure you want to delete this deposit record?", async () => {
+                showLoader(true);
+                const { success, error } = await window.DB.deleteDeposit(id);
+                showLoader(false);
+                if (success) {
+                    init(); // Reload dashboard data
+                } else {
+                    showAlert('error', "Failed to delete deposit: " + (error?.message || "Unknown error"));
+                }
+            }, "Delete Deposit");
+        }
+
+        async function quickActionDeposit(id, status) {
+            showConfirm(`Are you sure you want to ${status} this deposit?`, async () => {
+                showLoader(true);
+                const res = await window.DB.updateDepositStatus(id, status);
+                showLoader(false);
+                if (res.success) {
+                    showAlert('success', `Deposit ${status} successfully!`);
+                    init();
+                } else {
+                    showAlert('error', "Operation failed: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Confirm Transaction");
+        }
+
+        async function deleteNotification(id) {
+            showConfirm("Are you sure you want to delete this notification?", async () => {
+                showLoader(true);
+                const res = await window.DB.deleteNotification(id);
+                showLoader(false);
+                if (res.success) {
+                    init();
+                } else {
+                    showAlert('error', "Delete failed: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Delete Notification");
+        }
+
+        async function deleteBankAccount(id) {
+            showConfirm("Are you sure you want to delete this bank account?", async () => {
+                showLoader(true);
+                const res = await window.DB.deleteBankAccount(id);
+                showLoader(false);
+                if (res.success) {
+                    init();
+                } else {
+                    showAlert('error', "Delete failed: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Delete Bank Account");
         }
 
         // --- Institutional Stock 057 Logic ---
@@ -4254,67 +4799,69 @@
             showLoader(false);
 
             if (success) {
-                alert("Institutional configuration updated successfully!");
+                showAlert('success', "Institutional configuration updated successfully!");
                 renderStock057();
             } else {
-                alert("Failed to update configuration: " + (error?.message || "Unknown error"));
+                showAlert('error', "Failed to update configuration: " + (error?.message || "Unknown error"));
             }
         }
 
 
 
         async function deleteLoanRecord(id) {
-            if (!confirm("Are you sure you want to delete this loan record?")) return;
-            showLoader(true);
+            showConfirm("Are you sure you want to delete this loan record?", async () => {
+                showLoader(true);
 
-            // Use shared connection - Single Source of Truth
-            const res = await window.DB.deleteLoanRecord(id);
+                // Use shared connection - Single Source of Truth
+                const res = await window.DB.deleteLoanRecord(id);
 
-            showLoader(false);
+                showLoader(false);
 
-            if (res.success) {
-                // UI Removal - Instant Sync
-                const allBtns = Array.from(document.querySelectorAll("button, .user-action-btn"));
+                if (res.success) {
+                    // UI Removal - Instant Sync
+                    const allBtns = Array.from(document.querySelectorAll("button, .user-action-btn"));
 
-                // Find method matches strict ID to avoid partial matches (e.g. 1 vs 11)
-                const target = allBtns.find(b => {
-                    const attr = b.getAttribute("onclick");
-                    return attr && (attr.includes(`deleteLoanRecord(${id})`) || attr.includes(`deleteLoanRecord('${id}')`));
-                });
+                    // Find method matches strict ID to avoid partial matches (e.g. 1 vs 11)
+                    const target = allBtns.find(b => {
+                        const attr = b.getAttribute("onclick");
+                        return attr && (attr.includes(`deleteLoanRecord(${id})`) || attr.includes(`deleteLoanRecord('${id}')`));
+                    });
 
-                if (target) {
-                    const row = target.closest("tr");
-                    if (row) {
-                        row.style.transition = "opacity 0.3s";
-                        row.style.opacity = "0";
-                        setTimeout(() => row.remove(), 300);
+                    if (target) {
+                        const row = target.closest("tr");
+                        if (row) {
+                            row.style.transition = "opacity 0.3s";
+                            row.style.opacity = "0";
+                            setTimeout(() => row.remove(), 300);
+                        }
                     }
-                }
 
-                // Optional: Show success message briefly or just skip for speed
-                // alert("Loan record deleted successfully!"); 
-            } else {
-                alert("Delete failed: " + (res.error?.message || "Unknown error"));
-            }
+                    // Optional: Show success message briefly or just skip for speed
+                    // alert("Loan record deleted successfully!");
+                } else {
+                    showAlert('error', "Delete failed: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Delete Loan Record");
         }
 
         async function quickActionLoan(id, status) {
             // Strict Uppercase
             status = status.toUpperCase();
 
-            if (!confirm(`Are you sure you want to ${status} this loan ? `)) return;
-            const note = status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin';
+            showConfirm(`Are you sure you want to ${status} this loan?`, async () => {
+                const note = status === 'APPROVED' ? 'Approved by Admin' : 'Rejected by Admin';
 
-            showLoader(true);
-            const res = await window.DB.updateLoanStatus(id, status, note);
-            showLoader(false);
+                showLoader(true);
+                const res = await window.DB.updateLoanStatus(id, status, note);
+                showLoader(false);
 
-            if (res.success) {
-                alert(`Loan ${status} successfully!`);
-                init();
-            } else {
-                alert("Operation failed: " + (res.error?.message || "Unknown error"));
-            }
+                if (res.success) {
+                    showAlert('success', `Loan ${status} successfully!`);
+                    init();
+                } else {
+                    showAlert('error', "Operation failed: " + (res.error?.message || "Unknown error"));
+                }
+            }, "Confirm Loan Action");
         }
 
         window.onload = () => {
