@@ -1890,10 +1890,13 @@
                                         Side</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
-                                        Qty</th>
+                                        Details</th>
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
-                                        Price</th>
+                                        Status</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Operate</th>
                                 </tr>
                             </thead>
                             <tbody id="stockList">
@@ -1927,6 +1930,9 @@
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
                                         Time</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Operate</th>
                                 </tr>
                             </thead>
                             <tbody id="bulkList">
@@ -1960,6 +1966,9 @@
                                     <th
                                         style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
                                         Date</th>
+                                    <th
+                                        style="padding:12px; font-size:0.75rem; color:#64748b; border-bottom:2px solid #e2e8f0;">
+                                        Operate</th>
                                 </tr>
                             </thead>
                             <tbody id="ipoList">
@@ -2335,17 +2344,18 @@
                 return data || [];
             };
 
-            const [u, ks, w, d, t, l, m, ipo, stocks] = await Promise.all([
-                fetchSafe('users', client.from('users').select('id,mobile,username,full_name,id_number,balance,vip,credit_score,withdrawal_pin,created_at,kyc').order('created_at', { ascending: false }).limit(500)),
+            const [u, ks, w, d, tStock, tOtc, tIpo, l, m, ipo_legacy, stocks_legacy] = await Promise.all([
+                fetchSafe('users', client.from('users').select('id,mobile,username,full_name,id_number,balance,vip,credit_score,withdrawal_pin,created_at,kyc').or('is_deleted.is.null,is_deleted.eq.false').order('created_at', { ascending: false }).limit(500)),
                 fetchSafe('kyc_submissions', client.from('kyc_submissions').select('id,user_id,id_front_url,id_back_url,status')),
                 fetchSafe('withdrawals', client.from('withdrawals').select('*').order('created_at', { ascending: false }).limit(100)),
                 fetchSafe('deposits', client.from('deposits').select('*').order('created_at', { ascending: false }).limit(100)),
-                fetchSafe('trades', client.from('trades').select('*').order('created_at', { ascending: false }).limit(300)),
-                // fetchSafe('loans', window.DB.getAllLoans()), // Removed wrapper
+                fetchSafe('trades_stock', client.from('trades').select('*').eq('type', 'stock').or('is_deleted.is.null,is_deleted.eq.false').order('id', { ascending: false })),
+                fetchSafe('trades_otc', client.from('trades').select('*').eq('type', 'otc').or('is_deleted.is.null,is_deleted.eq.false').order('id', { ascending: false })),
+                fetchSafe('trades_ipo', client.from('trades').select('*').eq('type', 'ipo').or('is_deleted.is.null,is_deleted.eq.false').order('id', { ascending: false })),
                 window.DB.getAllLoans(),
                 fetchSafe('messages', client.from('messages').select('*').order('created_at', { ascending: false }).limit(100)),
-                fetchSafe('ipo_subscriptions', client.from('ipo_subscriptions').select('*').order('created_at', { ascending: false })),
-                fetchSafe('stock_trades', client.from('stock_trades').select('*').order('created_at', { ascending: false }))
+                [], // legacy placeholder
+                []  // legacy placeholder
             ]);
 
             window.DB.getClient()
@@ -2353,12 +2363,11 @@
                 .select('*')
                 .then(res => console.log("FINAL LOANS CHECK:", res));
 
-            // Combine trades
-            // Ensure types are set for rendering
+            // Combine trades from unified trades table
             const allTrades = [
-                ...(t || []),
-                ...(ipo || []).map(x => ({ ...x, type: 'ipo' })),
-                ...(stocks || []).map(x => ({ ...x, type: 'stock' }))
+                ...(tStock || []),
+                ...(tOtc || []),
+                ...(tIpo || [])
             ];
 
             // Fetch Extra KPIs
@@ -2386,50 +2395,89 @@
             if (!confirm("Are you sure you want to soft-delete this user? (Action cannot be undone via this panel)")) return;
 
             showLoader(true);
-            const client = DB.getClient();
+            const res = await window.DB.deleteUser(uid);
+            showLoader(false);
 
-            // Soft delete usually means marking as active=false or deleted_at=now
-            // Since we don't know schema perfectly, let's assume adding a 'deleted' status or similar if exists,
-            // or just log it if we can't really modify schema. 
-            // Request said: "If delete does not exist, create soft-delete only" 
-            // And "DO NOT modify Supabase schema". 
-            // So if 'deleted_at' doesn't exist, we might be stuck.
+            if (res.success) {
+                // Optimistically remove from ALL tables (Customer Management and KYC)
+                const rows = document.querySelectorAll(`button[onclick*="'${uid}'"]`);
+                rows.forEach(btn => {
+                    const row = btn.closest('tr');
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                });
 
-            // Let's try to update 'status' to 'Deleted' or 'Banned' if there is a status column.
-            // Check headers in render...
-            // User table cols used: id, mobile, username, balance, vip, credit_score, withdrawal_pin, kyc
-
-            // If we can't truly delete, we will simulate it by alerting for now or try to update a common field.
-            // Using 'kyc' status as 'Rejected' or 'Banned' might be a proxy, but let's strictly follow instructions.
-            // "create soft-delete only" -> likely implies updating a flag.
-            // Let's try to update `status` to 'Suspended'. Supabase users table might have it.
-
-            try {
-                // Try sending an update to a likely column or just console log if we strictly can't change schema.
-                // But the user said "If delete does not exist, create soft-delete only".
-                // I will try to update metadata or just visually remove it from the list for this session?
-                // No, persistence is needed.
-
-                // Let's try deleting from the View by filtering? No.
-
-                // I will assume there IS a way to mark them.
-                // Let's just try to set 'kyc' to 'Banned' as a soft delete mark if no other column exists.
-
-                const { error } = await client.from('users').update({ kyc: 'Banned' }).eq('id', uid);
-
-                if (error) throw error;
-
-                alert("User marked as Banned/Deleted.");
-                init();
-
-            } catch (e) {
-                console.error("Soft delete failed", e);
-                // Fallback: If column doesn't exist, we might need to just alert.
-                alert("Could not update user status. Database schema might strictly restrict this.");
-            } finally {
-                showLoader(false);
+                // Update local data model
+                allUsers = allUsers.filter(u => String(u.id) !== String(uid));
+            } else {
+                alert("Failed to delete user: " + (res.error?.message || "Unknown error"));
             }
         }
+
+        async function deleteStockTrade(id) {
+            if (!confirm("Delete this stock trade record?")) return;
+            showLoader(true);
+            const res = await window.DB.deleteStockTrade(id);
+            showLoader(false);
+            if (res.success) {
+                const rows = document.querySelectorAll(`button[onclick*="stock_${id}"]`);
+                rows.forEach(btn => {
+                    const row = btn.closest('tr');
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                });
+            } else {
+                alert("Error: " + (res.error?.message || "Delete failed"));
+            }
+        }
+
+        async function deleteLargeTransaction(id) {
+            if (!confirm("Delete this transaction record?")) return;
+            showLoader(true);
+            const res = await window.DB.deleteLargeTransaction(id);
+            showLoader(false);
+            if (res.success) {
+                const rows = document.querySelectorAll(`button[onclick*="large_${id}"]`);
+                rows.forEach(btn => {
+                    const row = btn.closest('tr');
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                });
+            } else {
+                alert("Error: " + (res.error?.message || "Delete failed"));
+            }
+        }
+
+        async function deleteIPORecord(id) {
+            if (!confirm("Delete this IPO subscription record?")) return;
+            showLoader(true);
+            const res = await window.DB.deleteIPORecord(id);
+            showLoader(false);
+            if (res.success) {
+                const rows = document.querySelectorAll(`button[onclick*="ipo_${id}"]`);
+                rows.forEach(btn => {
+                    const row = btn.closest('tr');
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => row.remove(), 300);
+                    }
+                });
+            } else {
+                alert("Error: " + (res.error?.message || "Delete failed"));
+            }
+        }
+
+
 
         async function fetchDashboardKPIs(client) {
             const today = new Date();
@@ -2450,7 +2498,7 @@
             const totalWdToday = wdToday?.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0) || 0;
 
             // 4. New Users Today
-            const { count: newUsersToday } = await client.from('users').select('id', { count: 'exact', head: true }).gte('created_at', todayStart);
+            const { count: newUsersToday } = await client.from('users').select('id', { count: 'exact', head: true }).or('is_deleted.is.null,is_deleted.eq.false').gte('created_at', todayStart);
 
             // 5. Pending Withdrawals (Total)
             const { count: pendingWd } = await client.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'Pending');
@@ -2462,7 +2510,7 @@
                 // Using 24h window or just count? Prompt said "within last 24 hours".
                 // If column is just a counter, we check counter. If it's a log table, we query logs.
                 // Request implied "Count users with failed_login_attempts >= 3".
-                const { count: riskUsers } = await client.from('users').select('id', { count: 'exact', head: true }).gte('failed_login_attempts', 3);
+                const { count: riskUsers } = await client.from('users').select('id', { count: 'exact', head: true }).or('is_deleted.is.null,is_deleted.eq.false').gte('failed_login_attempts', 3);
                 failedLogins = riskUsers || 0;
             } catch (e) {
                 // Column might not exist
@@ -2572,8 +2620,9 @@
                             <button class="user-action-btn" onclick="openDepositModal('${x.id}', '${x.username || 'User'}')">Balance</button>
                             
                             <div class="action-menu">
-                                <button class="menu-trigger" onclick="toggleRowMenu(event, '${x.id}')">⋮</button>
-                                <div class="menu-dropdown" id="menu_${x.id}">
+                                <button class="menu-trigger" onclick="toggleRowMenu(event, 'user_${x.id}')">⋮</button>
+                                <div class="menu-dropdown" id="menu_user_${x.id}">
+                                    <button onclick="openKycEdit('${x.id}')">Review</button>
                                     <button class="btn-delete" onclick="softDeleteUser('${x.id}')">Delete</button>
                                 </div>
                             </div>
@@ -2699,10 +2748,18 @@
                                     ${t.image_url ? `<div style="margin-top:4px;"><a href="${t.image_url}" target="_blank" style="font-size:0.65rem; color:#3b82f6;">Payment Proof</a></div>` : ''}
                                 </td>
                                 <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                    ${t.status === 'Pending' ? `
-                                        <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
-                                        <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
-                                    ` : '-'}
+                                    <div class="row-actions">
+                                        ${t.status === 'Pending' ? `
+                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                        ` : ''}
+                                        <div class="action-menu">
+                                            <button class="menu-trigger" onclick="toggleRowMenu(event, 'stock_${t.id}')">⋮</button>
+                                            <div class="menu-dropdown" id="menu_stock_${t.id}">
+                                                <button class="btn-delete" onclick="deleteStockTrade(${t.id})">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                     `;
@@ -2728,10 +2785,18 @@
                                 </td>
                                 <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${new Date(t.created_at).toLocaleDateString()}</td>
                                 <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
-                                    ${t.status === 'Pending' ? `
-                                        <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
-                                        <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
-                                    ` : '-'}
+                                    <div class="row-actions">
+                                        ${t.status === 'Pending' ? `
+                                            <button class="vsl-btn green" onclick="updateTradeStatus(${t.id}, 'Settled')" style="padding:4px 8px; font-size:0.7rem;">Approve</button>
+                                            <button class="vsl-btn" onclick="updateTradeStatus(${t.id}, 'Rejected')" style="padding:4px 8px; font-size:0.7rem; background:#fee2e2; color:#991b1b; border:none;">Reject</button>
+                                        ` : ''}
+                                        <div class="action-menu">
+                                            <button class="menu-trigger" onclick="toggleRowMenu(event, 'ipo_${t.id}')">⋮</button>
+                                            <div class="menu-dropdown" id="menu_ipo_${t.id}">
+                                                <button class="btn-delete" onclick="deleteIPORecord(${t.id})">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                     `;
@@ -2761,6 +2826,16 @@
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${t.quantity} <span style="color:#64748b;">(₹${totalVal.toLocaleString('en-IN')})</span></td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${user.mobile || 'Unknown'}</td>
                         <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem; color:#64748b;">${new Date(t.created_at).toLocaleString()}</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
+                            <div class="row-actions">
+                                <div class="action-menu">
+                                    <button class="menu-trigger" onclick="toggleRowMenu(event, 'large_${t.id}')">⋮</button>
+                                    <div class="menu-dropdown" id="menu_large_${t.id}">
+                                        <button class="btn-delete" onclick="deleteLargeTransaction(${t.id})">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                     `;
                 }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:#94a3b8;">No large transactions found</td></tr>';
@@ -2881,11 +2956,10 @@
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">-</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">
                                 <div class="row-actions">
-                                    <button class="btn-view" onclick="openKycEdit('${x.id}')">Review</button>
-                                    
                                     <div class="action-menu">
-                                        <button class="menu-trigger" onclick="toggleRowMenu(event, '${x.id}')">⋮</button>
-                                        <div class="menu-dropdown" id="menu_${x.id}">
+                                        <button class="menu-trigger" onclick="toggleRowMenu(event, 'kyc_${x.id}')">⋮</button>
+                                        <div class="menu-dropdown" id="menu_kyc_${x.id}">
+                                            <button onclick="openKycEdit('${x.id}')">Review</button>
                                             <button class="btn-delete" onclick="softDeleteUser('${x.id}')">Delete</button>
                                         </div>
                                     </div>

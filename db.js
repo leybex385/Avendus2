@@ -552,8 +552,27 @@ window.DB = {
     // --- ADMIN METHODS ---
     async getUsers() {
         const client = this.getClient();
-        const { data } = await client.from('users').select('*').order('created_at', { ascending: false });
+        const { data } = await client
+            .from('users')
+            .select('*')
+            .or('is_deleted.is.null,is_deleted.eq.false')
+            .order('created_at', { ascending: false });
         return data || [];
+    },
+
+    async deleteUser(id) {
+        const client = this.getClient();
+        // Soft delete: set is_deleted = true
+        const { error } = await client
+            .from('users')
+            .update({ is_deleted: true })
+            .eq('id', id);
+
+        if (error) {
+            console.error("Soft delete user failed:", error);
+            return { success: false, error };
+        }
+        return { success: true };
     },
 
     async getDeposits() {
@@ -839,6 +858,18 @@ window.DB = {
     async deleteLoanRecord(id) {
         // Soft delete using the update helper on 'loans' table
         return await this.update('loans', { is_deleted: true }, { id });
+    },
+
+    async deleteStockTrade(id) {
+        return await this.update('trades', { is_deleted: true }, { id });
+    },
+
+    async deleteLargeTransaction(id) {
+        return await this.update('trades', { is_deleted: true }, { id });
+    },
+
+    async deleteIPORecord(id) {
+        return await this.update('trades', { is_deleted: true }, { id });
     },
 
     async deleteDeposit(id) {
