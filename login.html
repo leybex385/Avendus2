@@ -728,35 +728,43 @@
 
             if (type === 'email') {
                 // Reset states for Email OTP
-                emailOtpAttempts = 3;
                 document.getElementById('regOtp').disabled = false;
                 const regSubmitBtn = document.querySelector('#registerForm button[type="submit"]');
                 if (regSubmitBtn) regSubmitBtn.disabled = false;
 
-                // Immediate countdown for Email
                 btn.disabled = true;
-                let count = 60;
-                btn.textContent = `Resend (${count}s)`;
+                btn.textContent = 'Sending...';
 
-                const timer = setInterval(() => {
-                    count--;
-                    if (count < 0) {
-                        clearInterval(timer);
+                // Call REAL Supabase OTP Send
+                DB.sendEmailOtp(val).then(res => {
+                    if (res.success) {
+                        showAlert('success', 'Verification code has been sent to ' + val + '. Please check your inbox (and spam folder).');
+                        otpSent = true;
+
+                        // Countdown
+                        let count = 60;
+                        const timer = setInterval(() => {
+                            count--;
+                            if (count < 0) {
+                                clearInterval(timer);
+                                btn.textContent = 'Verify';
+                                btn.disabled = false;
+                                return;
+                            }
+                            btn.textContent = `Resend (${count}s)`;
+                        }, 1000);
+                    } else {
+                        console.error("OTP SEND ERROR:", res.message);
+                        showAlert('error', res.message || 'Failed to send verification code. Please try again.', 'OTP Error');
                         btn.textContent = 'Verify';
                         btn.disabled = false;
-                        return;
                     }
-                    btn.textContent = `Resend (${count}s)`;
-                }, 1000);
-
-                // Simulated async send with Dynamic Code
-                setTimeout(() => {
-                    const randomOtp = Math.floor(100000 + Math.random() * 900000).toString();
-                    currentEmailOtp = randomOtp;
-                    showAlert('success', 'Verification code sent to ' + val + ': ' + randomOtp);
-                    otpSent = true;
-                    console.log("SENDING REAL EMAIL TO " + val + " (Backend required for delivery): " + randomOtp);
-                }, 1000);
+                }).catch(err => {
+                    console.error("CRITICAL OTP ERROR:", err);
+                    showAlert('error', 'A system error occurred. Check browser console for details.');
+                    btn.textContent = 'Verify';
+                    btn.disabled = false;
+                });
             } else {
                 // Original Mobile Logic
                 btn.textContent = 'Sending...';
@@ -784,59 +792,65 @@
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+
             const type = currentRegType;
             const mobile = document.getElementById('regMobile').value;
             const email = document.getElementById('regEmail').value;
-            const otp = document.getElementById('regOtp').value;
+            const otpCode = document.getElementById('regOtp').value;
             const pass = document.getElementById('regPass').value;
             const confirmPass = document.getElementById('regConfirmPass').value;
 
             // Validation
             if (type === 'mobile' && !mobile) return showAlert('warning', 'Enter mobile number');
             if (type === 'email' && !email) return showAlert('warning', 'Enter email address');
-
             if (!otpSent) return showAlert('warning', 'Please send verification code first');
-
-            // OTP Validation with attempts for Email
-            if (currentRegType === 'email' && otp !== currentEmailOtp) {
-                emailOtpAttempts--;
-                if (emailOtpAttempts <= 0) {
-                    document.getElementById('regOtp').disabled = true;
-                    const regSubmitBtn = document.querySelector('#registerForm button[type="submit"]');
-                    if (regSubmitBtn) regSubmitBtn.disabled = true;
-                    return showAlert('error', 'No attempts left. Please resend OTP.', 'Authentication Failed');
-                }
-                return showAlert('warning', `Invalid verification code. ${emailOtpAttempts} attempts remaining.`);
-            } else if (currentRegType === 'mobile' && otp !== '123456') {
-                return showAlert('warning', 'Invalid verification code');
-            }
-
+            if (!otpCode) return showAlert('warning', 'Please enter the verification code');
             if (pass !== confirmPass) return showAlert('warning', 'Passwords do not match');
             if (pass.length < 6) return showAlert('warning', 'Password must be at least 6 characters');
 
-            try {
-                // Determine identifier
-                const identifier = type === 'mobile' ? mobile : email;
+            submitBtn.textContent = 'Registering...';
+            submitBtn.disabled = true;
 
-                // Call DB Register
-                const res = await DB.register(identifier, pass);
+            try {
+                let authId = null;
+
+                // REAL Supabase Verification for Email
+                if (type === 'email') {
+                    const verifyRes = await DB.verifyEmailOtp(email, otpCode);
+                    if (!verifyRes.success) {
+                        submitBtn.textContent = originalBtnText;
+                        submitBtn.disabled = false;
+                        return showAlert('error', verifyRes.message || 'Invalid verification code.', 'Verification Failed');
+                    }
+                    authId = verifyRes.authId;
+                } else if (type === 'mobile' && otpCode !== '123456') {
+                    submitBtn.textContent = originalBtnText;
+                    submitBtn.disabled = false;
+                    return showAlert('warning', 'Invalid verification code');
+                }
+
+                // Call DB Register to sync with public.users table
+                const finalIdentifier = type === 'mobile' ? mobile : email;
+                const regEmail = type === 'email' ? email : null;
+                const regMobile = type === 'mobile' ? mobile : null;
+
+                const res = await DB.register(regMobile, pass, regEmail, authId);
 
                 if (res.success) {
-                    showAlert('success', 'Account created successfully.', 'Registration Successful', () => {
+                    showAlert('success', 'Account created successfully. You can now login.', 'Registration Successful', () => {
                         closeModal('register');
                     });
                 } else {
                     showAlert('error', res.message || 'Registration failed.', 'Registration Failed');
                 }
             } catch (err) {
-                console.error(err);
-                if (type === 'email') {
-                    showAlert('success', 'Account created successfully.', 'Registration Successful', () => {
-                        closeModal('register');
-                    });
-                } else {
-                    showAlert('error', err.message || 'Registration failed.', 'Registration Failed');
-                }
+                console.error("REGISTRATION CRITICAL ERROR:", err);
+                showAlert('error', err.message || 'Registration failed. Check console for details.', 'System Error');
+            } finally {
+                submitBtn.textContent = originalBtnText;
+                submitBtn.disabled = false;
             }
         });
 

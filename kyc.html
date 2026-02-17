@@ -299,7 +299,7 @@
                         </div>
                         <div class="form-group">
                             <label>Mobile Number</label>
-                            <input type="text" id="mobileDisplay" class="form-input" readonly>
+                            <input type="text" id="mobileDisplay" class="form-input" placeholder="Enter Mobile Number">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label>Residential Address</label>
@@ -367,7 +367,7 @@
         const user = DB.getCurrentUser();
         if (!user) window.location.href = 'login.html';
 
-        document.getElementById('mobileDisplay').value = user.mobile;
+        document.getElementById('mobileDisplay').value = user.mobile || '';
         if (user.kyc === 'Approved' || user.kyc === 'Pending') {
             showStatus(user.kyc);
         }
@@ -393,16 +393,17 @@
             // In a real app, we would upload images here
             // For now, we simulate success
             const client = DB.getClient();
-            if (client) {
-                await client.from('users').update({
-                    kyc: 'Pending',
-                    full_name: document.getElementById('fullName').value,
-                    address: document.getElementById('address').value
-                }).eq('id', user.id);
-            }
+            const mobileVal = document.getElementById('mobileDisplay').value;
+            await DB.updateUser(user.id, {
+                kyc: 'Pending',
+                full_name: document.getElementById('fullName').value,
+                mobile: mobileVal,
+                address: document.getElementById('address').value
+            });
 
             setTimeout(() => {
                 user.kyc = 'Pending';
+                user.mobile = mobileVal;
                 localStorage.setItem(DB.CURRENT_USER_KEY, JSON.stringify(user));
                 showStatus('Pending');
             }, 1500);

@@ -2063,7 +2063,7 @@
                     allUsers = data;
                     document.getElementById('userList').innerHTML = data.length ? data.map(x => `
                         <tr>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.mobile || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.username || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">₹${parseFloat(x.balance || 0).toFixed(2)}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">${x.vip || 0}</td>
@@ -2318,7 +2318,7 @@
                         <tr>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.username || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;"><span class="kyc-badge ${statusClass}">${statusText}</span></td>
-                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile}</td>
+                            <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.mobile || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.full_name || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9; font-size:0.75rem;">${x.id_number || '-'}</td>
                             <td style="padding:12px; border-bottom:1px solid #f1f5f9;">

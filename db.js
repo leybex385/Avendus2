@@ -37,39 +37,94 @@ window.DB = {
     },
 
     // --- AUTHENTICATION ---
-    async login(mobile, password) {
+    async login(identifier, password) {
         const client = this.getClient();
         if (!client) return { success: false, message: 'Database connecting...' };
 
+        // Check mobile OR email
         const { data, error } = await client
             .from('users')
             .select('*')
-            .eq('mobile', mobile)
+            .or(`mobile.eq.${identifier},email.eq.${identifier}`)
             .eq('password', password)
             .single();
 
         if (error || !data) {
-            return { success: false, message: 'Invalid mobile or password.' };
+            return { success: false, message: 'Invalid credentials.' };
         }
 
         localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(data));
         return { success: true, user: data };
     },
 
-    async register(mobile, password) {
+    async register(mobile, password, email = null, authId = null) {
         const client = this.getClient();
+        const insertData = {
+            password,
+            balance: 0,
+            invested: 0,
+            kyc: 'Pending'
+        };
+
+        if (mobile) insertData.mobile = mobile;
+        if (email) insertData.email = email;
+        if (authId) insertData.auth_id = authId;
+
         const { data, error } = await client
             .from('users')
-            .insert([{ mobile, password, balance: 0, invested: 0, kyc: 'Pending' }])
+            .insert([insertData])
             .select()
             .single();
 
-        if (error) return { success: false, message: error.message };
+        if (error) {
+            console.error("Registration Error:", error);
+            return { success: false, message: error.message };
+        }
 
         // Auto-login after registration
         localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(data));
 
         return { success: true, user: data };
+    },
+
+    // --- SUPABASE OTP AUTH ---
+    async sendEmailOtp(email) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database connecting...' };
+
+        console.log("Supabase sendEmailOtp for:", email);
+        const { error } = await client.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: true
+            }
+        });
+
+        if (error) {
+            console.error("Supabase OTP Send Error:", error);
+            return { success: false, message: error.message };
+        }
+
+        return { success: true };
+    },
+
+    async verifyEmailOtp(email, token) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database connecting...' };
+
+        console.log("Supabase verifyEmailOtp for:", email);
+        const { data, error } = await client.auth.verifyOtp({
+            email: email,
+            token: token,
+            type: 'email'
+        });
+
+        if (error) {
+            console.error("Supabase OTP Verify Error:", error);
+            return { success: false, message: error.message };
+        }
+
+        return { success: true, authId: data?.user?.id };
     },
 
     async resetPassword(mobile, newPassword) {
@@ -601,7 +656,17 @@ window.DB = {
 
     async updateUser(id, updateData) {
         const client = this.getClient();
-        const { data, error } = await client.from('users').update(updateData).eq('id', id);
+        let query = client.from('users').update(updateData);
+
+        // Safety: Detect if id is UUID (Supabase auth_id) or Numeric (internal id)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+            query = query.eq('auth_id', id);
+        } else {
+            query = query.eq('id', id);
+        }
+
+        const { data, error } = await query;
         return { success: !error, error };
     },
 

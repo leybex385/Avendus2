@@ -919,6 +919,7 @@ window.submitKYC = async function () {
     }
 
     const name = document.getElementById('kycName').value.trim();
+    const mobile = document.getElementById('kycMobile').value.trim();
     const idNum = document.getElementById('kycIdNum').value.trim();
     const frontInput = document.getElementById('kycFrontInput');
     const backInput = document.getElementById('kycBackInput');
@@ -927,8 +928,8 @@ window.submitKYC = async function () {
     const frontPreview = document.getElementById('kycFrontPreview').src;
     const backPreview = document.getElementById('kycBackPreview').src;
 
-    if (!name || !idNum || (!frontInput.files[0] && (!frontPreview || frontPreview.includes('placeholder'))) || (!backInput.files[0] && (!backPreview || backPreview.includes('placeholder')))) {
-        await window.CustomUI.alert('Please complete all fields and upload both ID images.', 'Incomplete Form');
+    if (!name || !mobile || !idNum || (!frontInput.files[0] && (!frontPreview || frontPreview.includes('placeholder'))) || (!backInput.files[0] && (!backPreview || backPreview.includes('placeholder')))) {
+        await window.CustomUI.alert('Please complete all fields (Name, Mobile, ID) and upload both ID images.', 'Incomplete Form');
         return;
     }
 
@@ -951,6 +952,7 @@ window.submitKYC = async function () {
         // 1. Update User Profile (Primary data goes to 'users' table)
         const userResult = await window.DB.updateUser(user.id, {
             full_name: name,
+            mobile: mobile,
             id_number: idNum,
             kyc: 'Pending'
         });
@@ -961,6 +963,7 @@ window.submitKYC = async function () {
 
         // Update local "Memory" (Local Storage) so data persists across refreshes
         user.full_name = name;
+        user.mobile = mobile;
         user.id_number = idNum;
         user.kyc = 'Pending';
         localStorage.setItem('avendus_current_user', JSON.stringify(user));
