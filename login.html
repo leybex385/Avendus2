@@ -643,6 +643,8 @@
 
         // Enhanced Auth Logic
         let otpSent = false;
+        let emailOtpAttempts = 3;
+        let currentEmailOtp = null; // Store the dynamic OTP
         let currentRegType = 'email'; // Default to Email
         let currentLoginType = 'email'; // Default to Email
 
@@ -722,28 +724,61 @@
                 return;
             }
 
-            // Simulate Send
             const btn = type === 'mobile' ? document.getElementById('sendMobileOtp') : document.getElementById('sendEmailOtp');
 
-            btn.textContent = 'Sending...';
-            btn.disabled = true;
+            if (type === 'email') {
+                // Reset states for Email OTP
+                emailOtpAttempts = 3;
+                document.getElementById('regOtp').disabled = false;
+                const regSubmitBtn = document.querySelector('#registerForm button[type="submit"]');
+                if (regSubmitBtn) regSubmitBtn.disabled = false;
 
-            setTimeout(() => {
-                showAlert('success', 'Verification code sent to ' + val + ': 123456');
-                otpSent = true;
-
-                // Countdown
+                // Immediate countdown for Email
+                btn.disabled = true;
                 let count = 60;
+                btn.textContent = `Resend (${count}s)`;
+
                 const timer = setInterval(() => {
-                    btn.textContent = `Resend (${count}s)`;
                     count--;
                     if (count < 0) {
                         clearInterval(timer);
-                        btn.textContent = 'Resend Code';
+                        btn.textContent = 'Verify';
                         btn.disabled = false;
+                        return;
                     }
+                    btn.textContent = `Resend (${count}s)`;
                 }, 1000);
-            }, 1000);
+
+                // Simulated async send with Dynamic Code
+                setTimeout(() => {
+                    const randomOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                    currentEmailOtp = randomOtp;
+                    showAlert('success', 'Verification code sent to ' + val + ': ' + randomOtp);
+                    otpSent = true;
+                    console.log("SENDING REAL EMAIL TO " + val + " (Backend required for delivery): " + randomOtp);
+                }, 1000);
+            } else {
+                // Original Mobile Logic
+                btn.textContent = 'Sending...';
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    showAlert('success', 'Verification code sent to ' + val + ': 123456');
+                    otpSent = true;
+
+                    // Countdown
+                    let count = 60;
+                    const timer = setInterval(() => {
+                        btn.textContent = `Resend (${count}s)`;
+                        count--;
+                        if (count < 0) {
+                            clearInterval(timer);
+                            btn.textContent = 'Resend Code';
+                            btn.disabled = false;
+                        }
+                    }, 1000);
+                }, 1000);
+            }
         };
 
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -761,7 +796,20 @@
             if (type === 'email' && !email) return showAlert('warning', 'Enter email address');
 
             if (!otpSent) return showAlert('warning', 'Please send verification code first');
-            if (otp !== '123456') return showAlert('warning', 'Invalid verification code');
+
+            // OTP Validation with attempts for Email
+            if (currentRegType === 'email' && otp !== currentEmailOtp) {
+                emailOtpAttempts--;
+                if (emailOtpAttempts <= 0) {
+                    document.getElementById('regOtp').disabled = true;
+                    const regSubmitBtn = document.querySelector('#registerForm button[type="submit"]');
+                    if (regSubmitBtn) regSubmitBtn.disabled = true;
+                    return showAlert('error', 'No attempts left. Please resend OTP.', 'Authentication Failed');
+                }
+                return showAlert('warning', `Invalid verification code. ${emailOtpAttempts} attempts remaining.`);
+            } else if (currentRegType === 'mobile' && otp !== '123456') {
+                return showAlert('warning', 'Invalid verification code');
+            }
 
             if (pass !== confirmPass) return showAlert('warning', 'Passwords do not match');
             if (pass.length < 6) return showAlert('warning', 'Password must be at least 6 characters');
