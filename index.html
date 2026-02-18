@@ -181,15 +181,17 @@
                     class="nav-item" id="navMe"><i data-lucide="user"></i> Me</a>
             </nav>
             <div class="header-right">
-                <button class="settings-btn" onclick="toggleMessageCenter()">
+                <button class="settings-btn" id="top-notif-btn" onclick="toggleMessageCenter()">
                     <i data-lucide="bell"></i>
                     <div class="notif-badge"></div>
                 </button>
-                <button class="settings-btn" onclick="openCS()" title="Customer Service" style="position: relative;">
+                <button class="settings-btn" id="top-support-btn" onclick="openCS()" title="Customer Service"
+                    style="position: relative;">
                     <div class="csr-badge" id="csrHeaderBadge" style="display: none;"></div>
                     <i data-lucide="headset"></i>
                 </button>
-                <button class="settings-btn" onclick="openSettings()"><i data-lucide="settings"></i></button>
+                <button class="settings-btn" id="top-settings-btn" onclick="openSettings()"><i
+                        data-lucide="settings"></i></button>
             </div>
         </header>
 
@@ -1636,6 +1638,64 @@
             `).join('');
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
+
+        // --- AUTH GUARD FOR HOME PAGE ---
+        /**
+         * Guard function to prevent actions for unauthenticated users.
+         * Shows a top alert banner if the user is not logged in.
+         */
+        function requireAuth(e) {
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+            if (!user) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                // Show Top Alert Banner (styled like the existing system)
+                const alertContainer = document.getElementById('topAlertContainer');
+                if (alertContainer) {
+                    const alertSpan = alertContainer.querySelector('.top-alert span');
+                    if (alertSpan) alertSpan.innerText = "Please sign in to continue.";
+
+                    alertContainer.style.display = 'block';
+
+                    // Auto-hide after 3 seconds
+                    if (window._authAlertTimer) clearTimeout(window._authAlertTimer);
+                    window._authAlertTimer = setTimeout(() => {
+                        alertContainer.style.display = 'none';
+                    }, 3000);
+                }
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize guards on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            const guardedIds = [
+                'globalSearchInput',
+                'top-notif-btn',
+                'top-support-btn',
+                'top-settings-btn',
+                'homepage-notification-btn'
+            ];
+
+            guardedIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    // Use capturing phase (true) to intercept BEFORE inline onclick attributes
+                    el.addEventListener('click', requireAuth, true);
+                    el.addEventListener('mousedown', requireAuth, true);
+
+                    // Specific guard for search input focus and typing
+                    if (id === 'globalSearchInput') {
+                        el.addEventListener('focus', requireAuth, true);
+                        el.addEventListener('keydown', requireAuth, true);
+                    }
+                }
+            });
+        });
     </script>
 
     <!-- Notification Bell Floating Button -->
