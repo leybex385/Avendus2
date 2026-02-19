@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const colorClass = isUp ? 'up' : 'down';
 
             html += `
-                <div class="index-card ${bgClass}">
+                <div class="index-card ${bgClass}" onclick="handleIndexClick('${idx.symbol}')">
                     <div class="index-card-header">
                         <img src="https://flagcdn.com/w20/in.png" class="index-flag" alt="IN">
                         <span class="index-name">${idx.symbol}</span>
@@ -217,6 +217,23 @@ document.addEventListener('DOMContentLoaded', () => {
         globalSearchResults.innerHTML = html;
         globalSearchResults.style.display = 'block';
     }
+
+    // Helper for Index Clicks
+    window.handleIndexClick = function (symbol) {
+        let mapped = symbol;
+        if (symbol === 'SENSEX') mapped = 'BSE:SENSEX';
+        else if (symbol === 'NIFTY 50') mapped = 'NSE:NIFTY';
+        else if (symbol === 'NIFTY BANK') mapped = 'NSE:BANKNIFTY'; // Likely correct for 12Data
+        else if (symbol === 'NIFTY SMLCAP') mapped = 'NSE:NIFTYSMALL100'; // Guessing
+        else if (symbol === 'NIFTY MIDCAP') mapped = 'NSE:NIFTYMIDCAP100'; // Guessing
+
+        // For now, if we don't know mapping, just try NSE:
+        if (!mapped.includes(':') && symbol !== 'SENSEX') mapped = 'NSE:' + symbol.replace(' ', '');
+
+        if (window.ChartManager && window.ChartManager.loadSymbol) {
+            window.ChartManager.loadSymbol(mapped);
+        }
+    };
 
     async function fetchGlobalStockPrice(query) {
         if (!globalSearchResults) return;
@@ -329,6 +346,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.globalSelectStock = (symbol, name, type) => {
         console.log("Global Select Stock:", symbol, name, type);
+
+        // If on market.html, load chart
+        const isMarketPage = window.location.pathname.includes('market.html') || window.location.pathname.endsWith('/');
+
+        if (isMarketPage && window.ChartManager) {
+            let properSymbol = symbol;
+            if (type === 'index') {
+                // Use same mapping as handleIndexClick if logic needed, 
+                // but typically search returns clean symbols?
+                if (symbol === 'SENSEX') properSymbol = 'BSE:SENSEX';
+                else properSymbol = 'NSE:' + symbol.replace(' ', '');
+            } else {
+                // Stocks. Default to NSE if not specified.
+                if (!properSymbol.includes(':')) {
+                    // 12Data needs exchange. Local search items don't have exchange prefix.
+                    // STOCK_DATA items don't have it.
+                    // Assume NSE for most.
+                    properSymbol = 'NSE:' + symbol;
+                }
+            }
+
+            window.ChartManager.loadSymbol(properSymbol);
+
+            // Close search
+            const globalSearchResults = document.getElementById('searchResults');
+            if (globalSearchResults) globalSearchResults.style.display = 'none';
+            const globalSearchInput = document.getElementById('globalSearchInput');
+            if (globalSearchInput) globalSearchInput.value = '';
+
+            return;
+        }
 
         let cleanType = (type || 'stock').toLowerCase();
         if (cleanType === 'ins.stock') cleanType = 'stock';

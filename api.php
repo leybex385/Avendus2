@@ -152,4 +152,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-$conn->close();
+
+if ($action === 'getMarketData') {
+
+    $symbol = $_GET['symbol'] ?? '';
+    $interval = $_GET['interval'] ?? '1day';
+
+    // 🔥 HARD CODE FOR LOCAL TESTING
+    $apiKey = 'f5a558c730a64406839742e38b78af5e';
+
+    if (!$symbol) {
+        echo json_encode(["status" => "error", "message" => "Symbol required"]);
+        exit;
+    }
+
+    $outputsize = $_GET['outputsize'] ?? '300';
+
+    $url = "https://api.twelvedata.com/time_series?symbol="
+        . urlencode($symbol)
+        . "&interval=" . urlencode($interval)
+        . "&outputsize=" . urlencode($outputsize)
+        . "&apikey=" . $apiKey;
+
+    $response = file_get_contents($url);
+
+    if ($response === FALSE) {
+        echo json_encode(["status" => "error", "message" => "Failed to fetch data from provider"]);
+    } else {
+        echo $response;
+    }
+}
+
