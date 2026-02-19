@@ -442,7 +442,10 @@
                 <label>Password</label>
                 <div class="password-wrapper">
                     <input type="password" id="password" placeholder="Enter password" required>
-                    <i data-lucide="eye" class="eye-icon" id="togglePass"></i>
+                    <button type="button" id="togglePass" class="eye-icon"
+                        style="background: none; border: none; padding: 0;">
+                        <i data-lucide="eye"></i>
+                    </button>
                 </div>
                 <div style="text-align: right; margin-top: 5px;">
                     <a href="#" onclick="openModal('forgot')"
@@ -460,71 +463,309 @@
 
     </div>
 
-    <!-- Register Modal -->
+    <!-- Register Modal (3-Step Flow) -->
     <div id="registerModal" class="modal-overlay">
-        <div class="modal-body">
+        <div class="modal-body" style="max-width: 600px;">
             <button class="close-modal" onclick="closeModal('register')"><i data-lucide="x"></i></button>
-            <h2>Create Account</h2>
-
-            <!-- Registration Tabs -->
-            <div
-                style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;">
-                <button type="button" class="tab-btn active" onclick="switchRegTab('mobile')"
-                    id="tabMobile">Mobile</button>
-                <button type="button" class="tab-btn" onclick="switchRegTab('email')" id="tabEmail">Email</button>
+            <div id="regTitleContainer">
+                <h2>Create Account</h2>
             </div>
 
-            <form id="registerForm" style="margin-top: 1rem;">
-                <input type="hidden" id="regType" value="mobile">
-
-                <!-- Mobile Input Section -->
-                <div id="mobileSection" class="form-group">
+            <!-- Step 1: Basic Information -->
+            <div id="regStep1">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="Full Legal Name">
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="regDob" style="color-scheme: dark;">
+                </div>
+                <div class="form-group">
                     <label>Mobile Number</label>
                     <div class="phone-input-wrapper">
-                        <div class="country-code">+91</div>
+                        <div class="country-code">
+                            <img src="https://flagcdn.com/w20/in.png" width="20"> +91
+                        </div>
                         <input type="tel" id="regMobile" placeholder="10-digit number" maxlength="10">
-                        <button type="button" class="otp-btn" id="sendMobileOtp" onclick="sendOtp('mobile')">Send
-                            OTP</button>
                     </div>
                 </div>
+                <button class="login-submit-btn" onclick="goToStep2()">Next</button>
+            </div>
 
-                <!-- Email Input Section -->
-                <div id="emailSection" class="form-group" style="display:none;">
+            <!-- Step 2: Bind Email & Security -->
+            <div id="regStep2" style="display:none;">
+                <div class="form-group">
                     <label>Email Address</label>
                     <div class="phone-input-wrapper">
                         <input type="email" id="regEmail" placeholder="name@example.com">
-                        <button type="button" class="otp-btn" id="sendEmailOtp"
-                            onclick="sendOtp('email')">Verify</button>
+                        <button type="button" class="otp-btn" id="sendEmailOtpBtn" onclick="triggerEmailOtp()">Send
+                            OTP</button>
                     </div>
                 </div>
-
-                <!-- OTP Input -->
                 <div class="form-group">
                     <label>Verification Code</label>
-                    <input type="text" id="regOtp" placeholder="Enter 6-digit code" maxlength="6"
-                        style="border:1px solid #333; border-radius:8px;">
+                    <input type="text" id="regOtpInput" placeholder="Enter 6-digit code" maxlength="6">
                 </div>
-
-                <!-- Password Fields -->
                 <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="regPass" placeholder="Create password"
-                        style="border:1px solid #333; border-radius:8px;" required>
+                    <label>Create Password</label>
+                    <input type="password" id="regPass" placeholder="Create password" required>
                 </div>
                 <div class="form-group">
                     <label>Confirm Password</label>
-                    <input type="password" id="regConfirmPass" placeholder="Confirm password"
-                        style="border:1px solid #333; border-radius:8px;" required>
+                    <input type="password" id="regConfirmPass" placeholder="Confirm password" required>
+                </div>
+                <div class="form-group">
+                    <label>Invitation Code (Optional)</label>
+                    <input type="text" id="regInviteCode" placeholder="Enter code">
+                </div>
+                <button class="login-submit-btn" onclick="goToStep3()">Next</button>
+                <div style="text-align: center; margin-top: 10px;">
+                    <a href="#" onclick="showStep(1)"
+                        style="color: #64748b; font-size: 0.9rem; text-decoration: none;">Back</a>
+                </div>
+            </div>
+
+            <!-- Step 3: KYC Agreement -->
+            <div id="regStep3" style="display:none;">
+                <h2 style="margin-bottom: 0.5rem; color: #d4af37;">Know Your Customer (KYC)</h2>
+
+                <!-- Progress Indicator -->
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem; color: #64748b; font-weight: 600;">
+                    <span style="color: #d4af37;">Agreement</span>
+                    <span>Basic Information</span>
+                    <span>Identification</span>
+                </div>
+                <div
+                    style="background: #333; height: 3px; width: 100%; margin-bottom: 1.5rem; position: relative; border-radius: 2px;">
+                    <div
+                        style="background: #d4af37; height: 3px; width: 33%; position: absolute; left: 0; border-radius: 2px;">
+                    </div>
+                </div>
+
+                <!-- Agreement Text Area -->
+                <div
+                    style="background: #050505; padding: 1.5rem; border-radius: 8px; height: 350px; overflow-y: auto; border: 1px solid #333; margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; color: #cbd5e1; text-align: left;">
+                    <h3 style="color: #fff; margin-top: 0;">Identity Verification Agreement</h3>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">1. Introduction</h4>
+                    <p>This Identity Verification Agreement (“Agreement”) sets forth the terms and conditions governing
+                        the identity verification process for users of our financial application (“the App”).</p>
+                    <p>By proceeding with registration and using the App, you (“the User”) agree to be bound by the
+                        terms of this Agreement.</p>
+                    <p>This Agreement is entered into pursuant to applicable national and international laws, including
+                        but not limited to Anti-Money Laundering (AML), Counter-Terrorism Financing (CTF), and financial
+                        regulations.</p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">2. Purpose of Identity Verification</h4>
+                    <p>In compliance with applicable laws, regulatory requirements, and anti-money laundering
+                        obligations, we are legally required to verify the identity of all users before granting access
+                        to certain financial features within the App.</p>
+                    <p>The primary purposes of the identity verification process are:</p>
+                    <ul style="padding-left: 20px; list-style-type: disc;">
+                        <li>To prevent fraud and financial crimes</li>
+                        <li>To ensure the legality and compliance of financial transactions</li>
+                        <li>To comply with FATF recommendations and relevant jurisdictional standards</li>
+                    </ul>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">3. Information Collected</h4>
+                    <p>As part of the identity verification process, the user may be required to provide the following
+                        information and documents:</p>
+                    <ul style="padding-left: 20px; list-style-type: disc;">
+                        <li>Full legal name</li>
+                        <li>Date of birth</li>
+                        <li>Residential address and proof of address</li>
+                        <li>Government-issued identification (e.g., passport, ID card, driver’s license)</li>
+                        <li>A live photo or selfie for biometric verification</li>
+                        <li>Additional documents upon request by compliance officers</li>
+                    </ul>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">4. Use of Personal Data</h4>
+                    <p>Your personal data will be used solely for the following purposes:</p>
+                    <ul style="padding-left: 20px; list-style-type: disc;">
+                        <li>Identity verification</li>
+                        <li>Regulatory due diligence</li>
+                        <li>Fraud prevention</li>
+                        <li>Compliance with financial and anti-money laundering regulations</li>
+                    </ul>
+                    <p>No personal data will be used for marketing or unrelated commercial purposes.</p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">5. Data Protection and Privacy</h4>
+                    <p>We protect your personal data in accordance with the Data Protection Act and industry standards.
+                        Our data protection framework includes:</p>
+                    <ul style="padding-left: 20px; list-style-type: disc;">
+                        <li>End-to-end encryption</li>
+                        <li>Role-based access control and multi-factor authentication (MFA)</li>
+                        <li>Data minimization and secure retention policies</li>
+                        <li>Regular internal and external security audits</li>
+                    </ul>
+                    <p>We will never sell or disclose your data unless required by law or with your explicit consent.
+                    </p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">6. User Acknowledgment and Consent</h4>
+                    <p>By proceeding with identity verification, the user hereby:</p>
+                    <ul style="padding-left: 20px; list-style-type: disc;">
+                        <li>Confirms the accuracy and truthfulness of all submitted data</li>
+                        <li>Understands the legal necessity of identity verification</li>
+                        <li>Provides informed consent for the collection and processing of personal data</li>
+                        <li>Agrees to comply with any additional verification or re-verification steps that may be
+                            required by our compliance team</li>
+                    </ul>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">7. Retention of Information</h4>
+                    <p>All identity-related data will be securely stored for the legally required period, typically
+                        between five (5) to seven (7) years, in compliance with applicable data retention and financial
+                        audit regulations.</p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">8. Updates to this Agreement</h4>
+                    <p>We may update or modify this Agreement from time to time.</p>
+                    <p>Any updates will be posted in the App, and such changes will take effect immediately upon
+                        posting. Continued use of the App after updates constitutes acceptance of the revised Agreement.
+                    </p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">9. Governing Law and Jurisdiction</h4>
+                    <p>This Agreement is governed by and construed under the laws of our operational jurisdiction.</p>
+                    <p>Any disputes arising out of or in connection with this Agreement will be subject to the exclusive
+                        jurisdiction of the competent courts of that jurisdiction.</p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">10. Contact</h4>
+                    <p>For any questions, concerns, or privacy-related inquiries, please contact our Compliance Team
+                        through the in-app support center or via official communication channels provided in the App.
+                    </p>
+
+                    <h4 style="color: #94a3b8; margin: 1rem 0 0.5rem;">11. User Confirmation</h4>
+                    <p>By tapping “Agree and Continue,” you acknowledge that you have read, understood, and accepted all
+                        the terms of this Identity Verification Agreement.</p>
+                </div>
+
+                <div
+                    style="margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 10px; background: #0a0a0a; padding: 10px; border-radius: 4px;">
+                    <input type="checkbox" id="agreeCheckbox"
+                        style="width: 20px; height: 20px; margin-top: 2px; accent-color: #d4af37;">
+                    <label for="agreeCheckbox" style="font-size: 0.9rem; margin: 0; color: #e2e8f0; cursor: pointer;">I
+                        have read and agree to the KYC agreement.</label>
+                </div>
+
+                <button class="login-submit-btn" onclick="submitRegistration()">Agree and Continue</button>
+                <button class="tab-btn" style="width: 100%; margin-top: 1rem; color: #64748b;"
+                    onclick="closeModal('register')">I Don't Agree</button>
+            </div>
+
+            <!-- Step 3B: Basic Info Confirmation (Auto-filled) -->
+            <div id="regStep3B" style="display:none;">
+                <h2 style="margin-bottom: 0.5rem; color: #d4af37;">Confirm Information</h2>
+
+                <!-- Progress Indicator -->
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem; color: #64748b; font-weight: 600;">
+                    <span style="color: #d4af37;">Agreement</span>
+                    <span style="color: #d4af37;">Basic Information</span>
+                    <span>Identification</span>
+                </div>
+                <div
+                    style="background: #333; height: 3px; width: 100%; margin-bottom: 2rem; position: relative; border-radius: 2px;">
+                    <div
+                        style="background: #d4af37; height: 3px; width: 66%; position: absolute; left: 0; border-radius: 2px;">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Invitation Code (Optional)</label>
-                    <input type="text" id="regCode" placeholder="Enter code"
-                        style="border:1px solid #333; border-radius:8px;">
+                    <label>Full Legal Name</label>
+                    <input type="text" id="confName" readonly
+                        style="color: #94a3b8; cursor: not-allowed; background: #0a0a0a; border: 1px solid #333;">
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="text" id="confDob" readonly
+                        style="color: #94a3b8; cursor: not-allowed; background: #0a0a0a; border: 1px solid #333;">
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="text" id="confMobile" readonly
+                        style="color: #94a3b8; cursor: not-allowed; background: #0a0a0a; border: 1px solid #333;">
                 </div>
 
-                <button type="submit" class="login-submit-btn">Register</button>
-            </form>
+                <button class="login-submit-btn" onclick="goToStep3C()">Next</button>
+                <div style="text-align: center; margin-top: 10px;">
+                    <a href="#" onclick="showStep(3)"
+                        style="color: #64748b; font-size: 0.9rem; text-decoration: none;">Back</a>
+                </div>
+            </div>
+
+            <!-- Step 3C: Identification Upload -->
+            <div id="regStep3C" style="display:none;">
+                <h2 style="margin-bottom: 0.5rem; color: #d4af37;">Identification</h2>
+
+                <!-- Progress Indicator -->
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem; color: #64748b; font-weight: 600;">
+                    <span style="color: #d4af37;">Agreement</span>
+                    <span style="color: #d4af37;">Basic Information</span>
+                    <span style="color: #d4af37;">Identification</span>
+                </div>
+                <div
+                    style="background: #333; height: 3px; width: 100%; margin-bottom: 2rem; position: relative; border-radius: 2px;">
+                    <div
+                        style="background: #d4af37; height: 3px; width: 100%; position: absolute; left: 0; border-radius: 2px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ID Document Type</label>
+                    <select id="regIdType"
+                        style="color: #cbd5e1; background: #0a0a0a; border: 1px solid #333; margin-bottom: 0.5rem; width: 100%; padding: 10px; border-radius: 4px;">
+                        <option value="Aadhar">Aadhar Card</option>
+                        <option value="PAN">PAN Card</option>
+                        <option value="Passport">Passport</option>
+                        <option value="Driving License">Driving License</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>ID Number</label>
+                    <input type="text" id="regIdNumber" placeholder="Enter your ID document number"
+                        style="color: #cbd5e1; background: #0a0a0a; border: 1px solid #333; margin-bottom: 0.5rem;">
+                </div>
+
+                <div class="form-group">
+                    <label>Government-Issued ID (Front)</label>
+                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Upload a clear photo of
+                        your
+                        Passport, Driver's License, or National ID.</p>
+                    <input type="file" id="kycDocId" accept="image/*"
+                        style="padding: 10px; background: #0a0a0a; border: 1px dashed #333; width: 100%; color: #94a3b8;">
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Government-Issued ID (Back)</label>
+                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Upload a clear photo of the
+                        back side of your ID.</p>
+                    <input type="file" id="kycDocIdBack" accept="image/*"
+                        style="padding: 10px; background: #0a0a0a; border: 1px dashed #333; width: 100%; color: #94a3b8;">
+                </div>
+
+                <button class="login-submit-btn" onclick="submitFinalKYC()">Submit Documents</button>
+                <div style="text-align: center; margin-top: 10px;">
+                    <a href="#" onclick="showStep('3B')"
+                        style="color: #64748b; font-size: 0.9rem; text-decoration: none;">Back</a>
+                </div>
+            </div>
+
+            <!-- Final State: Under Review -->
+            <div id="regFinalReview" style="display:none; text-align: center; padding: 2rem 0;">
+                <div
+                    style="width: 80px; height: 80px; background: rgba(212, 175, 55, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #d4af37;">
+                    <i data-lucide="clock" style="width: 40px; height: 40px;"></i>
+                </div>
+                <h2 style="color: #d4af37; margin-bottom: 1rem;">KYC Under Review</h2>
+                <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 2rem;">
+                    Your documents have been submitted. Our compliance team is reviewing them — please allow up to
+                    48
+                    hours.
+                </p>
+                <button class="login-submit-btn" onclick="window.location.reload()">Return to Home</button>
+            </div>
         </div>
     </div>
 
@@ -544,12 +785,22 @@
         lucide.createIcons();
 
         // Password Toggle
-        document.getElementById('togglePass').addEventListener('click', function () {
-            const input = document.getElementById('password');
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
-            this.setAttribute('data-lucide', type === 'password' ? 'eye' : 'eye-off');
-            lucide.createIcons();
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById('togglePass');
+            const passwordInput = document.getElementById('password');
+
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Toggle Password Type
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
+
+                    // Toggle Icon
+                    toggleBtn.innerHTML = `<i data-lucide="${isPassword ? 'eye-off' : 'eye'}"></i>`;
+                    lucide.createIcons();
+                });
+            }
         });
 
         // Modals
@@ -700,162 +951,280 @@
             }
         });
 
-        // --- Registration Logic ---
-        window.switchRegTab = function (type) {
-            currentRegType = type;
-            document.getElementById('regType').value = type;
+        // --- Registration Logic (Multi-step) ---
+        let regData = {};
 
-            // Toggle Tabs
-            document.querySelectorAll('#registerModal .tab-btn').forEach(b => b.classList.remove('active'));
-            const activeId = type === 'mobile' ? 'tabMobile' : 'tabEmail';
-            const btn = document.getElementById(activeId);
-            if (btn) btn.classList.add('active');
-
-            // Toggle Sections
-            document.getElementById('mobileSection').style.display = type === 'mobile' ? 'block' : 'none';
-            document.getElementById('emailSection').style.display = type === 'email' ? 'block' : 'none';
+        // Reset modal state on open
+        const originalOpenModal = window.openModal;
+        window.openModal = function (id) {
+            originalOpenModal(id);
+            if (id === 'register') {
+                showStep(1);
+            }
         };
 
-        window.sendOtp = function (type) {
-            const val = type === 'mobile' ? document.getElementById('regMobile').value : document.getElementById('regEmail').value;
+        window.showStep = function (step) {
+            // Hide all steps
+            const s1 = document.getElementById('regStep1');
+            const s2 = document.getElementById('regStep2');
+            const s3 = document.getElementById('regStep3');
 
-            if (!val) {
-                showAlert('warning', 'Please enter a valid ' + (type === 'mobile' ? 'mobile number' : 'email'));
-                return;
-            }
+            if (s1) s1.style.display = 'none';
+            if (s2) s2.style.display = 'none';
+            if (s3) s3.style.display = 'none';
 
-            const btn = type === 'mobile' ? document.getElementById('sendMobileOtp') : document.getElementById('sendEmailOtp');
+            // Show target step
+            const target = document.getElementById('regStep' + step);
+            if (target) target.style.display = 'block';
+        };
 
-            if (type === 'email') {
-                // Reset states for Email OTP
-                document.getElementById('regOtp').disabled = false;
-                const regSubmitBtn = document.querySelector('#registerForm button[type="submit"]');
-                if (regSubmitBtn) regSubmitBtn.disabled = false;
+        window.goToStep2 = function () {
+            const name = document.getElementById('regName').value;
+            const dob = document.getElementById('regDob').value;
+            const mobile = document.getElementById('regMobile').value;
 
-                btn.disabled = true;
-                btn.textContent = 'Sending...';
+            if (!name) return showAlert('warning', 'Please enter your full name.');
+            if (!dob) return showAlert('warning', 'Please enter your date of birth.');
+            if (!mobile || mobile.length < 10) return showAlert('warning', 'Please enter a valid 10-digit mobile number.');
 
-                // Call REAL Supabase OTP Send
-                DB.sendEmailOtp(val).then(res => {
-                    if (res.success) {
-                        showAlert('success', 'Verification code has been sent to ' + val + '. Please check your inbox (and spam folder).');
-                        otpSent = true;
+            // Store Data
+            regData.name = name;
+            regData.dob = dob;
+            regData.mobile = mobile;
 
-                        // Countdown
-                        let count = 60;
-                        const timer = setInterval(() => {
-                            count--;
-                            if (count < 0) {
-                                clearInterval(timer);
-                                btn.textContent = 'Verify';
-                                btn.disabled = false;
-                                return;
-                            }
-                            btn.textContent = `Resend (${count}s)`;
-                        }, 1000);
-                    } else {
-                        console.error("OTP SEND ERROR:", res.message);
-                        showAlert('error', res.message || 'Failed to send verification code. Please try again.', 'OTP Error');
-                        btn.textContent = 'Verify';
-                        btn.disabled = false;
-                    }
-                }).catch(err => {
-                    console.error("CRITICAL OTP ERROR:", err);
-                    showAlert('error', 'A system error occurred. Check browser console for details.');
-                    btn.textContent = 'Verify';
-                    btn.disabled = false;
-                });
-            } else {
-                // Original Mobile Logic
-                btn.textContent = 'Sending...';
-                btn.disabled = true;
+            showStep(2);
+        };
 
-                setTimeout(() => {
-                    showAlert('success', 'Verification code sent to ' + val + ': 123456');
-                    otpSent = true;
+        window.triggerEmailOtp = function () {
+            const email = document.getElementById('regEmail').value;
+            if (!email) return showAlert('warning', 'Please enter a valid email address.');
 
-                    // Countdown
+            const btn = document.getElementById('sendEmailOtpBtn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            DB.sendEmailOtp(email).then(res => {
+                if (res.success) {
+                    showAlert('success', 'OTP sent to ' + email);
                     let count = 60;
                     const timer = setInterval(() => {
-                        btn.textContent = `Resend (${count}s)`;
                         count--;
                         if (count < 0) {
                             clearInterval(timer);
-                            btn.textContent = 'Resend Code';
+                            btn.textContent = 'Send OTP';
                             btn.disabled = false;
+                        } else {
+                            btn.textContent = `Resend (${count}s)`;
                         }
                     }, 1000);
-                }, 1000);
+                } else {
+                    showAlert('error', res.message || 'Failed to send OTP.');
+                    btn.textContent = 'Send OTP';
+                    btn.disabled = false;
+                }
+            }).catch(err => {
+                console.error(err);
+                showAlert('error', 'Error sending OTP.');
+                btn.textContent = 'Send OTP';
+                btn.disabled = false;
+            });
+        };
+
+        window.goToStep3 = async function () {
+            const email = document.getElementById('regEmail').value;
+            const otp = document.getElementById('regOtpInput').value;
+            const pass = document.getElementById('regPass').value;
+            const confirmPass = document.getElementById('regConfirmPass').value;
+            const inviteCode = document.getElementById('regInviteCode').value;
+
+            if (!email) return showAlert('warning', 'Please enter email address.');
+            if (!otp) return showAlert('warning', 'Please enter verification code.');
+            if (!pass) return showAlert('warning', 'Please create a password.');
+            if (pass !== confirmPass) return showAlert('warning', 'Passwords do not match.');
+            if (pass.length < 6) return showAlert('warning', 'Password must be at least 6 characters.');
+
+            // Verify OTP
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = 'Verifying...';
+            btn.disabled = true;
+
+            try {
+                // Verify Email OTP using Supabase via DB helper
+                const res = await DB.verifyEmailOtp(email, otp);
+                if (res.success) {
+                    // Success
+                    regData.email = email;
+                    regData.password = pass;
+                    regData.inviteCode = inviteCode;
+                    regData.authId = res.authId; // Store Auth ID
+
+                    showStep(3);
+                } else {
+                    showAlert('error', 'Invalid OTP or expired. Please try again.');
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert('error', 'Verification failed due to a system error.');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         };
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        window.submitRegistration = function () {
+            const checkbox = document.getElementById('agreeCheckbox');
+            if (!checkbox.checked) {
+                return showAlert('warning', 'You must agree to the KYC agreement to proceed.');
+            }
 
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.textContent;
+            // Move to Step 3B (Confirmation)
+            // Auto-fill confirmation fields
+            document.getElementById('confName').value = regData.name;
+            document.getElementById('confDob').value = regData.dob;
+            document.getElementById('confMobile').value = '+91' + regData.mobile;
 
-            const type = currentRegType;
-            const mobile = document.getElementById('regMobile').value;
-            const email = document.getElementById('regEmail').value;
-            const otpCode = document.getElementById('regOtp').value;
-            const pass = document.getElementById('regPass').value;
-            const confirmPass = document.getElementById('regConfirmPass').value;
+            showStep('3B');
+        };
 
-            // Validation
-            if (type === 'mobile' && !mobile) return showAlert('warning', 'Enter mobile number');
-            if (type === 'email' && !email) return showAlert('warning', 'Enter email address');
-            if (!otpSent) return showAlert('warning', 'Please send verification code first');
-            if (!otpCode) return showAlert('warning', 'Please enter the verification code');
-            if (pass !== confirmPass) return showAlert('warning', 'Passwords do not match');
-            if (pass.length < 6) return showAlert('warning', 'Password must be at least 6 characters');
+        window.goToStep3C = function () {
+            showStep('3C');
+        };
 
-            submitBtn.textContent = 'Registering...';
-            submitBtn.disabled = true;
+        window.submitFinalKYC = async function () {
+            const idFile = document.getElementById('kycDocId').files[0];
+            const idBackFile = document.getElementById('kycDocIdBack').files[0];
+            const idNumber = document.getElementById('regIdNumber').value.trim();
+
+            if (!idNumber) return showAlert('warning', 'Please enter your ID document number.');
+            if (!idFile) return showAlert('warning', 'Please upload your Government-Issued ID (Front).');
+            if (!idBackFile) return showAlert('warning', 'Please upload your Government-Issued ID (Back).');
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = 'Submitting...';
+            btn.disabled = true;
 
             try {
-                let authId = null;
+                // 1. Create User Account (Basic Registration)
+                let regRes = await DB.register(regData.mobile, regData.password, regData.email, regData.authId);
 
-                // REAL Supabase Verification for Email
-                if (type === 'email') {
-                    const verifyRes = await DB.verifyEmailOtp(email, otpCode);
-                    if (!verifyRes.success) {
-                        submitBtn.textContent = originalBtnText;
-                        submitBtn.disabled = false;
-                        return showAlert('error', verifyRes.message || 'Invalid verification code.', 'Verification Failed');
+                if (!regRes.success) {
+                    console.warn("USER CREATION FAILED (Checking for existing record):", regRes.message);
+
+                    // If conflict, try to fetch the existing user record linked to this session
+                    if (regRes.message.includes("duplicate key") && regData.authId) {
+                        const client = DB.getClient();
+                        const { data: existingUser } = await client
+                            .from('users')
+                            .select('id')
+                            .eq('auth_id', regData.authId)
+                            .single();
+
+                        if (existingUser) {
+                            console.log("RECOVERED EXISTING USER ID FROM PREVIOUS ATTEMPT:", existingUser.id);
+                            regRes = { success: true, user: existingUser };
+                        } else {
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                            return showAlert('error', regRes.message || 'Registration failed.', 'Error');
+                        }
+                    } else {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                        return showAlert('error', regRes.message || 'Registration failed.', 'Error');
                     }
-                    authId = verifyRes.authId;
-                } else if (type === 'mobile' && otpCode !== '123456') {
-                    submitBtn.textContent = originalBtnText;
-                    submitBtn.disabled = false;
-                    return showAlert('warning', 'Invalid verification code');
                 }
 
-                // Call DB Register to sync with public.users table
-                const finalIdentifier = type === 'mobile' ? mobile : email;
-                const regEmail = type === 'email' ? email : null;
-                const regMobile = type === 'mobile' ? mobile : null;
+                const userId = regRes.user.id;
+                console.log("USER ID READY:", userId, regRes);
 
-                const res = await DB.register(regMobile, pass, regEmail, authId);
+                // --- CRITICAL: FORCE SESSION SYNC BEFORE UPDATES ---
+                const client = DB.getClient();
+                const { data: { session } } = await client.auth.getSession();
+                console.log("AUTHENTICATION SESSION ESTABLISHED:", session);
 
-                if (res.success) {
-                    showAlert('success', 'Account created successfully. You can now login.', 'Registration Successful', () => {
-                        closeModal('register');
-                    });
+                const sessionUser = (await client.auth.getUser()).data.user;
+                const activeAuthId = sessionUser?.id || regData.authId;
+
+                console.log("AUTH LINKAGE DATA:", {
+                    internalId: userId,
+                    sessionUid: sessionUser?.id,
+                    cachedAuthId: regData.authId,
+                    finalToLink: activeAuthId
+                });
+
+                if (!activeAuthId) {
+                    console.error("CRITICAL: NO AUTH UUID FOUND TO LINK TO USER.");
+                }
+
+                // 2. Submit KYC using Unified Function (Handles both Users table update and KYC record)
+                console.log("INITIATING UNIFIED KYC PIPELINE FOR USER ID:", userId);
+                console.log("USER ID BEING PASSED:", userId, typeof userId);
+
+                const idType = document.getElementById('regIdType').value;
+
+                const kycRes = await DB.submitKYC(
+                    userId,
+                    regData.name,
+                    '+91' + regData.mobile,
+                    idNumber,
+                    idFile,       // idFront
+                    idBackFile,   // idBack
+                    null,         // selfie (now removed from reg)
+                    {
+                        dob: regData.dob,
+                        email: regData.email,
+                        status: 'active',
+                        auth_id: activeAuthId,
+                        username: regData.name || regData.mobile,
+                        id_type: idType
+                    }
+                );
+
+                if (kycRes.success) {
+                    console.log("PROFILE UPDATED SUCCESS:", kycRes.profileUpdate);
+                    console.log("KYC INSERT SUCCESS:", kycRes.kycInsert);
                 } else {
-                    showAlert('error', res.message || 'Registration failed.', 'Registration Failed');
+                    console.error("KYC PIPELINE FAILED at stage:", kycRes.stage, kycRes.error);
+                    throw new Error(`KYC Pipeline failed at ${kycRes.stage}: ` + (kycRes.error?.message || "Check RLS or network."));
                 }
+
+                // 4. Success
+                showStep('FinalReview');
+
             } catch (err) {
-                console.error("REGISTRATION CRITICAL ERROR:", err);
-                showAlert('error', err.message || 'Registration failed. Check console for details.', 'System Error');
-            } finally {
-                submitBtn.textContent = originalBtnText;
-                submitBtn.disabled = false;
+                console.error("KYC SUBMISSION ERROR:", err);
+                showAlert('error', err.message || 'Unexpected failure during document submission.', 'Error');
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
-        });
+        };
+
+        window.showStep = function (step) {
+            // Hide all steps
+            const ids = ['regStep1', 'regStep2', 'regStep3', 'regStep3B', 'regStep3C', 'regFinalReview'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+
+            // Show target
+            const targetId = step === 'FinalReview' ? 'regFinalReview' : 'regStep' + step;
+            const target = document.getElementById(targetId);
+            if (target) target.style.display = 'block';
+
+            // Clean up title if needed
+            if (step === '3B' || step === '3C' || step === 'FinalReview') {
+                const titleCont = document.getElementById('regTitleContainer');
+                if (titleCont) titleCont.style.display = 'none';
+            } else {
+                const titleCont = document.getElementById('regTitleContainer');
+                if (titleCont) titleCont.style.display = 'block';
+            }
+        };
 
         // Initialize Defaults
-        switchRegTab('email');
         switchLoginTab('email');
     </script>
 </body>

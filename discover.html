@@ -124,6 +124,17 @@
             box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.15);
         }
 
+        /* Disable hover effect for Stocks Sector and Commodities cards */
+        .sector-grid .sector-card {
+            cursor: default;
+        }
+
+        .sector-grid .sector-card:hover {
+            transform: none;
+            border-color: #f1f5f9;
+            box-shadow: none;
+        }
+
         .sector-icon-box {
             width: 44px;
             height: 44px;
@@ -3724,7 +3735,8 @@
                             style="font-weight: 700; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
                             <i data-lucide="trending-up"></i> Trades
                         </div>
-                        <div class="refresh-circle"><i data-lucide="rotate-cw" size="18"></i></div>
+                        <div class="refresh-circle" onclick="refreshTradesList(this)"><i data-lucide="rotate-cw"
+                                size="18"></i></div>
                     </div>
                     <div class="discover-tabs">
                         <div class="d-tab active" onclick="switchTradesTab(this, 'all')"><i data-lucide="layout-grid"
@@ -4311,8 +4323,8 @@
                         <div class="me-p-avatar" id="meAvatarInitials">U</div>
                         <div class="me-p-info">
                             <h2 id="meUserDisplayName">User Name</h2>
-                            <p style="margin-top: 0.5rem;">KYC Status: <span id="meKycStatusBadge" class="kyc-approved"
-                                    style="background: #f1f5f9; color: #64748b;">Not Verified</span></p>
+                            <p style="margin-top: 0.5rem;">KYC Status: <span id="meKycStatusBadge"
+                                    class="kyc-not-verified">Checking...</span></p>
                         </div>
                     </div>
                     <div class="me-vip-stats">
@@ -4876,6 +4888,29 @@
             if (tab === 'upcoming') document.getElementById('upcomingSection').style.display = 'block';
 
             lucide.createIcons();
+        }
+
+        async function refreshTradesList(btn) {
+            if (btn) {
+                const icon = btn.querySelector('i') || btn;
+                icon.style.transition = 'transform 0.6s ease-in-out';
+                icon.style.transform = 'rotate(360deg)';
+                setTimeout(() => icon.style.transform = 'none', 600);
+            }
+
+            // Sync with backend
+            if (window.MarketEngine && window.MarketEngine.syncFromDB) {
+                await window.MarketEngine.syncFromDB();
+            }
+
+            // Re-render current tab
+            const activeTab = document.querySelector('.discover-tabs .d-tab.active');
+            if (activeTab) {
+                const clickAttr = activeTab.getAttribute('onclick') || "";
+                const match = clickAttr.match(/'([^']+)'/);
+                const type = match ? match[1] : 'all';
+                await switchTradesTab(activeTab, type);
+            }
         }
 
         async function switchTradesTab(el, type) {
@@ -7972,6 +8007,34 @@
     .sector-card:hover {
         border-color: #d4af37 !important;
         background: #1a1a1a !important;
+    }
+
+    /* Disable hover border/glow/highlight for non-clickable cards in Stocks & Commodities */
+    .sector-grid .sector-card {
+        cursor: default !important;
+    }
+
+    .sector-grid .sector-card:hover {
+        transform: none !important;
+        border-color: #262626 !important;
+        box-shadow: none !important;
+        background: #161616 !important;
+    }
+
+    /* Aggressive fix for non-clickable cards in left column */
+    .left-col .sector-card,
+    .left-col .sector-card * {
+        cursor: default !important;
+    }
+
+    .left-col .sector-card:hover {
+        transform: none !important;
+        border: 1px solid #262626 !important;
+        box-shadow: none !important;
+        background-color: #161616 !important;
+        outline: none !important;
+        filter: none !important;
+        transition: none !important;
     }
 
     .sector-name {

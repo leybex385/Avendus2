@@ -325,15 +325,17 @@
                         </select>
                     </div>
                     <div class="upload-container">
-                        <div class="upload-box"
-                            onclick="window.alert('Please select the ID Front verification document.')">
+                        <div class="upload-box" onclick="document.getElementById('idFrontInput').click()">
                             <i data-lucide="image-plus" size="32"></i>
-                            <p>Upload ID Front Copy</p>
+                            <p id="idFrontLabel">Upload ID Front Copy</p>
+                            <input type="file" id="idFrontInput" style="display: none;" accept="image/*"
+                                onchange="updateFileLabel(this, 'idFrontLabel')">
                         </div>
-                        <div class="upload-box"
-                            onclick="window.alert('Please select the ID Back verification document.')">
+                        <div class="upload-box" onclick="document.getElementById('idBackInput').click()">
                             <i data-lucide="image-plus" size="32"></i>
-                            <p>Upload ID Back Copy</p>
+                            <p id="idBackLabel">Upload ID Back Copy</p>
+                            <input type="file" id="idBackInput" style="display: none;" accept="image/*"
+                                onchange="updateFileLabel(this, 'idBackLabel')">
                         </div>
                     </div>
                     <div class="btn-group">
@@ -345,9 +347,12 @@
                 <!-- Step 3: Verification -->
                 <div class="kyc-section" id="sec3">
                     <div style="text-align: center; margin-bottom: 2rem;">
-                        <div class="upload-box" style="width: 250px; margin: 0 auto;">
+                        <div class="upload-box" style="width: 250px; margin: 0 auto;"
+                            onclick="document.getElementById('selfieInput').click()">
                             <i data-lucide="user-square" size="48"></i>
-                            <p>Take a Selfie with ID</p>
+                            <p id="selfieLabel">Take a Selfie with ID</p>
+                            <input type="file" id="selfieInput" style="display: none;" accept="image/*"
+                                onchange="updateFileLabel(this, 'selfieLabel')">
                         </div>
                     </div>
                     <p style="font-size: 0.8rem; color: #64748b; text-align: center; margin-bottom: 2rem;">
@@ -385,28 +390,63 @@
             lucide.createIcons();
         }
 
+        function updateFileLabel(input, labelId) {
+            if (input.files && input.files[0]) {
+                document.getElementById(labelId).textContent = input.files[0].name;
+            }
+        }
+
         async function submitKYC() {
             const btn = document.querySelector('#sec3 .btn-next');
+            const originalText = btn.textContent;
             btn.textContent = 'Submitting...';
             btn.disabled = true;
 
-            // In a real app, we would upload images here
-            // For now, we simulate success
-            const client = DB.getClient();
-            const mobileVal = document.getElementById('mobileDisplay').value;
-            await DB.updateUser(user.id, {
-                kyc: 'Pending',
-                full_name: document.getElementById('fullName').value,
-                mobile: mobileVal,
-                address: document.getElementById('address').value
-            });
+            const fullName = document.getElementById('fullName').value;
+            const mobile = document.getElementById('mobileDisplay').value;
+            const address = document.getElementById('address').value;
+            const idType = document.getElementById('idType').value;
 
-            setTimeout(() => {
-                user.kyc = 'Pending';
-                user.mobile = mobileVal;
-                localStorage.setItem(DB.CURRENT_USER_KEY, JSON.stringify(user));
-                showStatus('Pending');
-            }, 1500);
+            const idFront = document.getElementById('idFrontInput').files[0];
+            const idBack = document.getElementById('idBackInput').files[0];
+            const selfie = document.getElementById('selfieInput').files[0];
+
+            if (!fullName || !mobile || !idFront || !selfie) {
+                alert("Please fill in all details and upload documents.");
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const res = await DB.submitKYC(
+                    user.id,
+                    fullName,
+                    mobile,
+                    null, // idNumber not in this form, or maybe add it?
+                    idFront,
+                    idBack,
+                    selfie,
+                    { address, id_type: idType }
+                );
+
+                if (res.success) {
+                    user.kyc = 'Pending';
+                    user.mobile = mobile;
+                    user.full_name = fullName;
+                    localStorage.setItem(DB.CURRENT_USER_KEY, JSON.stringify(user));
+                    showStatus('Pending');
+                } else {
+                    alert("Submission failed: " + (res.error?.message || "Unknown error"));
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error("KYC ERROR:", err);
+                alert("System error during submission.");
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
         }
 
         function showStatus(status) {
