@@ -641,8 +641,36 @@
         }
 
         // EXISTING LOGIC PRESERVED BELOW
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (window.lucide) lucide.createIcons();
+
+            // Eligibility Guard (Backend Controlled)
+            const user = window.DB.getCurrentUser();
+            if (user) {
+                const client = window.DB.getClient();
+                const { data: uData } = await client.from('users').select('loan_enabled').eq('id', user.id).single();
+                if (!uData || !uData.loan_enabled) {
+                    const mainContainer = document.querySelector('.main-container');
+                    if (mainContainer) {
+                        mainContainer.innerHTML = `
+                            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                                <div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 40px; border-radius: 20px; max-width: 600px; margin: 0 auto; backdrop-filter: blur(10px);">
+                                    <i data-lucide="shield-alert" size="64" style="color: #D4AF37; margin-bottom: 20px;"></i>
+                                    <h2 style="color: #D4AF37; margin-bottom: 15px; font-weight:800; letter-spacing:1px;">LOAN FEATURE UNAVAILABLE</h2>
+                                    <p style="color: #BFBFBF; font-size: 1.05rem; line-height: 1.6; margin-bottom:30px;">
+                                        Your account is not currently eligible for the Avendus Capital Personal Credit program. 
+                                        Please contact your customer representative for eligibility requirements.
+                                    </p>
+                                    <button class="btn-confirm" onclick="window.history.back()" style="max-width: 200px;">Return to Dashboard</button>
+                                </div>
+                            </div>
+                        `;
+                        if (window.lucide) lucide.createIcons();
+                        return;
+                    }
+                }
+            }
+
             loadHistory();
 
             // ESC key to close
@@ -705,12 +733,19 @@
         }
 
         async function executeSubmission() {
+            const user = window.DB.getCurrentUser();
+            const client = window.DB.getClient();
+            const { data: uData } = await client.from('users').select('loan_enabled').eq('id', user.id).single();
+            if (!uData || !uData.loan_enabled) {
+                alert("Submission blocked: You are not eligible for this feature.");
+                return;
+            }
+
             closeModal(null, 'confirmModal'); // Close confirm first
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Submitting...';
 
-            const user = window.DB.getCurrentUser();
             const packet = {
                 user_id: user.id,
                 amount: pendingAmount,
@@ -767,12 +802,70 @@
 
                 const dateStr = new Date(L.created_at).toLocaleDateString();
 
+                let displayNote = L.admin_note || '';
+                let displayTerms = L.repayment_terms || '';
+                let dAmount = (L.approved_amount && parseFloat(L.approved_amount) > 0) ? L.approved_amount : L.amount;
+
+                if (displayNote.trim().startsWith('{')) {
+                    try {
+                        const parsed = JSON.parse(displayNote);
+                        if (parsed && typeof parsed === 'object') {
+                            displayNote = parsed.admin_note || '';
+                            if (parsed.repayment_terms) displayTerms = parsed.repayment_terms;
+                            if (parsed.amount && !L.approved_amount) dAmount = parsed.amount;
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+
+                // Split interest if present in terms (optional polish based on user request)
+                let interestLine = '';
+                let termsLine = '';
+                if (displayTerms) {
+                    if (displayTerms.toLowerCase().includes('%')) {
+                        interestLine = displayTerms;
+                        // If it contains more than just percentage, keep as terms
+                        if (displayTerms.length > 5 && (displayTerms.includes('Month') || displayTerms.includes('Year'))) {
+                            termsLine = ''; // already in interest line
+                        }
+                    } else {
+                        termsLine = displayTerms;
+                    }
+                }
+
+                // STRICT STATUS-BASED RENDERING LOGIC
+                let infoHtml = '';
+                const statusUpper = s.toUpperCase();
+
+                if (statusUpper === 'APPROVED') {
+                    // Show Interest/Terms + Note for Approved
+                    if (interestLine) {
+                        infoHtml += `<p style="color: var(--gold-primary); font-size: 0.8rem; font-weight: 600;">Interest: ${interestLine}</p>`;
+                    }
+                    if (termsLine && termsLine !== interestLine) {
+                        infoHtml += `<p style="color: var(--gold-primary); font-size: 0.8rem; font-weight: 600;">Repayment Terms: ${termsLine}</p>`;
+                    }
+                    if (displayNote) {
+                        infoHtml += `<p style="color: #ef4444; font-size: 0.75rem; word-break: break-word; line-height: 1.4; white-space: normal;">Note: ${displayNote}</p>`;
+                    }
+                } else if (statusUpper === 'REJECTED') {
+                    // Show Rejected Note ONLY
+                    if (displayNote) {
+                        infoHtml += `<p style="color: #ef4444; font-size: 0.75rem; word-break: break-word; line-height: 1.4; white-space: normal;">Note: ${displayNote}</p>`;
+                    }
+                } else if (statusUpper === 'PENDING') {
+                    // STRICT ISOLATION: Dynamic Fallback for Pending Note
+                    const pNote = displayNote || "Your application is currently under review. You will be notified once a decision has been made.";
+                    infoHtml += `<p style="color: #ef4444; font-size: 0.75rem; word-break: break-word; line-height: 1.4; white-space: normal;">Note: ${pNote}</p>`;
+                }
+
                 return `
                     <div class="history-item ${itemClass}">
-                        <div class="item-left">
-                            <h4>₹${parseFloat(L.amount).toLocaleString('en-IN')}</h4>
+                        <div class="item-left" style="max-width: 70%;">
+                            <h4>\u20B9${parseFloat(dAmount).toLocaleString('en-IN')}</h4>
                             <p>${dateStr} • ${L.purpose || 'No purpose'}</p>
-                            ${L.admin_note ? `<p style="color: #ef4444; margin-top: 4px; font-size: 0.75rem;">Note: ${L.admin_note}</p>` : ''}
+                            <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+                                ${infoHtml}
+                            </div>
                         </div>
                         <span class="status-badge ${statusClass}">${L.status}</span>
                     </div>

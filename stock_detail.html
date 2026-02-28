@@ -431,11 +431,17 @@
             return s ? s.p : 0;
         }
 
+        function formatCurrency(val) {
+            return '₹' + (parseFloat(val) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         let currentActiveSymbol = '';
         let currentStockName = '';
         let currentPrice = 0;
         let currentInterval = 'D';
-        let currentProductType = 'stock';
+        let currentProductId = null;
+        let currentMinInvest = 0;
+        let currentProductType = '';
 
         async function syncBalance() {
             const user = window.DB.getCurrentUser();
@@ -483,9 +489,11 @@
             const sym = urlParams.get('symbol');
             const name = urlParams.get('name') || sym;
             const type = urlParams.get('type') || 'stock';
+            const id = urlParams.get('id');
+            const minInvest = urlParams.get('minInvest') || 0;
 
             if (sym) {
-                initPage(sym, name, type);
+                initPage(sym, name, type, id, minInvest);
             } else {
                 alert("No stock specified.");
                 window.location.href = 'market.html';
@@ -544,10 +552,14 @@
             }
         }
 
-        function initPage(sym, name, type = 'stock') {
+        function initPage(sym, name, type = 'stock', id = null, minInvest = 0) {
+            console.log("INIT PAGE LOADED");
             currentActiveSymbol = sym;
             currentStockName = name;
             currentProductType = type;
+            currentProductId = id;
+            currentMinInvest = parseFloat(minInvest) || 0;
+            currentPrice = 0; // Reset to 0 to ensure live price takes precedence
 
             // Set Titles
             document.getElementById('bpStockSymbol').innerText = sym;
@@ -556,28 +568,94 @@
             // Load Widget
             loadWidget(sym);
 
-            // Set Price (Use Engine if available)
-            const liveData = window.MarketEngine ? window.MarketEngine.getProduct(sym) : null;
-            currentPrice = liveData ? liveData.price : getStockPrice(sym);
-            if (currentPrice === 0) {
-                currentPrice = 1000.00; // Default fallback
-            }
-            document.getElementById('bpCurrentPrice').innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            // Ensure price is fetched live from Provider Engine
+            const priceEl = document.getElementById('bpCurrentPrice');
+            if (priceEl) priceEl.innerText = 'Loading...';
 
 
             // Set Action Text
-            const buyBtn = document.querySelector('.bp-btn');
+            const buyBtn = document.getElementById('buyBtn');
             const headerTitle = document.getElementById('bpHeaderTitle');
+            const qtyRow = document.querySelector('.bp-row'); // The row containing Quantity label and input
+
             if (currentProductType === 'OTC' || currentProductType === 'IPO') {
-                if (buyBtn) buyBtn.innerText = 'SUBSCRIBE NOW';
+                if (buyBtn) {
+                    buyBtn.innerText = 'SUBSCRIBE NOW';
+                    buyBtn.dataset.type = currentProductType;
+                }
                 if (headerTitle) headerTitle.innerText = `Subscribe to ${currentProductType}`;
+
+                if (currentProductType === 'IPO') {
+                    // IPO MUST NOT allow user to select quantity
+                    if (qtyRow) qtyRow.style.display = 'none';
+                } else {
+                    if (qtyRow) qtyRow.style.display = 'block';
+                }
+            } else {
+                if (qtyRow) qtyRow.style.display = 'block';
             }
 
             updateBuyTotal();
             startSimulation(); // Start the ticker
+            fetchLivePrice();  // Force initial fetch
         }
 
         function loadWidget(symbol) {
+            const container = document.getElementById('tradingview_widget');
+            if (container) container.innerHTML = '';
+
+            // Handle Restricted Symbols with Investing.com Iframe
+            const investingPairs = {
+                'NSE:NIFTY': '17940',
+                'NIFTY1!': '17940',
+                'BSE:SENSEX': '39929',
+                'NSE:BANKNIFTY': '17923',
+                'NSE:NIFTYBANK': '17923',
+                'NIFTYBANK': '17923',
+                'NSE:INDIAVIX': '17942',
+                'NSE:MIDCPNIFTY': '18012',
+                'NSE:NIFTYMIDCAP100': '18012',
+                'NSE:NIFTYMIDCAP': '18012',
+                'NSE:SMLCAP100': '17946',
+                'NSE:NIFTYSMALLCAP100': '17946',
+                'NSE:NIFTYSMLCAP': '17946'
+            };
+
+            if (investingPairs[symbol]) {
+                let pairId = investingPairs[symbol];
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                wrapper.style.overflow = 'hidden';
+
+                const iframe = document.createElement('iframe');
+                let w = (container && container.offsetWidth) ? container.offsetWidth : 800;
+                let h = (container && container.offsetHeight) ? container.offsetHeight : 600;
+                iframe.src = `https://ssltvc.investing.com/?pair_ID=${pairId}&height=${h}&width=${w}&interval=300&plotStyle=candles&domain_ID=56&lang_ID=56&timezone_ID=20`;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.filter = 'invert(1) hue-rotate(180deg) brightness(0.9)'; // Dark Mode Filter
+                iframe.id = 'investing_chart';
+
+                // Mask for the logo (now black to match dark theme)
+                const mask = document.createElement('div');
+                mask.style.position = 'absolute';
+                mask.style.bottom = '42px';
+                mask.style.left = '45px';
+                mask.style.width = '100px';
+                mask.style.height = '25px';
+                mask.style.background = '#000000';
+                mask.style.pointerEvents = 'none';
+                mask.style.zIndex = '10';
+
+                wrapper.appendChild(iframe);
+                wrapper.appendChild(mask);
+                if (container) container.appendChild(wrapper);
+                return;
+            }
+
             let tvSymbol = symbol;
             if (symbol.includes('.')) {
                 const parts = symbol.split('.');
@@ -587,9 +665,6 @@
             } else if (!symbol.includes(':')) {
                 tvSymbol = `BSE:${symbol}`;
             }
-
-            const container = document.getElementById('tradingview_widget');
-            if (container) container.innerHTML = '';
 
             new TradingView.widget({
                 "autosize": true,
@@ -619,13 +694,25 @@
 
         // --- Buy Logic ---
         function updateBuyTotal() {
-            const qty = parseInt(document.getElementById('bpQuantity').value) || 0;
-            const baseTotal = qty * currentPrice;
+            const qtyInput = document.getElementById('bpQuantity');
+            if (!qtyInput) return { qty: 0, price: 0, baseTotal: 0, tax: 0, txnCharge: 0, total: 0 };
 
-            // Realtime Market Fees
-            const tax = baseTotal * 0.0012;
-            const txnCharge = baseTotal * 0.0003;
-            const finalTotal = baseTotal + tax + txnCharge;
+            let qty = parseInt(qtyInput.value) || 0;
+            let baseTotal, tax, txnCharge, finalTotal;
+
+            if (currentProductType === 'IPO') {
+                // FIXED LOT LOGIC FOR IPO
+                baseTotal = currentMinInvest || 15000;
+                qty = baseTotal / (currentPrice || 1);
+                tax = 0;
+                txnCharge = 0;
+                finalTotal = baseTotal;
+            } else {
+                baseTotal = qty * currentPrice;
+                tax = baseTotal * 0.0012;
+                txnCharge = baseTotal * 0.0003;
+                finalTotal = baseTotal + tax + txnCharge;
+            }
 
             const taxEl = document.getElementById('bpTaxFees');
             const txnEl = document.getElementById('bpTxnCharge');
@@ -778,17 +865,27 @@
                         symbol: symbol,
                         name: stockName,
                         type: (type || 'stock').toLowerCase(),
+                        product_id: currentProductId,
                         quantity: calc.qty,
+                        requested_quantity: calc.qty,
                         price: calc.price,
                         total_amount: calc.total,
                         tax_amount: calc.tax,
                         txn_charge: calc.txnCharge,
-                        status: tradeStatus
+                        status: tradeStatus,
+                        order_status: 'OPEN'
                     };
 
-                    const result = await window.DB.submitTrade(tradeData);
+                    let result;
+                    if (isSubscription) {
+                        result = await window.DB.submitSubscriptionAtomic(tradeData);
+                    } else {
+                        result = await window.DB.submitTrade(tradeData);
+                    }
+
                     if (result.success) {
-                        if (tradeStatus === 'Approved') {
+                        // --- WALLET STATE TRANSITION (NON-SUBSCRIPTION) ---
+                        if (!isSubscription && tradeStatus === 'Approved') {
                             const newBalance = currentBalance - calc.total;
                             const newInvested = (parseFloat(freshUser.invested) || 0) + calc.total;
                             await window.DB.updateUserFinancials(freshUser.id, newBalance, newInvested);
@@ -804,7 +901,8 @@
                             });
                         }
                     } else {
-                        showModal('error', 'Submission Failed', 'Failed to submit trade.');
+                        const errStr = result.error?.message || result.error || "Unknown Error";
+                        showModal('error', 'Submission Failed', 'Failed to submit trade: ' + errStr);
                     }
                 } else {
                     // SELL logic
@@ -862,65 +960,136 @@
                         const tradeDate = new Date(trade.created_at).toLocaleDateString('en-IN', {
                             day: '2-digit', month: 'short'
                         });
-                        const total = parseFloat(trade.total_amount);
-                        const qty = parseInt(trade.quantity);
-                        const price = parseFloat(trade.price);
+                        const totalBuyIn = parseFloat(trade.total_amount);
+                        const qty = parseFloat(trade.quantity);
+                        const buyPrice = parseFloat(trade.price);
 
-                        // Show each purchase as an entry
+                        // Calculate Real-time Profit
+                        // Profit = (Current Price * Qty) - Buy In Total (including fees)
+                        // Or if Buy In Total is just base, we use that. 
+                        // Instructions say: Profit = Current Price - Buy In Price
+                        const profitPerShare = currentPrice - buyPrice;
+                        const totalProfit = profitPerShare * qty;
+                        const profitPercent = (profitPerShare / buyPrice) * 100;
+
+                        const profitColor = totalProfit >= 0 ? '#10b981' : '#ef4444';
+                        const profitSign = totalProfit >= 0 ? '+' : '';
+
                         return `
-                            <div class="tl-item">
+                            <div class="tl-item" style="padding: 1.25rem 0;">
                                 <div class="tl-left">
-                                    <div class="tl-symbol">${trade.symbol}</div>
-                                    <div class="tl-date">${tradeDate} • Bought at ₹${price.toLocaleString('en-IN')}</div>
-                                    <button onclick="executeSellOrder('${trade.id}')" style="margin-top: 0.5rem; background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: 600;">SELL LOT</button>
+                                    <div class="tl-symbol" style="display:flex; align-items:center; gap:0.5rem;">
+                                        ${trade.symbol}
+                                        <span style="font-size: 0.7rem; padding: 2px 6px; background: #f1f5f9; border-radius: 4px; color: #64748b;">LOT</span>
+                                    </div>
+                                    <div class="tl-date">${tradeDate} • Bought at ₹${buyPrice.toLocaleString('en-IN')}</div>
+                                    
+                                    <div style="margin-top: 0.8rem; display: flex; gap: 1rem; align-items: center;">
+                                        <div style="font-size: 0.8rem;">
+                                            <span style="color: #64748b;">Profit:</span>
+                                            <span style="font-weight: 700; color: ${profitColor};">${profitSign}₹${totalProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div style="font-size: 0.8rem;">
+                                            <span style="color: #64748b;">ROI:</span>
+                                            <span style="font-weight: 700; color: ${profitColor}; border-radius: 4px; padding: 2px 6px; background: ${profitColor}15;">${profitSign}${profitPercent.toFixed(2)}%</span>
+                                        </div>
+                                    </div>
+
+                                    <button onclick="executeSellOrder('${trade.id}')" style="margin-top: 1rem; background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 700; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">EXIT POSITION</button>
                                 </div>
                                 <div class="tl-right">
-                                    <div class="tl-price">₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
-                                    <div class="tl-qty">${qty} Shares</div>
+                                    <div class="tl-price" style="font-size: 1.1rem;">₹${totalBuyIn.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                                    <div class="tl-qty">${qty} Units</div>
                                 </div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#94a3b8; font-size:0.8rem;">You do not own this stock yet.</div>';
+                    list.innerHTML = '<div style="text-align:center; padding:2rem; color:#94a3b8; font-size:0.85rem;">You do not own this asset yet.</div>';
                 }
             } catch (e) {
                 console.error("Error loading holdings:", e);
-                list.innerHTML = '<div style="text-align:center; padding:1rem; color:#ef4444; font-size:0.75rem;">Error updating holdings</div>';
+                list.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#ef4444; font-size:0.8rem;">Error updating holdings</div>';
             }
         }
 
-        // --- SIMULATION ---
-        function startSimulation() {
-            // Synchronize with MarketEngine for REAL real-time data
-            setInterval(() => {
-                const liveData = window.MarketEngine ? window.MarketEngine.getProduct(currentActiveSymbol) : null;
-                if (!liveData) return;
+        // --- MARKET DATA POLLING ---
+        let priceInterval = null;
 
-                currentPrice = liveData.price;
+        async function fetchLivePrice() {
+            console.log("FETCH LIVE PRICE CALLED");
+            if (!currentActiveSymbol) return;
 
-                // Update UI Prices
-                const elPrice = document.getElementById('bpCurrentPrice');
-                const sdPrice = document.getElementById('sdPrice');
-                const sdSymbol = document.getElementById('sdSymbol');
+            try {
+                const data = await window.DB.getMarketPrice(currentActiveSymbol);
+                const price = data ? data.price : null;
+                console.log("LIVE PRICE RECEIVED:", price);
 
-                if (elPrice) elPrice.innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                if (sdPrice) sdPrice.innerText = '₹' + currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                if (sdSymbol) sdSymbol.innerText = currentActiveSymbol;
+                if (data && data.price !== null && data.price !== undefined && !isNaN(data.price) && data.price > 0) {
+                    currentPrice = data.price;
 
-                // Update Progress on Detail Page (Mock)
-                const sdProgress = document.getElementById('sdProgress');
-                const sdMarker = document.getElementById('sdSliderMarker');
-                if (sdProgress && sdMarker) {
-                    const mockPct = 30 + (Math.random() * 40); // Random wiggle
-                    sdProgress.style.width = mockPct + '%';
-                    sdMarker.style.left = mockPct + '%';
+                    // Update UI Prices
+                    const elPrice = document.getElementById('bpCurrentPrice');
+                    const sdPrice = document.getElementById('sdPrice');
+
+                    // FORCE MAIN PRICE TO BIND TO LIVE FETCHED VALUE
+                    const formattedPrice = formatCurrency(currentPrice);
+                    if (elPrice) elPrice.innerText = formattedPrice;
+                    if (sdPrice) sdPrice.innerText = formattedPrice;
+
+                    // Remove warning if active
+                    const warnEl = document.getElementById('marketDelayedWarning');
+                    if (warnEl) warnEl.remove();
+
+                    // Update Progress on Detail Page (Mock)
+                    const sdProgress = document.getElementById('sdProgress');
+                    const sdMarker = document.getElementById('sdSliderMarker');
+                    if (sdProgress && sdMarker) {
+                        const mockPct = 30 + (Math.random() * 40); // Random wiggle
+                        sdProgress.style.width = mockPct + '%';
+                        sdMarker.style.left = mockPct + '%';
+                    }
+
+                    // Auto-update Total Cost in Buy Panel
+                    updateBuyTotal();
+
+                    // Refresh Holdings UI to show updated Profit/ROI
+                    loadHoldings();
+                } else if (data && data.status === "market_delayed") {
+                    console.warn("Market data delayed for:", currentActiveSymbol);
+                    const warnEl = document.getElementById('marketDelayedWarning');
+                    if (!warnEl) {
+                        const elPrice = document.getElementById('bpCurrentPrice');
+                        if (elPrice && elPrice.parentNode) {
+                            const w = document.createElement('div');
+                            w.id = 'marketDelayedWarning';
+                            w.style.color = '#f59e0b';
+                            w.style.fontSize = '0.75rem';
+                            w.style.marginTop = '4px';
+                            w.innerText = 'Market data temporarily unavailable';
+                            elPrice.parentNode.appendChild(w);
+                        }
+                    }
+                } else {
+                    console.warn("Invalid price received, ignoring update:", data);
                 }
-
-                // Also update Total Cost
-                updateBuyTotal();
-            }, 1000); // Check engine every second
+            } catch (e) {
+                console.error("Failed to poll market price:", e);
+            }
         }
+
+        function startSimulation() {
+            // Initial fetch
+            fetchLivePrice();
+
+            // Poll every 10 seconds safely
+            if (priceInterval) clearInterval(priceInterval);
+            priceInterval = setInterval(fetchLivePrice, 10000);
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (priceInterval) clearInterval(priceInterval);
+        });
 
         let currentPurchaseData = null;
 
@@ -949,7 +1118,7 @@
             btn.disabled = true;
 
             try {
-                showModal('success', 'Request Received', `Your subscription request for ${currentPurchaseData.name} has been received and is waiting for administrator approval.`, () => {
+                showModal('success', 'Request Received', `Your subscription request for ${currentPurchaseData.name} has been received and is waiting for approval.`, () => {
                     closePurchaseModal();
                     syncBalance();
                 });
@@ -1053,7 +1222,7 @@
             style="max-width: 480px; background:white; border-radius:20px; width:90%; overflow: hidden;">
             <div style="background: #1e56a0; padding: 1.5rem; color: white;">
                 <h2 style="font-weight: 800; margin: 0; font-size: 1.25rem;">Subscription Confirmation</h2>
-                <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">Review your institutional allocation
+                <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">Review your institutional subscription
                     request</div>
             </div>
             <div class="popup-body" style="padding:1.5rem;">

@@ -109,6 +109,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check Login & Update UI
     checkLoginStatus();
 
+    // --- GLOBAL KYC PAGE GUARD ---
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (user && user.kyc === 'Pending') {
+        const path = window.location.pathname.toLowerCase();
+        const isRestrictedPage = path.includes('market.html') ||
+            path.includes('deposit.html') ||
+            path.includes('withdraw.html') ||
+            path.includes('bank_accounts.html') ||
+            path.includes('loan_application.html');
+
+        if (isRestrictedPage) {
+            // Check if we already have a flag to prevent infinite loops (though usually home is not restricted)
+            window.location.href = 'index.html?kyc_popup=true';
+        }
+    }
+
+    // Handle KYC Popup from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('kyc_popup') === 'true') {
+        setTimeout(() => {
+            window.CustomUI.alert("KYC verification in progress.", "Verification Required");
+        }, 500);
+    }
+
     // Initialize Carousel
     initCarousel();
 
@@ -333,17 +357,25 @@ document.addEventListener('DOMContentLoaded', () => {
         let cleanType = (type || 'stock').toLowerCase();
         if (cleanType === 'ins.stock') cleanType = 'stock';
 
-        // User requested routing:
-        // INS.STOCK -> DISCOVER BUY & SELL (discover.html with stock detail)
-        // OTC/IPO -> SUBSCRIBE PAGE (discover.html with subscribe view - same view logic)
-
-        const targetUrl = `discover.html?view=detail&symbol=${encodeURIComponent(symbol)}&type=${encodeURIComponent(cleanType)}`;
-        window.location.href = targetUrl;
-
         const globalSearchResults = document.getElementById('searchResults');
         if (globalSearchResults) globalSearchResults.style.display = 'none';
         const globalSearchInput = document.getElementById('globalSearchInput');
         if (globalSearchInput) globalSearchInput.value = '';
+
+        // SPA Routing Check
+        if (window.location.pathname.endsWith('market.html') && typeof window.openStockDetail === 'function') {
+            // We are on market.html, use SPA router
+            // Need to fetch price/change/color if possible or use defaults/async fetch in detail
+            // For now, pass what we have; detail view will fetch live data.
+            const isUp = true; // Placeholder, detail view logic handles fetching
+            window.openStockDetail(symbol, name, 'NSE', 'Loading...', '0.00%', '#888', cleanType, true);
+        } else {
+            // Not on market.html, standard nav
+            // User requested routing:
+            // INS.STOCK -> DISCOVER BUY & SELL (market.html?view=discover&stock=...)
+            const targetUrl = `market.html?view=discover&stock=${encodeURIComponent(symbol)}`;
+            window.location.href = targetUrl;
+        }
     };
 });
 
@@ -373,6 +405,9 @@ function checkLoginStatus() {
 
         // Ensure user data is synced globally on load
         if (window.syncUserData) window.syncUserData();
+
+        // Sync Loan Eligibility (Backend Rule Integration)
+        if (typeof syncLoanEligibility === 'function') syncLoanEligibility();
     } else {
         // Show Login Buttons
         if (promoActions) promoActions.style.display = 'flex';
@@ -481,6 +516,11 @@ window.handleInternalReset = async function () {
 window.handleGuestClick = async function (url) {
     const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
     if (user) {
+        // --- KYC RESTRICTION RULE ---
+        if (user.kyc === 'Pending') {
+            await window.CustomUI.alert("KYC verification in progress.", "Verification Required");
+            return;
+        }
         if (url && url !== '#') window.location.href = url;
     } else {
         // Show Top Alert
@@ -500,12 +540,32 @@ window.handleGuestTabClick = function (type) {
         window.handleGuestClick('#');
         return;
     }
+
+    // --- KYC RESTRICTION RULE for Protected Tabs ---
+    const restrictedTabs = ['portfolio', 'trade', 'deposits', 'withdrawals'];
+    if (user.kyc === 'Pending' && restrictedTabs.includes(type)) {
+        window.CustomUI.alert("KYC verification in progress.", "Verification Required");
+        return;
+    }
+
     if (type === 'me') {
-        window.location.href = 'market.html?view=me';
+        if (window.location.pathname.endsWith('market.html') && typeof window.showMeView === 'function') {
+            window.showMeView();
+        } else {
+            window.location.href = 'market.html?view=me';
+        }
     } else if (type === 'portfolio') {
-        window.location.href = 'market.html?view=portfolio';
+        if (window.location.pathname.endsWith('market.html') && typeof window.showPortfolioView === 'function') {
+            window.showPortfolioView();
+        } else {
+            window.location.href = 'market.html?view=portfolio';
+        }
     } else if (type === 'market') {
-        window.location.href = 'market.html';
+        if (window.location.pathname.endsWith('market.html') && typeof window.showMarketView === 'function') {
+            window.showMarketView();
+        } else if (!window.location.pathname.endsWith('market.html')) {
+            window.location.href = 'market.html?view=market';
+        }
     }
 };
 
@@ -1021,7 +1081,7 @@ window.loadUserAssets = async function (userId) {
     try {
         const { data: dbUser, error } = await client
             .from('users')
-            .select('*')
+            .select('id, balance, invested, frozen, outstanding, username, full_name, kyc, credit_score, vip, loan_enabled')
             .eq('id', userId)
             .single();
 
@@ -1030,7 +1090,7 @@ window.loadUserAssets = async function (userId) {
             return;
         }
 
-        console.log("Assets response:", dbUser);
+        // console.log("Assets response:", dbUser); // Security: do not log full user object
 
         if (!dbUser) {
             console.error("User not found.");
@@ -1040,10 +1100,10 @@ window.loadUserAssets = async function (userId) {
         // --- Data Extraction & Safe Fallbacks ---
         const rawBalance = parseFloat(dbUser.balance) || 0;
         const inv = parseFloat(dbUser.invested) || 0;
+        const frozen = parseFloat(dbUser.frozen) || 0;
         const bonus = parseFloat(dbUser.bonus) || 0;
-
-        // pending_funds vs frozen (legacy support)
-        const frozen = (typeof dbUser.pending_funds !== 'undefined') ? (parseFloat(dbUser.pending_funds) || 0) : (parseFloat(dbUser.frozen) || 0);
+        const portfolioProfit = window.__LATEST_TOTAL_PROFIT__ || 0;
+        const totalAssets = rawBalance + frozen + inv + portfolioProfit;
 
         // borrowed_funds calculation (Live from loans table)
         let loan = 0;
@@ -1136,9 +1196,9 @@ window.loadUserAssets = async function (userId) {
         }
 
         // --- Update Me Page (Specific IDs) ---
+        updateVal('meTotalAssets', totalAssets);
         updateVal('meAvailableBalance', rawBalance);
         updateVal('meCurrentInvestments', inv);
-        updateVal('meBonusCredits', bonus);
         updateVal('meFrozenFunds', frozen);
         updateVal('meBorrowedFunds', loan);
         updateVal('mePendingSettlement', outstanding);
@@ -1149,6 +1209,7 @@ window.loadUserAssets = async function (userId) {
         });
 
         // --- Update Portfolio Page (Specific IDs) ---
+        updateVal('pTotalAssets', totalAssets);
         updateVal('pAvailableBalance', rawBalance);
         updateVal('pCurrentInvested', inv);
         updateVal('pPromoCredits', bonus);
@@ -2183,5 +2244,42 @@ async function openWithdrawPage() {
         return;
     }
 
-    window.location.href = "withdraw.html";
+    const currentPath = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+
+    if (currentPath.includes("market.html")) {
+        const view = params.get("view") || "market";
+        window.location.href = `withdraw.html?from=market&view=${view}`;
+    } else {
+        window.location.href = `withdraw.html?from=homepage`;
+    }
+}
+async function syncLoanEligibility() {
+    const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+    if (!user) return;
+
+    try {
+        const client = window.DB.getClient();
+        if (!client) return;
+
+        const { data, error } = await client
+            .from('users')
+            .select('loan_enabled')
+            .eq('id', user.id)
+            .single();
+
+        if (!error && data) {
+            // Update local user object cached in session/local storage
+            const updatedUser = { ...user, loan_enabled: !!data.loan_enabled };
+            localStorage.setItem(window.DB.CURRENT_USER_KEY, JSON.stringify(updatedUser));
+
+            // Ensure the Loan Offer Card is always visible even if loan_enabled = false
+            const loanCard = document.getElementById('loanOfferCard');
+            if (loanCard) {
+                loanCard.style.display = 'flex';
+            }
+        }
+    } catch (e) {
+        console.error("Loan Eligibility Sync Error:", e);
+    }
 }

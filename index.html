@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <title>Avendus Capital - Premium Trading Platform</title>
     <meta name="description"
         content="Access real-time market summaries, breaking news, and personalized stock recommendations on our premium financial dashboard.">
@@ -798,6 +799,10 @@
                         </style>
                         <script>
                             (function () {
+                                if (symbol === 'BSE:SENSEX') document.getElementById('cardSensex').classList.add('active');
+                                else if (symbol === 'NSE:NIFTY' || symbol === 'NIFTY1!') document.getElementById('cardNifty').classList.add('active');
+                                else if (symbol === 'NSE:NIFTYBANK') document.getElementById('cardBankNifty').classList.add('active');
+
                                 const section = document.getElementById('recommendationSection');
                                 const header = document.getElementById('recommendationHeader');
                                 const list = document.getElementById('recommendationList');
@@ -915,7 +920,7 @@
                 </div>
                 <div class="offer-card">
                     <div class="offer-img-wrapper">
-                        <img src="https://images.pexels.com/photos/6780824/pexels-photo-6780824.jpeg?auto=compress&cs=tinysrgb&w=600"
+                        <img src="https://images.pexels.com/photos/186461/pexels-photo-186461.jpeg?auto=compress&cs=tinysrgb&w=600"
                             alt="Exchange Traded Funds">
                     </div>
                     <div class="offer-info">
@@ -941,7 +946,7 @@
         <!-- Footer -->
         <footer class="footer">
             <div class="footer-left">
-                © 2025. Reserved. | <a href="admin_kyc.html" style="color: inherit; text-decoration: none;">Admin</a>
+                © 2025 Avendus Capital. Secure. Transparent. Reliable.
             </div>
             <div class="footer-right" style="display: none !important;">
                 <span class="timezone">
@@ -1319,6 +1324,7 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="js/credit_notifier.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -1497,14 +1503,14 @@
 
             // Initialize Market Components
             if (typeof lucide !== 'undefined') lucide.createIcons();
-            loadWidget('BSE:SENSEX');
+            loadWidget('NIFTY1!');
             switchExchange('gainers', 'NSE');
             switchExchange('losers', 'NSE');
         });
 
         // --- MARKET DATA & CHART LOGIC (GLOBAL SCOPE) ---
         let currentWidget = null;
-        let currentActiveSymbol = 'BSE:SENSEX';
+        let currentActiveSymbol = 'NIFTY1!';
         let currentInterval = 'D';
 
         const indexData = {
@@ -1512,8 +1518,8 @@
                 price: 83580.40, basePrice: 83313.93, low: 83250.27, high: 83784.17, open: 83757.54, close: 83817.69, sym: "SENSEX",
                 cardValId: 'valSensexCard', cardChgId: 'chgSensexCard'
             },
-            'NSE:NIFTY': {
-                price: 25641.65, basePrice: 25776.00, low: 25600.00, high: 25800.00, open: 25750.00, close: 25776.00, sym: "NIFTY 50",
+            'NIFTY1!': {
+                price: 25660.25, basePrice: 25776.00, low: 25600.00, high: 25800.00, open: 25750.00, close: 25776.00, sym: "NIFTY 50",
                 cardValId: 'valNiftyCard', cardChgId: 'chgNiftyCard'
             },
             'NSE:NIFTYBANK': {
@@ -1548,12 +1554,67 @@
 
         function loadWidget(symbol) {
             const container = document.getElementById('tradingview_widget');
-            if (container) container.innerHTML = '';
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Handle Restricted Symbols with Investing.com Iframe
+            const investingPairs = {
+                'NSE:NIFTY': '17940',
+                'NIFTY1!': '17940',
+                'BSE:SENSEX': '39929',
+                'NSE:BANKNIFTY': '17923',
+                'NSE:NIFTYBANK': '17923',
+                'NIFTYBANK': '17923',
+                'NSE:INDIAVIX': '17942',
+                'NSE:MIDCPNIFTY': '18012',
+                'NSE:NIFTYMIDCAP100': '18012',
+                'NSE:NIFTYMIDCAP': '18012',
+                'NSE:SMLCAP100': '17946',
+                'NSE:NIFTYSMALLCAP100': '17946',
+                'NSE:NIFTYSMLCAP': '17946'
+            };
+
+            if (investingPairs[symbol]) {
+                let pairId = investingPairs[symbol];
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                wrapper.style.overflow = 'hidden';
+
+                const iframe = document.createElement('iframe');
+                let w = container.offsetWidth || 800;
+                let h = container.offsetHeight || 600;
+                iframe.src = `https://ssltvc.investing.com/?pair_ID=${pairId}&height=${h}&width=${w}&interval=300&plotStyle=candles&domain_ID=56&lang_ID=56&timezone_ID=20`;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.filter = 'invert(1) hue-rotate(180deg) brightness(0.9)'; // Dark Mode Filter
+                iframe.id = 'investing_chart';
+
+                // Mask for the logo (now black to match dark theme)
+                const mask = document.createElement('div');
+                mask.style.position = 'absolute';
+                mask.style.bottom = '42px';
+                mask.style.left = '45px';
+                mask.style.width = '100px';
+                mask.style.height = '25px';
+                mask.style.background = '#000000';
+                mask.style.pointerEvents = 'none';
+                mask.style.zIndex = '10';
+
+                wrapper.appendChild(iframe);
+                wrapper.appendChild(mask);
+                container.appendChild(wrapper);
+                return;
+            }
+
             if (typeof TradingView === 'undefined') return;
 
+            let targetSymbol = symbol;
             currentWidget = new TradingView.widget({
                 "autosize": true,
-                "symbol": symbol,
+                "symbol": targetSymbol,
                 "interval": currentInterval,
                 "timezone": "Asia/Kolkata",
                 "theme": "dark",
@@ -1564,7 +1625,12 @@
                 "allow_symbol_change": false,
                 "hide_top_toolbar": true,
                 "container_id": "tradingview_widget",
-                "hide_side_toolbar": true,
+                "hide_side_toolbar": false,
+                "withdateranges": true,
+                "save_image": true,
+                "details": true,
+                "hotlist": true,
+                "calendar": true,
                 "overrides": {
                     "paneProperties.background": "#000000",
                     "paneProperties.gridLines": "#1a1a1a",
@@ -1575,11 +1641,7 @@
                     "mainSeriesProperties.candleStyle.wickUpColor": "#00ff88",
                     "mainSeriesProperties.candleStyle.wickDownColor": "#ff3b3b"
                 },
-                "disabled_features": [
-                    "header_symbol_search", "header_compare", "header_settings",
-                    "header_indicators", "header_chart_type", "header_resolutions",
-                    "left_toolbar", "context_menus"
-                ]
+                "disabled_features": []
             });
         }
 
@@ -1743,6 +1805,24 @@
             </div>
         </div>
     </div>
+    <script>
+        // Fix homepage redirect logic
+        (function () {
+            // Check if user is logged in
+            const user = window.DB && window.DB.getCurrentUser ? window.DB.getCurrentUser() : null;
+
+            if (user) {
+                // Only redirect to market if:
+                // 1. No referrer (direct visit)
+                // 2. AND we are not avoiding redirects explicitly
+
+                if (!document.referrer) {
+                    // Optional: Redirect to market for direct visits by logged-in users
+                    // window.location.href = 'market.html';
+                }
+            }
+        })();
+    </script>
 </body>
 
 </html>

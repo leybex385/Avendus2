@@ -61,19 +61,9 @@
         { symbol: 'PAYTM', name: 'One 97 Communications (Paytm)', price: 420.30, change: -4.50, type: 'stock' },
         { symbol: 'JIOFIN', name: 'Jio Financial Services Ltd.', price: 360.75, change: 1.90, type: 'stock' }
     ];
+    const OTC_DATA = [];
 
-    const OTC_DATA = [
-        { symbol: 'DELHIVERY-OTC', name: 'Delhivery Private Placement', price: 420.00, change: 0, type: 'OTC' },
-        { symbol: 'BYJUS-OTC', name: 'Byju\'s Secondary Market', price: 2500.00, change: 0, type: 'OTC' },
-        { symbol: 'SWIGGY-OTC', name: 'Swiggy Pre-IPO Shares', price: 310.00, change: 0, type: 'OTC' }
-    ];
-
-    const IPO_DATA = [
-        { symbol: 'HYUNDAI-IPO', name: 'Hyundai India IPO', price: 1960.00, change: 0, type: 'IPO' },
-        { symbol: 'OLA-IPO', name: 'Ola Electric IPO', price: 76.00, change: 0, type: 'IPO' },
-        { symbol: 'NSDL-IPO', name: 'NSDL IPO', price: 920.00, change: 0, type: 'IPO' },
-        { symbol: 'COLGATE-IPO', name: 'Colgate-Palmolive India', price: 1648.88, yield: '31.39%', level: 'Lv > 1', type: 'IPO' }
-    ];
+    const IPO_DATA = [];
 
     const INDICES_DATA = [
         { symbol: 'SENSEX', name: 'BSE SENSEX', price: 83710.26, change: 396.33, changePercent: 0.48, type: 'index' },
@@ -90,28 +80,54 @@
             this.otc = OTC_DATA;
             this.ipo = IPO_DATA;
             this.indices = INDICES_DATA;
-            this.dbProducts = []; // Cache for database products
+            this.dbProducts = []; // Cache for database products (IPO)
+            this.dbOtcProducts = []; // Cache for database products (OTC)
             this.listeners = [];
             this.startSimulation();
             this.syncFromDB();
         }
 
         async syncFromDB() {
-            if (window.DB && window.DB.getProducts) {
+            if (window.DB && window.DB.getActiveProductsByType) {
                 try {
-                    const data = await window.DB.getProducts();
-                    this.dbProducts = data.filter(p => p.status === 'Active').map(p => ({
-                        symbol: p.name.split(' ')[0].toUpperCase() + '-IPO',
+                    // Fetch IPOs
+                    const ipoData = await window.DB.getActiveProductsByType('IPO');
+                    this.dbProducts = ipoData.map(p => ({
+                        id: p.id,
+                        symbol: p.market_symbol || p.name.split(' ')[0].toUpperCase(),
+                        market_symbol: p.market_symbol,
                         name: p.name,
                         price: parseFloat(p.price) || 0,
-                        yield: p.profit || 'TBD',
+                        yield: p.est_profit_percent || 'TBD',
                         subDate: p.start_date || 'TBD',
                         deadline: p.end_date || 'TBD',
                         listingDate: p.listing_date || 'TBD',
                         level: (parseFloat(p.min_invest) > 100000) ? 'Lv ≥ 2' : 'Lv ≥ 1',
-                        type: p.type || 'IPO',
+                        type: 'IPO',
+                        totalShares: p.total_shares || 0,
+                        availableShares: p.available_shares || 0,
                         change: 0
                     }));
+
+                    // Fetch OTCs
+                    const otcData = await window.DB.getActiveProductsByType('OTC');
+                    this.dbOtcProducts = otcData.map(p => ({
+                        id: p.id,
+                        symbol: p.market_symbol || p.name.split(' ')[0].toUpperCase(),
+                        market_symbol: p.market_symbol,
+                        name: p.name,
+                        price: parseFloat(p.price) || 0,
+                        yield: p.est_profit_percent || 'TBD',
+                        subDate: p.start_date || 'TBD',
+                        deadline: p.end_date || 'TBD',
+                        listingDate: p.listing_date || 'TBD',
+                        level: (parseFloat(p.min_invest) > 100000) ? 'Lv ≥ 2' : 'Lv ≥ 1',
+                        type: 'OTC',
+                        totalShares: p.total_shares || 0,
+                        availableShares: p.available_shares || 0,
+                        change: 0
+                    }));
+
                     this.notifyListeners();
                 } catch (e) {
                     console.error("Failed to sync products from DB:", e);
@@ -160,10 +176,26 @@
             }, 1000);
         }
 
+        addListener(callback) {
+            if (typeof callback === 'function') {
+                this.listeners.push(callback);
+            }
+        }
+
+        notifyListeners() {
+            this.listeners.forEach(cb => {
+                try {
+                    cb();
+                } catch (e) {
+                    console.error("MarketEngine listener error:", e);
+                }
+            });
+        }
+
         search(query) {
             if (!query) return [];
             const q = query.toLowerCase();
-            const all = [...this.stocks, ...this.otc, ...this.getIPO(), ...this.indices];
+            const all = [...this.stocks, ...this.getOTC(), ...this.getIPO(), ...this.indices];
             return all.filter(s =>
                 s.symbol.toLowerCase().includes(q) ||
                 s.name.toLowerCase().includes(q)
@@ -173,13 +205,13 @@
         getIndices() { return this.indices; }
 
         getAllStocks() { return this.stocks; }
-        getOTC() { return this.otc; }
+        getOTC() { return [...this.otc, ...(this.dbOtcProducts || [])]; }
         getIPO() {
             return [...this.ipo, ...this.dbProducts];
         }
 
         getProduct(symbol) {
-            const all = [...this.stocks, ...this.otc, ...this.getIPO(), ...this.indices];
+            const all = [...this.stocks, ...this.getOTC(), ...this.getIPO(), ...this.indices];
             return all.find(s => s.symbol === symbol);
         }
     }
