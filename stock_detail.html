@@ -10,8 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
     <style>
         /* Reusing styles from market.html */
         .market-wrapper {
@@ -1278,39 +1276,49 @@
             </button>
         </div>
     </div>
+    <!-- Core Database Layer -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/market_data.js"></script>
+    <script src="js/trading.js"></script>
+    <script src="script.js"></script>
+    <script src="js/credit_notifier.js"></script>
+
+    <style>
+        .mini-tf-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mini-tf-btn.active {
+            background: #1e56a0;
+            color: white;
+            border-color: #1e56a0;
+        }
+
+        .range-dot,
+        #rangeProgress {
+            transition: all 0.5s ease;
+        }
+
+        .styled-chart-box {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+
 </body>
 
 </html>
-<style>
-    .mini-tf-btn {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 700;
-        color: #475569;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .mini-tf-btn.active {
-        background: #1e56a0;
-        color: white;
-        border-color: #1e56a0;
-    }
-
-    .range-dot,
-    #rangeProgress {
-        transition: all 0.5s ease;
-    }
-
-    .styled-chart-box {
-        background: white;
-        border-radius: 16px;
-        padding: 1.5rem;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    }
-</style>
