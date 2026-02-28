@@ -149,6 +149,17 @@ window.handleSellTrade = async function (tradeId, sellPrice, netReturn) {
         if (fetchErr || !trade) throw new Error("Could not find the original trade record.");
         if (trade.status === 'Sold') throw new Error("This position is already closed.");
 
+        // IPO LOCKUP GUARD
+        const lockupUntil = trade.lockup_until ? new Date(trade.lockup_until) : null;
+        if (lockupUntil && lockupUntil > new Date()) {
+            throw new Error(`This position is under lock-up until ${lockupUntil.toLocaleDateString('en-IN')}. Selling is disabled until then.`);
+        }
+
+        // --- TRADING FREEZE GUARD ---
+        if (user.trading_frozen) {
+            throw new Error("Trading functions are temporarily unavailable. Please check your account status or try again later.");
+        }
+
         // 2. Re-fetch real-time price
         const me = window.MarketEngine || {};
         const livePriceData = me.getProduct ? me.getProduct(trade.symbol) : null;
@@ -160,27 +171,39 @@ window.handleSellTrade = async function (tradeId, sellPrice, netReturn) {
         const tax = grossValue * 0.0012;
         const txn = grossValue * 0.0003;
         const finalNetReturn = grossValue - tax - txn;
+        const buyAmount = parseFloat(trade.total_amount) || 0;
 
-        // 3. Update the original trade to 'Sold'
+        // 3. Update the original trade to 'Sold' with historical data
+        const realisedProfit = finalNetReturn - buyAmount;
+        const finalisedNote = `Sold at Market ₹${finalSellPrice.toLocaleString('en-IN')} @ ${new Date().toLocaleTimeString('en-IN')}`;
         const { error: tradeUpdateErr } = await client.from('trades').update({
             status: 'Sold',
+            order_status: 'CLOSED',
             processed_at: new Date().toISOString(),
-            admin_note: `Sold at Market ₹${finalSellPrice.toLocaleString('en-IN')}`
+            sell_price: finalSellPrice,
+            total_sale_value: finalNetReturn,
+            realised_profit: realisedProfit,
+            sell_timestamp: new Date().toISOString(),
+            sell_tax: tax,
+            sell_fees: txn,
+            admin_note: finalisedNote
         }).eq('id', tradeId);
         if (tradeUpdateErr) throw tradeUpdateErr;
 
-        // 4. Record history
+        // 4. Record history (Secondary record for ledger/inflow)
         const { error: sellRecordErr } = await client.from('trades').insert([{
             user_id: user.id,
             symbol: trade.symbol,
             name: trade.name,
-            type: trade.type, // Preserve original type (e.g., 'stock') to satisfy DB constraint
+            type: trade.type, // Reverted to original type to satisfy DB check constraint (trades_type_check)
             quantity: qty,
             price: finalSellPrice,
             total_amount: finalNetReturn,
             tax_amount: tax,
             txn_charge: txn,
             status: 'Sold',
+            order_status: 'CLOSED',
+            processed_at: new Date().toISOString(),
             admin_note: `Proceeds from selling ${qty} shares of ${trade.symbol}`
         }]);
         if (sellRecordErr) throw sellRecordErr;
@@ -189,7 +212,6 @@ window.handleSellTrade = async function (tradeId, sellPrice, netReturn) {
         const freshUser = await window.DB.refreshCurrentUser();
         const currentBalance = parseFloat(freshUser.balance) || 0;
         const currentInvested = parseFloat(freshUser.invested) || 0;
-        const buyAmount = parseFloat(trade.total_amount) || 0;
 
         const newBalance = currentBalance + finalNetReturn;
         const newInvested = Math.max(0, currentInvested - buyAmount);
@@ -319,7 +341,7 @@ window.openOTCSubscribeModal = function (productId) {
 
         const color = (product.change >= 0 || product.type !== 'stock') ? '#10b981' : '#ef4444';
 
-        window.openStockDetail(product.symbol, product.name, exchange, priceStr, changeStr, color, product.type);
+        window.openStockDetail(product.market_symbol || product.symbol, product.name, exchange, priceStr, changeStr, color, product.type, true, product.id, product.minInvest);
     } else {
         console.error("openStockDetail not defined on this page");
     }
