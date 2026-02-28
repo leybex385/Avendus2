@@ -220,7 +220,7 @@
 
 <body>
     <header class="deposit-navbar">
-        <a href="market.html" class="back-btn"><i data-lucide="chevron-left"></i></a>
+        <a href="#" class="back-btn" onclick="goBackFromDeposit()"><i data-lucide="chevron-left"></i></a>
         <h1>Deposit</h1>
     </header>
 
@@ -435,6 +435,10 @@
         });
 
         initDeposits();
+
+        function goBackFromDeposit() {
+            window.history.back();
+        }
     </script>
     <!-- Modals -->
     <div id="topAlertContainer" class="top-alert-container">
@@ -800,6 +804,7 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="js/credit_notifier.js"></script>
 </body>
 
 </html>

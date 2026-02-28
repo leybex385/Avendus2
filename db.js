@@ -36,6 +36,23 @@ window.DB = {
         return { success: !error, error };
     },
 
+    async getMarketPrice(symbol) {
+        const client = this.getClient();
+        if (!client) return { status: 'error', message: 'No client' };
+
+        try {
+            const { data, error } = await client.functions.invoke('get-market-price', {
+                body: { symbol }
+            });
+
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Error fetching market price:", e);
+            return { status: 'error', message: e.message };
+        }
+    },
+
     // --- AUTHENTICATION ---
     async login(identifier, password) {
         const client = this.getClient();
@@ -54,21 +71,105 @@ window.DB = {
         }
 
         localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(data));
+
+        // --- AUTOMATIC CREDIT ALERT (Instruction 4) ---
+        if (data.credit_score < 90 && !sessionStorage.getItem('credit_alert_shown')) {
+            try {
+                // Check if already notified in this session to avoid duplicates
+                const { data: notices } = await client
+                    .from('messages')
+                    .select('id')
+                    .eq('user_id', data.id)
+                    .eq('sender', 'System')
+                    .ilike('message', '%credit score is below%')
+                    .limit(1);
+
+                if (!notices || notices.length === 0) {
+                    await this.sendNotice(data.id, "Credit Score Alert",
+                        JSON.stringify({
+                            title: "Credit Score Alert",
+                            message: "Your credit score is below the recommended level. Please maintain at least 90 credit points.",
+                            is_notification: true
+                        })
+                    );
+                }
+                sessionStorage.setItem('credit_alert_shown', 'true');
+            } catch (e) { console.error("Credit alert error:", e); }
+        }
+
         return { success: true, user: data };
     },
 
-    async register(mobile, password, email = null, authId = null) {
+    async register(mobile, password, email = null, authId = null, invitationCode = null) {
         const client = this.getClient();
         const insertData = {
             password,
             balance: 0,
+            frozen: 0,
             invested: 0,
+            outstanding: 0,
             kyc: 'Pending'
         };
 
         if (mobile) insertData.mobile = mobile;
         if (email) insertData.email = email;
         if (authId) insertData.auth_id = authId;
+
+        // CSR Linkage Logic (STRICT ENFORCEMENT)
+        if (!invitationCode) {
+            return { success: false, message: "Invitation code is strictly required for registration." };
+        }
+
+        try {
+            console.log("DB: Validating invitation code:", invitationCode);
+            const { data: csr, error: csrError } = await client
+                .from('admins')
+                .select('id, status, role')
+                .eq('invitation_code', invitationCode)
+                .eq('role', 'csr')
+                .eq('status', 'active')
+                .maybeSingle();
+
+            if (csrError) throw csrError;
+
+            if (!csr) {
+                console.error("DB: Invalid or inactive invitation code:", invitationCode);
+                return { success: false, message: "Invalid or inactive invitation code." };
+            }
+
+            // Valid CSR found, link the user
+            insertData.csr_id = csr.id;
+            insertData.invitation_code = invitationCode; // Store the code used
+            console.log("DB: CSR validated and linked:", csr.id);
+        } catch (e) {
+            console.error("DB: Error during invitation validation:", e);
+            return { success: false, message: "System error during invitation validation." };
+        }
+
+        // STRICT PRE-REGISTRATION DUPLICATE CHECK (SEPARATE)
+        if (email) {
+            const { data: existingEmail } = await client
+                .from('users')
+                .select('id')
+                .eq('email', email)
+                .limit(1);
+            if (existingEmail && existingEmail.length > 0) {
+                showAlert("warning", "This email is already registered.");
+                return { success: false, message: "This email is already registered." };
+            }
+        }
+
+        if (mobile) {
+            const { data: existingPhone } = await client
+                .from('users')
+                .select('id')
+                .eq('mobile', mobile)
+                .limit(1);
+            if (existingPhone && existingPhone.length > 0) {
+                showAlert("warning", "This mobile number is already registered.");
+                return { success: false, message: "This mobile number is already registered." };
+            }
+        }
 
         const { data, error } = await client
             .from('users')
@@ -194,7 +295,7 @@ window.DB = {
 
         const { data, error } = await client
             .from('users')
-            .select('*')
+            .select('id, mobile, username, kyc, credit_score, vip, balance, invested, frozen, outstanding, full_name, id_number, address, loan_enabled, created_at, csr_id, invitation_code')
             .eq('id', user.id)
             .single();
 
@@ -519,7 +620,8 @@ window.DB = {
             dob: extra.dob,
             email: extra.email,
             auth_id: extra.auth_id,
-            username: extra.username
+            username: extra.username,
+            gender: extra.gender
             // Note: We skip 'mobile' because it's the unique ID and already set.
         };
 
@@ -736,11 +838,18 @@ window.DB = {
     // --- ADMIN METHODS ---
     async getUsers() {
         const client = this.getClient();
-        const { data } = await client
-            .from('users')
-            .select('*')
-            .or('is_deleted.is.null,is_deleted.eq.false')
-            .order('created_at', { ascending: false });
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        let query = client.from('users').select('id, mobile, username, kyc, credit_score, vip, balance, invested, frozen, outstanding, full_name, created_at, csr_id, invitation_code').or('is_deleted.is.null,is_deleted.eq.false');
+
+        if (auth.role === 'csr') {
+            if (auth.invitation_code) {
+                query = query.or(`csr_id.eq.${auth.id},invitation_code.eq.${auth.invitation_code}`);
+            } else {
+                query = query.eq('csr_id', auth.id);
+            }
+        }
+
+        const { data } = await query.order('created_at', { ascending: false });
         return data || [];
     },
 
@@ -761,30 +870,89 @@ window.DB = {
 
     async getDeposits() {
         const client = this.getClient();
-        const { data } = await client.from('deposits').select('*').order('created_at', { ascending: false });
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        let query = client.from('deposits').select('*');
+        if (auth.role === 'csr') {
+            query = client.from('deposits').select('*, users!inner(*)');
+            if (auth.invitation_code) {
+                query = query.or(`users.csr_id.eq.${auth.id},users.invitation_code.eq.${auth.invitation_code}`);
+            } else {
+                query = query.eq('users.csr_id', auth.id);
+            }
+        }
+        const { data } = await query.order('created_at', { ascending: false });
         return data || [];
     },
 
     async getWithdrawals() {
         const client = this.getClient();
-        const { data } = await client.from('withdrawals').select('*').order('created_at', { ascending: false });
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        let query = client.from('withdrawals').select('*');
+        if (auth.role === 'csr') {
+            query = client.from('withdrawals').select('*, users!inner(*)');
+            if (auth.invitation_code) {
+                query = query.or(`users.csr_id.eq.${auth.id},users.invitation_code.eq.${auth.invitation_code}`);
+            } else {
+                query = query.eq('users.csr_id', auth.id);
+            }
+        }
+        const { data } = await query.order('created_at', { ascending: false });
         return data || [];
     },
 
     async getAllMessages() {
         const client = this.getClient();
-        const { data } = await client.from('messages').select('*').order('created_at', { ascending: false });
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        let query = client.from('messages').select('*');
+        if (auth.role === 'csr') {
+            query = client.from('messages').select('*, users!inner(*)');
+            if (auth.invitation_code) {
+                query = query.or(`users.csr_id.eq.${auth.id},users.invitation_code.eq.${auth.invitation_code}`);
+            } else {
+                query = query.eq('users.csr_id', auth.id);
+            }
+        }
+        const { data } = await query.order('created_at', { ascending: false });
         return data || [];
     },
 
     async getKycs() {
         const client = this.getClient();
-        const { data } = await client.from('kyc_submissions').select('*').order('created_at', { ascending: false });
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        let query = client.from('kyc_submissions').select('*');
+        if (auth.role === 'csr') {
+            query = client.from('kyc_submissions').select('*, users!inner(*)');
+            if (auth.invitation_code) {
+                query = query.or(`users.csr_id.eq.${auth.id},users.invitation_code.eq.${auth.invitation_code}`);
+            } else {
+                query = query.eq('users.csr_id', auth.id);
+            }
+        }
+        const { data } = await query.order('created_at', { ascending: false });
         return data || [];
     },
 
     async updateUser(id, updateData) {
         const client = this.getClient();
+        // Detect CSR restriction for trading_frozen field (Instruction 1)
+        if (updateData.hasOwnProperty('trading_frozen')) {
+            const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+            if (auth.role === 'csr') {
+                const { data: target } = await client.from('users').select('csr_id, invitation_code').eq('id', id).single();
+                const hasCsrIdMatch = target && target.csr_id == auth.id;
+                const hasInvCodeMatch = target && auth.invitation_code && target.invitation_code === auth.invitation_code;
+
+                if (!hasCsrIdMatch && !hasInvCodeMatch) {
+                    return { success: false, error: "Unauthorized Scope Violation" };
+                }
+            } else if (auth.role !== 'super_admin') {
+                // Only CSR and Super Admin can manage this if logged in as admin
+                if (sessionStorage.getItem('admin_auth')) {
+                    return { success: false, error: "Unauthorized action." };
+                }
+            }
+        }
+
         let query = client.from('users').update(updateData);
 
         // Safety: Detect if id is UUID (Supabase auth_id) or Numeric (internal id)
@@ -813,19 +981,36 @@ window.DB = {
 
     async updateKycStatus(id, status) {
         const client = this.getClient();
-        const { data, error } = await client.from('kyc_submissions').update({ status }).eq('id', id);
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        if (auth.role === 'csr') {
+            const { data: kyc } = await client.from('kyc_submissions').select('*, users!inner(*)').eq('id', id).single();
+            const hasCsrIdMatch = kyc?.users?.csr_id == auth.id;
+            const hasInvCodeMatch = auth.invitation_code && kyc?.users?.invitation_code === auth.invitation_code;
+            if (!hasCsrIdMatch && !hasInvCodeMatch) {
+                return { success: false, error: { message: "Unauthorized Scope Violation" } };
+            }
+        }
+        const { error } = await client.from('kyc_submissions').update({ status, processed_at: new Date().toISOString() }).eq('id', id);
         return { success: !error, error };
     },
 
     async updateDepositStatus(id, status) {
         const client = this.getClient();
-        const { data, error } = await client.from('deposits').update({ status }).eq('id', id);
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        if (auth.role === 'csr') {
+            return { success: false, error: { message: "Unauthorized Role Action: CSR accounts are view-only for deposits." } };
+        }
+        const { error } = await client.from('deposits').update({ status, processed_at: new Date().toISOString() }).eq('id', id);
         return { success: !error, error };
     },
 
     async updateWithdrawalStatus(id, status) {
         const client = this.getClient();
-        const { data, error } = await client.from('withdrawals').update({ status }).eq('id', id);
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        if (auth.role === 'csr') {
+            return { success: false, error: { message: "Unauthorized Role Action: CSR accounts are view-only for withdrawals." } };
+        }
+        const { error } = await client.from('withdrawals').update({ status, processed_at: new Date().toISOString() }).eq('id', id);
         return { success: !error, error };
     },
 
@@ -856,25 +1041,58 @@ window.DB = {
         const client = this.getClient();
         const { data, error } = await client
             .from('trades')
-            .select('*')
+            .select('*, products(*)')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
 
-        return data || [];
+        if (error) {
+            console.error('getTradesByUserId error:', error);
+            return [];
+        }
+
+        return (data || []).map(trade => ({
+            ...trade,
+            est_profit_percent: trade.products ? (trade.products.est_profit_percent || trade.products.profit) : null
+        }));
     },
 
     async getAllTrades() {
         const client = this.getClient();
-        const { data, error } = await client
-            .from('trades')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        let query = client.from('trades').select('*, products(*)');
+        if (auth.role === 'csr') {
+            query = client.from('trades').select('*, users!inner(*), products(*)');
+            if (auth.invitation_code) {
+                query = query.or(`users.csr_id.eq.${auth.id},users.invitation_code.eq.${auth.invitation_code}`);
+            } else {
+                query = query.eq('users.csr_id', auth.id);
+            }
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) {
+            console.error('getAllTrades error:', error);
+            return [];
+        }
 
-        return data || [];
+        return (data || []).map(trade => ({
+            ...trade,
+            est_profit_percent: trade.products ? (trade.products.est_profit_percent || trade.products.profit) : null
+        }));
     },
 
     async updateTradeStatus(id, status, adminNote = '') {
         const client = this.getClient();
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+
+        if (auth.role === 'csr') {
+            const { data: trade } = await client.from('trades').select('*, users!inner(*)').eq('id', id).single();
+            const hasCsrIdMatch = trade?.users?.csr_id == auth.id;
+            const hasInvCodeMatch = auth.invitation_code && trade?.users?.invitation_code === auth.invitation_code;
+            if (!hasCsrIdMatch && !hasInvCodeMatch) {
+                return { success: false, error: { message: "Unauthorized Scope Violation" } };
+            }
+        }
+
         const updateData = {
             status,
             admin_note: adminNote,
@@ -895,9 +1113,11 @@ window.DB = {
             const newBalance = arguments[1];
             const newInvested = arguments[2];
             const newOutstanding = arguments[3];
+            const newFrozen = arguments[4];
             updates = { balance: newBalance };
             if (newInvested !== undefined) updates.invested = newInvested;
             if (newOutstanding !== undefined) updates.outstanding = newOutstanding;
+            if (newFrozen !== undefined) updates.frozen = newFrozen;
         }
 
         const { data, error } = await client
@@ -913,17 +1133,148 @@ window.DB = {
         return { success: !error, data, error };
     },
 
+    // --- SUBSCRIPTION WALLET TRANSITIONS ---
+
+    // --- SUBSCRIPTION WALLET TRANSITIONS (ATOMIC RPC DEPLOYMENT) ---
+
+    // STAGE 1: Submit Subscription (Deduct Balance, Increase Frozen, Create Trade ATOMICALLY)
+    async submitSubscriptionAtomic(tradeData) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database client not initialized' };
+
+        const { data, error } = await client.rpc('submit_subscription_atomic', {
+            p_user_id: tradeData.user_id,
+            p_trade_data: tradeData
+        });
+
+        if (error) {
+            console.error("RPC submit_subscription_atomic Error:", error);
+            return { success: false, error: error.message || error };
+        }
+        if (data && data.success === false) {
+            return { success: false, error: data.error };
+        }
+        return data;
+    },
+
+    // STAGE 2: Admin Approve (Deduct Frozen, Increase Invested, Mark Settled ATOMICALLY)
+    async approveSubscriptionAtomic(tradeId, approvedQty, authId, authRole) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database client not initialized' };
+
+        const { data, error } = await client.rpc('approve_subscription_atomic', {
+            p_trade_id: parseInt(tradeId),
+            p_approved_qty: parseFloat(approvedQty),
+            p_auth_id: parseInt(authId),
+            p_auth_role: authRole
+        });
+
+        if (error) {
+            console.error("RPC approve_subscription_atomic Error:", error);
+            return { success: false, error: error.message || error };
+        }
+        if (data && data.success === false) {
+            return { success: false, error: data.error };
+        }
+        return data;
+    },
+
+    // STAGE 3: Admin Reject (Deduct Frozen, Return to Balance, Mark Rejected ATOMICALLY)
+    async rejectSubscriptionAtomic(tradeId, authId, authRole) {
+        const client = this.getClient();
+        if (!client) return { success: false, message: 'Database client not initialized' };
+
+        const { data, error } = await client.rpc('reject_subscription_atomic', {
+            p_trade_id: parseInt(tradeId),
+            p_auth_id: parseInt(authId),
+            p_auth_role: authRole
+        });
+
+        if (error) {
+            console.error("RPC reject_subscription_atomic Error:", error);
+            return { success: false, error: error.message || error };
+        }
+        if (data && data.success === false) {
+            return { success: false, error: data.error };
+        }
+        return data;
+    },
+
+    // Fallback legacy methods (Modified to handle direct errors better)
+    async submitSubscriptionStage1(userId, amount) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { data, error } = await client.from('users').select('balance, frozen').eq('id', userId).single();
+        if (!user) return { success: false, message: 'User not found' };
+        const currentBalance = parseFloat(user.balance) || 0;
+        const currentFrozen = parseFloat(user.frozen) || 0;
+        if (currentBalance < amount) return { success: false, message: 'Insufficient balance' };
+        const { error: upErr } = await client.from('users').update({
+            balance: currentBalance - amount,
+            frozen: currentFrozen + amount
+        }).eq('id', userId);
+        return { success: !upErr, error: upErr };
+    },
+    async approveSubscriptionStage2(userId, amount) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { data: user } = await client.from('users').select('frozen, invested').eq('id', userId).single();
+        if (!user) return { success: false };
+        const { error } = await client.from('users').update({
+            frozen: Math.max(0, (parseFloat(user.frozen) || 0) - amount),
+            invested: (parseFloat(user.invested) || 0) + amount
+        }).eq('id', userId);
+        return { success: !error, error };
+    },
+    async rejectSubscriptionStage3(userId, amount) {
+        const client = this.getClient();
+        if (!client) return { success: false };
+        const { data: user } = await client.from('users').select('balance, frozen').eq('id', userId).single();
+        if (!user) return { success: false };
+        const { error } = await client.from('users').update({
+            balance: (parseFloat(user.balance) || 0) + amount,
+            frozen: Math.max(0, (parseFloat(user.frozen) || 0) - amount)
+        }).eq('id', userId);
+        return { success: !error, error };
+    },
+
     // --- PRODUCT MANAGEMENT ---
-    async getProducts() {
+    async getProducts(createdBy = null) {
         const client = this.getClient();
         if (!client) return [];
-        const { data, error } = await client
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
+
+        let query = client.from('products').select('*');
+
+        if (createdBy) {
+            query = query.eq('created_by', createdBy);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
             console.error("Error fetching products:", error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async getActiveProductsByType(type) {
+        const client = this.getClient();
+        if (!client) return [];
+
+        let query = client.from('products').select('*').eq('status', 'Active');
+
+        if (type === 'IPO') {
+            // For IPO, match explicit 'IPO' or catch legacy nulls/empties
+            query = query.or('product_type.eq.IPO,product_type.is.null');
+        } else if (type === 'OTC') {
+            query = query.eq('product_type', 'OTC');
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) {
+            console.error(`Error fetching ${type} products:`, error);
             return [];
         }
         return data || [];
@@ -933,19 +1284,31 @@ window.DB = {
         const client = this.getClient();
         if (!client) return { success: false, message: 'Database not connected' };
 
-        let result;
-        if (productData.id && !productData.id.toString().startsWith('local_')) {
-            // Update existing
-            result = await client
-                .from('products')
-                .update(productData)
-                .eq('id', productData.id);
-        } else {
-            // Insert new (remove local ID if any)
-            const { id, ...saveData } = productData;
-            result = await client
-                .from('products')
-                .insert([saveData]);
+        const performSave = async (data) => {
+            if (data.id && !data.id.toString().startsWith('local_')) {
+                return await client
+                    .from('products')
+                    .update(data)
+                    .eq('id', data.id);
+            } else {
+                const { id, ...saveData } = data;
+                return await client
+                    .from('products')
+                    .insert([saveData]);
+            }
+        };
+
+        let result = await performSave(productData);
+
+        // Fallback for missing est_profit_percent column
+        if (result.error && (result.error.message.includes('est_profit_percent') || result.error.code === 'PGRST204')) {
+            console.log('Detected missing est_profit_percent, falling back to profit column...');
+            const fallbackData = { ...productData };
+            if (fallbackData.est_profit_percent !== undefined) {
+                fallbackData.profit = fallbackData.est_profit_percent;
+                delete fallbackData.est_profit_percent;
+            }
+            result = await performSave(fallbackData);
         }
 
         return { success: !result.error, error: result.error };
@@ -1000,7 +1363,7 @@ window.DB = {
         const query = client
             .from('loans')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', parseInt(userId))
             .or('is_deleted.is.null,is_deleted.eq.false')
             .order('created_at', { ascending: false });
 
@@ -1017,46 +1380,197 @@ window.DB = {
 
     async getAllLoans() {
         const client = this.getClient();
+        if (!client) return [];
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        const isCsr = auth.role === 'csr';
 
-        const { data, error } = await client
+        // 1. Fetch loans independently (Resilient against join/scoping errors)
+        const { data: loans, error: loanErr } = await client
             .from('loans')
             .select('*')
+            .or('is_deleted.is.null,is_deleted.eq.false')
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('Loan fetch error:', error);
-            return [];
+        if (loanErr) {
+            console.error('DB: getAllLoans Fetch Error:', loanErr);
         }
 
-        return data || [];
+        if (loanErr || !loans) {
+            const { data: fb } = await client.from('loans').select('*').limit(200);
+            return fb || [];
+        }
+
+        // 2. Fetch users separately for manual mapping
+        const { data: users } = await client.from('users').select('id, username, full_name, mobile, csr_id, invitation_code');
+
+        // Manual mapping (Fail-safe Join)
+        const finalData = (loans || []).map(loan => {
+            loan.users = (users || []).find(u => String(u.id) === String(loan.user_id)) || null;
+            return loan;
+        });
+
+        // 3. Apply CSR scope validation in-memory
+        if (isCsr && finalData) {
+            return finalData.filter(loan => {
+                const u = loan.users;
+                if (!u) return false;
+                const hasIdMatch = String(u.csr_id) === String(auth.id);
+                const hasInvMatch = auth.invitation_code && u.invitation_code === auth.invitation_code;
+                return hasIdMatch || hasInvMatch;
+            });
+        }
+
+        return finalData;
     },
 
     async submitLoan(loanData) {
         const client = this.getClient();
         if (!client) return { success: false, message: 'Database disconnected' };
 
+        // 1. Log Input for deep debugging
+        console.log("DB: submitLoan called with:", loanData);
+
+        // 2. Normalize Data (Ensuring types match requested schema)
+        // STRICT: cast user_id to integer to match users table id
+        const insertPacket = {
+            user_id: parseInt(loanData.user_id),
+            amount: parseFloat(loanData.amount),
+            purpose: loanData.purpose || loanData.reason || 'Not specified',
+            reason: loanData.purpose || loanData.reason || 'Not specified',
+            status: 'Pending',
+            created_at: new Date().toISOString(),
+            is_deleted: false
+        };
+
+        console.log("DB: Normalized Insert Packet:", insertPacket);
+
+        // 3. Execute Pure INSERT (No eligibility guard, no .single() which adds 400 overhead on fail)
         const { data, error } = await client
             .from('loans')
-            .insert([loanData])
-            .select()
-            .single();
+            .insert([insertPacket])
+            .select();
 
-        return { success: !error, data, error };
+        if (error) {
+            console.error("DB: LOAN_INSERT_ERROR_DETECTED!");
+            console.error("Error Message:", error.message);
+            console.error("Error Details:", error.details);
+            console.error("Error Hint:", error.hint);
+            console.error("Full Error Object:", error);
+
+            return {
+                success: false,
+                message: error.message || "Database Insertion Failed",
+                details: error.details,
+                hint: error.hint
+            };
+        }
+
+        console.log("DB: Loan Insert Success:", data);
+        return { success: true, data: data ? data[0] : null };
     },
 
-    async updateLoanStatus(id, status, adminNote = '') {
+    async updateLoanStatus(id, status, payload = {}) {
         const client = this.getClient();
-        if (!client) return { success: false };
+        if (!client) return { success: false, error: { message: "Database client not available" } };
 
-        const updateData = {
-            status,
-            admin_note: adminNote,
-            processed_at: new Date().toISOString()
-        };
-        const { data, error } = await client
-            .from('loans')
-            .update(updateData)
-            .eq('id', id);
+        const adminAuth = sessionStorage.getItem('admin_auth');
+        if (!adminAuth) return { success: false, error: { message: "Admin session not found" } };
+
+        const auth = JSON.parse(adminAuth);
+        const adminId = parseInt(auth.id);
+        const loanId = parseInt(id);
+
+        if (isNaN(adminId)) return { success: false, error: { message: "Invalid Admin ID in session" } };
+        if (isNaN(loanId)) return { success: false, error: { message: "Invalid Loan ID" } };
+
+        console.log("DB: Executing secure loan operation:", { loanId, status, adminId, role: auth.role });
+
+        // Call the secure RPC to handle ownership check and updates in the backend
+        const { data, error } = await client.rpc('operate_loan_secure', {
+            p_loan_id: loanId,
+            p_status: status,
+            p_admin_note: payload.admin_note || '',
+            p_approved_amount: parseFloat(payload.amount) || 0,
+            p_repayment_terms: payload.repayment_terms || '',
+            p_eligibility: payload.loan_enabled !== undefined ? payload.loan_enabled : true,
+            p_admin_id: adminId,
+            p_admin_role: auth.role
+        });
+
+        if (error) {
+            console.error("RPC operate_loan_secure Error:", error);
+            return { success: false, error: error };
+        }
+
+        if (!data) return { success: false, error: { message: "No response from server" } };
+
+        // Handle string errors from backend to ensure res.error.message works in UI
+        if (data.success === false && typeof data.error === 'string') {
+            return { success: false, error: { message: data.error }, data };
+        }
+
+        return { success: data.success, error: data.error, data: data };
+    },
+
+    async markLoanAsRepaid(id) {
+        const client = this.getClient();
+        if (!client) return { success: false, error: { message: "Database client not available" } };
+
+        const adminAuth = sessionStorage.getItem('admin_auth');
+        if (!adminAuth) return { success: false, error: { message: "Admin session not found" } };
+
+        const auth = JSON.parse(adminAuth);
+        const adminId = parseInt(auth.id);
+        const loanId = parseInt(id);
+
+        if (isNaN(adminId)) return { success: false, error: { message: "Invalid Admin ID in session" } };
+        if (isNaN(loanId)) return { success: false, error: { message: "Invalid Loan ID" } };
+
+        console.log("DB: Marking loan as fully repaid:", { loanId, adminId, role: auth.role });
+
+        const { data, error } = await client.rpc('repay_loan_secure', {
+            p_loan_id: loanId,
+            p_admin_id: adminId,
+            p_admin_role: auth.role
+        });
+
+        if (error) {
+            console.error("RPC repay_loan_secure Error:", error);
+            return { success: false, error: error };
+        }
+
+        if (!data) return { success: false, error: { message: "No response from server" } };
+
+        if (data.success === false && typeof data.error === 'string') {
+            return { success: false, error: { message: data.error }, data };
+        }
+
+        return { success: data.success, error: data.error, data: data };
+    },
+
+    async update_user_loan_eligibility(userId, enabled) {
+        // Since we now have a secure RPC for loan operations that can also toggle eligibility,
+        // we could call it if this was related to a loan. 
+        // For general eligibility toggle, we can use a separate RPC or just keep the client-side check if RLS allows it on 'users' table.
+        // However, the user asked to enforce scope in backend.
+
+        const client = this.getClient();
+        const auth = JSON.parse(sessionStorage.getItem('admin_auth') || '{}');
+        const isCsr = auth.role === 'csr';
+
+        if (isCsr) {
+            const { data: u } = await client.from('users').select('csr_id, invitation_code').eq('id', userId).single();
+            const hasCsrIdMatch = u?.csr_id == auth.id;
+            const hasInvCodeMatch = auth.invitation_code && u?.invitation_code === auth.invitation_code;
+            if (!hasCsrIdMatch && !hasInvCodeMatch) {
+                return { success: false, error: "Unauthorized Scope Violation" };
+            }
+        }
+
+        const { error } = await client
+            .from('users')
+            .update({ loan_enabled: enabled })
+            .eq('id', userId);
 
         return { success: !error, error };
     },
